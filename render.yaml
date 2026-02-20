@@ -12,7 +12,7 @@ services:
     region: singapore
     
     # Source code
-    repo: https://github.com/your-username/dominate-ecommerce.git  # Update with your repo
+    repo: https://github.com/Sam15246/fitness-brand-dominate.git
     branch: main
     
     # Build and startup
@@ -25,8 +25,6 @@ services:
         value: production
       - key: DEBUG
         value: "False"
-      - key: PYTHON_VERSION
-        value: "3.11.0"
     
     # Health check
     healthCheckPath: /
