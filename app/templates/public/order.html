@@ -249,6 +249,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('checkoutForm');
     const phoneInput = document.getElementById('phone_number');
     const pincodeInput = document.getElementById('pincode');
+    const stateSelect = document.getElementById('state');
+    const addressInput = document.getElementById('address');
+    const cityInput = document.getElementById('city');
     
     // Numeric validation for phone number
     phoneInput.addEventListener('input', function(e) {
@@ -273,13 +276,77 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Form submission with Bootstrap validation
+    // Form submission with proper validation
     form.addEventListener('submit', function(e) {
-        if (!form.checkValidity()) {
+        // Mark form for Bootstrap validation styling
+        form.classList.add('was-validated');
+        
+        // Manual validation of required fields
+        let isValid = true;
+        let errorMessages = [];
+        
+        // Check state dropdown
+        if (!stateSelect.value || stateSelect.value.trim() === '') {
+            isValid = false;
+            stateSelect.classList.add('is-invalid');
+            errorMessages.push('Please select a state');
+        } else {
+            stateSelect.classList.remove('is-invalid');
+            stateSelect.classList.add('is-valid');
+        }
+        
+        // Check pincode
+        if (!pincodeInput.value || pincodeInput.value.length !== 6 || !/^[0-9]{6}$/.test(pincodeInput.value)) {
+            isValid = false;
+            pincodeInput.classList.add('is-invalid');
+            errorMessages.push('Please enter a valid 6-digit pincode');
+        } else {
+            pincodeInput.classList.remove('is-invalid');
+            pincodeInput.classList.add('is-valid');
+        }
+        
+        // Check phone
+        if (!phoneInput.value || phoneInput.value.length !== 10 || !/^[6-9][0-9]{9}$/.test(phoneInput.value)) {
+            isValid = false;
+            phoneInput.classList.add('is-invalid');
+            errorMessages.push('Please enter a valid 10-digit phone number');
+        } else {
+            phoneInput.classList.remove('is-invalid');
+            phoneInput.classList.add('is-valid');
+        }
+        
+        // Check address
+        if (!addressInput.value || addressInput.value.trim().length < 10) {
+            isValid = false;
+            addressInput.classList.add('is-invalid');
+            errorMessages.push('Please enter a valid delivery address');
+        } else {
+            addressInput.classList.remove('is-invalid');
+            addressInput.classList.add('is-valid');
+        }
+        
+        // Check city
+        if (!cityInput.value || cityInput.value.trim().length < 2) {
+            isValid = false;
+            cityInput.classList.add('is-invalid');
+            errorMessages.push('Please enter your city');
+        } else {
+            cityInput.classList.remove('is-invalid');
+            cityInput.classList.add('is-valid');
+        }
+        
+        // Check native form validity
+        if (!form.checkValidity() || !isValid) {
             e.preventDefault();
             e.stopPropagation();
+            
+            // Show errors
+            if (errorMessages.length > 0) {
+                console.error('Form errors:', errorMessages);
+                alert('Please fix the following errors:\n\n• ' + errorMessages.join('\n• '));
+            }
+            return false;
         }
-        form.classList.add('was-validated');
     }, false);
 });
 
