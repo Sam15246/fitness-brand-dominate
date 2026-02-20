@@ -16,7 +16,7 @@ services:
     branch: main
     
     # Build and startup
-    buildCommand: pip install -r requirements.txt && python -m flask db upgrade
+    buildCommand: pip install -r requirements.txt && python -m flask db upgrade && python -c "from app.scripts.init_policies import init_policies; init_policies()" && python app/scripts/create_superadmin.py
     startCommand: gunicorn --workers 4 --worker-class sync --timeout 60 wsgi:app
     
     # Environment variables
