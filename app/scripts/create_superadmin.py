@@ -1,8 +1,17 @@
 """
 Create superadmin account if it doesn't exist.
 Designed to be called during deployment.
+Run with: python -m app.scripts.create_superadmin
 """
 import os
+import sys
+from pathlib import Path
+
+# Ensure app module can be imported
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from app import create_app, db
 from app.models import User, UserRole
 
