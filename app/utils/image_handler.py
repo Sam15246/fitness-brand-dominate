@@ -29,12 +29,13 @@ import os
 import uuid
 from pathlib import Path
 from PIL import Image
+from pillow_heif import register_heif_opener
 from werkzeug.utils import secure_filename
 from flask import current_app
 
 # Configuration
-ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp'}
-MAX_FILE_SIZE_MB = 5
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'}
+MAX_FILE_SIZE_MB = 10
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 MAX_IMAGE_WIDTH = 1000
 THUMBNAIL_WIDTH = 300
@@ -64,6 +65,7 @@ class ImageUploadHandler:
     
     def __init__(self):
         """Initialize image handler."""
+        register_heif_opener()
         self.base_path = self._get_base_path()
         self.original_dir = os.path.join(self.base_path, 'static', 'images', 'original')
         self.thumbnail_dir = os.path.join(self.base_path, 'static', 'images', 'thumbnails')

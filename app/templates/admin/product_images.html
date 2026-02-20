@@ -26,8 +26,8 @@
                                 <div id="uploadPlaceholder">
                                     <div style="font-size: 2.5rem; margin-bottom: 1rem;">📸</div>
                                     <p class="mb-1"><strong>Click or drag file</strong></p>
-                                    <p class="text-muted small mb-3">Accepted: JPG, PNG, WebP</p>
-                                    <p class="text-muted small mb-0">Max size: 5MB</p>
+                                    <p class="text-muted small mb-3">Accepted: JPG, PNG, WebP, HEIC</p>
+                                    <p class="text-muted small mb-0">Max size: 10MB</p>
                                 </div>
                                 <div id="uploadProgress" style="display: none;">
                                     <div class="spinner-border mb-2" role="status">
@@ -37,7 +37,7 @@
                                 </div>
                             </div>
                             
-                            <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" style="display: none;">
+                            <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp,.heic,.heif" style="display: none;">
                             
                             <div id="uploadError" class="alert alert-danger mt-3" style="display: none;"></div>
                             
@@ -45,6 +45,7 @@
                                 <ul class="mb-0">
                                     <li>Images resized to max 1000px width</li>
                                     <li>Thumbnails auto-generated (300px)</li>
+                                    <li>Max size 10MB per image</li>
                                     <li>First image set as primary</li>
                                 </ul>
                             </div>
