@@ -72,13 +72,11 @@ class ImageUploadHandler:
     @staticmethod
     def _get_base_path():
         """Get base path for image storage."""
-        # For Flask app, use instance path parent (project root)
+        # For Flask app, use the app root so files are saved under app/static
         if current_app:
-            # Get Flask app root directory
-            return current_app.root_path.replace('/app', '')
-        else:
-            # Fallback: assume script is run from project root
-            return os.getcwd()
+            return current_app.root_path
+        # Fallback: assume script is run from project root and static lives in app/
+        return os.path.join(os.getcwd(), 'app')
     
     def _ensure_directories(self):
         """Create image directories if they don't exist."""

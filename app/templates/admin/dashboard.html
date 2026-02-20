@@ -60,8 +60,10 @@
                 <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary">+ Add Product</a>
                 <a href="{{ url_for('admin.products_list') }}" class="btn btn-outline-secondary">View All Products</a>
                 <a href="{{ url_for('admin.orders_list') }}" class="btn btn-outline-secondary">View All Orders</a>
-                {% if current_user.is_superadmin() %}
+                {% if current_user.is_admin() %}
                     <a href="{{ url_for('admin.policies_list') }}" class="btn btn-outline-secondary">Manage Policies</a>
+                {% endif %}
+                {% if current_user.is_superadmin() %}
                     <a href="{{ url_for('admin.users_list') }}" class="btn btn-outline-secondary">Manage Users</a>
                 {% endif %}
             </div>
@@ -132,6 +134,9 @@
                     <strong>Quick Links:</strong>
                     <a href="{{ url_for('admin.products_list') }}">Products</a> • 
                     <a href="{{ url_for('admin.orders_list') }}">Orders</a>
+                    {% if current_user.is_admin() %}
+                        • <a href="{{ url_for('admin.policies_list') }}">Policies</a>
+                    {% endif %}
                     {% if current_user.is_superadmin() %}
                         • <a href="{{ url_for('admin.users_list') }}">Users</a>
                     {% endif %}
