@@ -125,12 +125,13 @@ class ProductionConfig(Config):
     ✅ Secure session management
     ✅ SECRET_KEY must be set via environment
     ✅ Database URL from environment
+    ✅ SSL enabled for database connections
     
     REQUIREMENTS FOR PRODUCTION:
     1. Set environment variables:
        - FLASK_ENV=production
        - SECRET_KEY (generate: python -c "import secrets; print(secrets.token_hex(32))")
-       - DATABASE_URL (PostgreSQL recommended)
+       - DATABASE_URL (PostgreSQL recommended, will auto-add ?sslmode=require)
     
     2. Use HTTPS (reverse proxy like Nginx)
     
@@ -151,11 +152,13 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     
-    # PostgreSQL for production
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        'DATABASE_URL',
-        'postgresql://user:password@localhost:5432/fitness_brand'
-    )
+    # PostgreSQL for production with SSL enabled for external databases
+    _db_url = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost:5432/fitness_brand')
+    # Auto-add SSL mode for external databases (like Render) that require it
+    if _db_url and '?sslmode=' not in _db_url:
+        SQLALCHEMY_DATABASE_URI = _db_url + '?sslmode=require'
+    else:
+        SQLALCHEMY_DATABASE_URI = _db_url
     
     # WARNING: SECRET_KEY MUST be set in environment
     # Validation moved to __init__ to allow import without requiring env vars

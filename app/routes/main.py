@@ -381,8 +381,9 @@ def about():
 @main_bp.route('/contact')
 def contact():
     """Contact page."""
+    from flask import current_app
     # FUTURE: Email contact form implementation
-    return render_template('public/contact.html')
+    return render_template('public/contact.html', whatsapp_number=current_app.config['WHATSAPP_NUMBER'])
 
 
 @main_bp.route('/shipping')
