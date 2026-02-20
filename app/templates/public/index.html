@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-page{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">Handmade Calisthenics Gear</h1>
+                <p class="lead text-muted mb-4">Premium equipment crafted by athletes, for athletes. Every piece is handmade with precision using premium materials to help you dominate your training.</p>
+                <a href="#products" class="btn btn-primary btn-lg me-2">View Products</a>
+                <a href="{{ url_for('main.about') }}" class="btn btn-outline-secondary btn-lg">Learn More</a>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-image">
+                    <img src="{{ url_for('static', filename='images/dominate-parallettes.jpg') }}" alt="Premium wooden parallettes" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Products Section -->
+<section id="products" class="py-5">
+    <div class="container">
+        <div class="mb-4">
+            <p class="section-kicker mb-2">Featured drops</p>
+            <h2 class="fw-bold mb-2">Our Collection</h2>
+            <p class="text-muted mb-0">Crafted in small batches. Built for daily training.</p>
+        </div>
+
+        {% if featured_products %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for product in featured_products %}
+                    <div class="col">
+                        <div class="product-card h-100">
+                            {% set primary_image = product.get_primary_image() %}
+                            {% if primary_image %}
+                                {% set thumb_path = primary_image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
+                                <img src="{{ url_for('static', filename=thumb_path) }}" class="card-img-top" alt="{{ product.name }}">
+                            {% elif product.image_url %}
+                                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                            {% else %}
+                                <div class="placeholder-product-image">
+                                    <svg width="100%" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="300" height="250" fill="#E8DCC8"/>
+                                        <text x="150" y="125" text-anchor="middle" dy=".3em" font-size="14" fill="#8B6F47">{{ product.name }}</text>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title fw-bold">{{ product.name }}</h5>
+                                <p class="card-text text-muted flex-grow-1">{{ product.description[:80] }}...</p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="price fw-bold">{{ product.get_price_display() }}</span>
+                                    {% if product.stock_quantity == 0 %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-2 mt-auto">
+                                    <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-outline-secondary btn-sm flex-grow-1">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state text-center py-5">
+                <p class="text-muted mb-2">No products yet.</p>
+                <p class="small text-muted">Please check back soon.</p>
+            </div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('main.products') }}" class="btn btn-primary">Explore the full catalog</a>
+        </div>
+    </div>
+</section>
+
+<section class="cta-banner">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <p class="section-kicker mb-2">All products</p>
+                <h3 class="fw-bold mb-2">See the full DOMINATE collection</h3>
+                <p class="text-muted mb-0">New drops, restocks, and limited pieces in one place.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="{{ url_for('main.products') }}" class="btn btn-outline-secondary btn-lg">Browse all products</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">Why Choose DOMINATE</h2>
+            <p class="text-muted">We're committed to delivering equipment that matches your dedication</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3 text-center">
+                <div class="p-4">
+                    <div class="mb-3" style="font-size: 2.5rem;">🔨</div>
+                    <h5 class="fw-bold mb-2">Handcrafted Quality</h5>
+                    <p class="text-muted small">Each piece is individually crafted with meticulous attention to detail. No mass production.</p>
+                </div>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="p-4">
+                    <div class="mb-3" style="font-size: 2.5rem;">🌲</div>
+                    <h5 class="fw-bold mb-2">Premium Materials</h5>
+                    <p class="text-muted small">We source only the finest hardwoods and materials. Quality you can feel.</p>
+                </div>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="p-4">
+                    <div class="mb-3" style="font-size: 2.5rem;">💪</div>
+                    <h5 class="fw-bold mb-2">Athlete Tested</h5>
+                    <p class="text-muted small">Designed and tested by real calisthenics athletes for maximum performance.</p>
+                </div>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="p-4">
+                    <div class="mb-3" style="font-size: 2.5rem;">🇮🇳</div>
+                    <h5 class="fw-bold mb-2">Made in India</h5>
+                    <p class="text-muted small">Proudly crafted in India. Supporting local artisans and sustainable practices.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-light-secondary">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">How It Works</h2>
+            <p class="text-muted">Simple, transparent ordering process</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="fw-bold" style="font-size: 1.5rem; color: #8B6F47;">1</span>
+                    </div>
+                    <h5 class="fw-bold mb-2">Browse & Order</h5>
+                    <p class="text-muted small">Explore our collection and place your order. Guest checkout available - no account needed!</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="fw-bold" style="font-size: 1.5rem; color: #8B6F47;">2</span>
+                    </div>
+                    <h5 class="fw-bold mb-2">We Craft Your Gear</h5>
+                    <p class="text-muted small">Each order is handcrafted fresh. We'll keep you updated on your order status.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4">
+                    <div class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="fw-bold" style="font-size: 1.5rem; color: #8B6F47;">3</span>
+                    </div>
+                    <h5 class="fw-bold mb-2">Delivered to You</h5>
+                    <p class="text-muted small">Fast pan-India shipping with tracking. Start dominating your training!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light-secondary">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <h2 class="fw-bold mb-4">Built to Last, Designed to Perform</h2>
+                <div class="mb-4">
+                    <h5 class="fw-bold mb-2">✓ Premium Hardwood</h5>
+                    <p class="text-muted">Every piece is crafted from carefully selected hardwood, ensuring durability and a natural, comfortable grip.</p>
+                </div>
+                <div class="mb-4">
+                    <h5 class="fw-bold mb-2">✓ Smooth Finish</h5>
+                    <p class="text-muted">Hand-sanded and finished to perfection. No splinters, just smooth performance.</p>
+                </div>
+                <div class="mb-4">
+                    <h5 class="fw-bold mb-2">✓ Minimal Design</h5>
+                    <p class="text-muted">Clean, functional forms without unnecessary frills. Focus on what matters - your training.</p>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-2">✓ Tested by Athletes</h5>
+                    <p class="text-muted">Every design is tested by experienced calisthenics practitioners to ensure optimal performance.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-white p-4 rounded shadow-sm text-center">
+                    <h4 class="fw-bold mb-3">Join Our Community</h4>
+                    <p class="text-muted mb-4">Love our products? Become an affiliate and earn commission on every sale you refer!</p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('main.contact') }}" class="btn btn-primary">Contact Us to Partner</a>
+                        <p class="small text-muted mb-0">Earn up to 15% commission on referrals</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center py-5">
+            <h2 class="fw-bold mb-3">Ready to Elevate Your Training?</h2>
+            <p class="text-muted mb-4">Browse our collection and experience the difference quality equipment makes</p>
+            <a href="#products" class="btn btn-primary btn-lg">Shop Now</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

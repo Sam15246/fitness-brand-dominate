@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - DOMINATE{% endblock %}
+
+{% block body_class %}public-page{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="product-header mb-4">
+        <p class="section-kicker mb-2">Crafted for performance</p>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge badge-soft">Handmade</span>
+            <span class="badge badge-soft">Premium hardwood</span>
+            <span class="badge badge-soft">Small-batch</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            {% set product_images = product.get_all_images() %}
+            {% if product_images %}
+                <!-- Main Image Display -->
+                <div class="mb-3">
+                    {% set primary_image = product.get_primary_image() %}
+                    {% set main_path = primary_image.image_path.replace('\\', '/').replace('static/', '') %}
+                    <img id="mainProductImage" 
+                         src="{{ url_for('static', filename=main_path) }}" 
+                         alt="{{ product.name }}" 
+                         class="img-fluid rounded" 
+                         style="width: 100%; height: auto; max-height: 500px; object-fit: cover;">
+                </div>
+                
+                <!-- Thumbnail Gallery -->
+                {% if product_images|length > 1 %}
+                <div class="d-flex gap-2 flex-wrap">
+                    {% for image in product_images %}
+                    <div class="thumbnail-wrapper" style="cursor: pointer;">
+                        {% set thumb_path = image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
+                        {% set full_path = image.image_path.replace('\\', '/').replace('static/', '') %}
+                        <img src="{{ url_for('static', filename=thumb_path) }}" 
+                             alt="{{ product.name }}" 
+                             class="img-thumbnail {% if image.is_primary %}border-primary border-2{% endif %}"
+                             style="width: 80px; height: 80px; object-fit: cover;"
+                             onclick="changeMainImage('{{ url_for('static', filename=full_path) }}', this)">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% elif product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-fluid rounded">
+            {% else %}
+                <div class="placeholder-product-image-large">
+                    <svg width="100%" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="500" height="500" fill="#E8DCC8"/>
+                        <text x="250" y="250" text-anchor="middle" dy=".3em" font-size="20" fill="#8B6F47">{{ product.name }}</text>
+                    </svg>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-6">
+            <h1 class="fw-bold mb-3">{{ product.name }}</h1>
+
+            <div class="mb-4">
+                <span class="price-large fw-bold">{{ product.get_price_display() }}</span>
+                <div class="mt-2">
+                    {% if product.stock_quantity > 0 %}
+                        <span class="badge bg-success">In Stock ({{ product.stock_quantity }} available)</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Out of Stock</span>
+                    {% endif %}
+                </div>
+                <div class="trust-badges mt-3">
+                    <span>✓ Handcrafted finish</span>
+                    <span>✓ Pan-India delivery</span>
+                    <span>✓ WhatsApp support</span>
+                </div>
+            </div>
+
+            <div class="product-description mb-4">
+                <h5 class="fw-bold mb-3">Description</h5>
+                <p class="text-muted">{{ product.description }}</p>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3">Stock Information</h5>
+                <p class="text-muted">
+                    {% if product.stock_quantity > 0 %}
+                        {{ product.stock_quantity }} items in stock
+                    {% else %}
+                        This product is currently out of stock. Please check back soon.
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if product.stock_quantity > 0 %}
+                <form method="GET" action="{{ url_for('main.order_start', product_id=product.id) }}" class="mb-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-4">
+                            <label class="form-label mb-1" for="qty">Quantity</label>
+                            <input id="qty" name="qty" type="number" class="form-control" value="1" min="1" max="{{ product.stock_quantity }}" required>
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label mb-1 d-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary btn-lg w-100">Order Now</button>
+                        </div>
+                    </div>
+                </form>
+            {% else %}
+                <button class="btn btn-secondary btn-lg w-100 mb-3" disabled>
+                    Out of Stock
+                </button>
+            {% endif %}
+
+            <a href="{{ url_for('main.products') }}" class="btn btn-outline-secondary btn-lg w-100">
+                Back to Products
+            </a>
+        </div>
+    </div>
+
+    <!-- Related Products Section -->
+    <div class="mt-5 pt-5 border-top">
+        <h4 class="fw-bold mb-4">More Products</h4>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for other_product in related_products %}
+                <div class="col">
+                    <div class="product-card h-100">
+                        <a href="{{ url_for('main.product_detail', slug=other_product.slug) }}" class="text-decoration-none">
+                            {% set other_primary_image = other_product.get_primary_image() %}
+                            {% if other_primary_image %}
+                                {% set other_thumb_path = other_primary_image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
+                                <img src="{{ url_for('static', filename=other_thumb_path) }}" class="card-img-top" alt="{{ other_product.name }}">
+                            {% elif other_product.image_url %}
+                                <img src="{{ other_product.image_url }}" class="card-img-top" alt="{{ other_product.name }}">
+                            {% else %}
+                                <div class="placeholder-product-image">
+                                    <svg width="100%" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="300" height="250" fill="#E8DCC8"/>
+                                        <text x="150" y="125" text-anchor="middle" dy=".3em" font-size="14" fill="#8B6F47">{{ other_product.name }}</text>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">
+                                <a href="{{ url_for('main.product_detail', slug=other_product.slug) }}" class="text-decoration-none">
+                                    {{ other_product.name }}
+                                </a>
+                            </h5>
+                            <p class="card-text text-muted">{{ other_product.get_price_display() }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Change the main product image when thumbnail is clicked
+ * @param {string} imagePath - Full path to the image
+ * @param {HTMLElement} thumbnail - The clicked thumbnail element
+ */
+function changeMainImage(imagePath, thumbnail) {
+    // Update the main image src
+    document.getElementById('mainProductImage').src = imagePath;
+    
+    // Remove border from all thumbnails
+    document.querySelectorAll('.thumbnail-wrapper img').forEach(img => {
+        img.classList.remove('border-primary', 'border-2');
+        img.classList.add('border-secondary');
+    });
+    
+    // Add border to clicked thumbnail
+    thumbnail.classList.remove('border-secondary');
+    thumbnail.classList.add('border-primary', 'border-2');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+<!-- Admin Navigation Tabs -->
+<div class="admin-tabs mb-4">
+    <a href="{{ url_for('admin.dashboard') }}" class="admin-tab {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        Dashboard
+    </a>
+    <a href="{{ url_for('admin.products_list') }}" class="admin-tab {% if request.endpoint in ['admin.products_list', 'admin.add_product', 'admin.edit_product', 'admin.manage_product_images'] %}active{% endif %}">
+        Products
+    </a>
+    <a href="{{ url_for('admin.orders_list') }}" class="admin-tab {% if request.endpoint in ['admin.orders_list', 'admin.view_order'] %}active{% endif %}">
+        Orders
+    </a>
+    <a href="{{ url_for('admin.commissions_list') }}" class="admin-tab {% if request.endpoint in ['admin.commissions_list'] %}active{% endif %}">
+        Commissions
+    </a>
+    <a href="{{ url_for('admin.affiliates_list') }}" class="admin-tab {% if request.endpoint in ['admin.affiliates_list'] %}active{% endif %}">
+        Affiliates
+    </a>
+    {% if current_user.is_superadmin() %}
+        <a href="{{ url_for('admin.policies_list') }}" class="admin-tab {% if request.endpoint in ['admin.policies_list', 'admin.edit_policy'] %}active{% endif %}">
+            Policies
+        </a>
+        <a href="{{ url_for('admin.users_list') }}" class="admin-tab {% if request.endpoint == 'admin.users_list' %}active{% endif %}">
+            Users
+        </a>
+    {% endif %}
+</div>

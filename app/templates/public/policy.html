@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ policy.title }} - DOMINATE{% endblock %}
+
+{% block body_class %}public-page{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container py-4 py-md-5">
+        <p class="section-kicker mb-2">Our Policies</p>
+        <h1 class="display-6 fw-bold mb-2">{{ policy.title }}</h1>
+        <p class="text-muted mb-0">Last updated: {{ policy.updated_at.strftime('%B %d, %Y') }}</p>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="policy-content">
+                {{ policy.content | safe }}
+            </div>
+            
+            <hr class="my-5">
+            
+            <!-- Policy Navigation -->
+            <div class="row g-3 mt-4">
+                <div class="col-md-6">
+                    <a href="{{ url_for('main.shipping') }}" class="card h-100 text-decoration-none text-dark border-0 shadow-sm policy-nav-card">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold mb-2">Shipping Policy</h6>
+                            <p class="card-text text-muted small">Delivery timelines, charges, and courier information</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="{{ url_for('main.returns') }}" class="card h-100 text-decoration-none text-dark border-0 shadow-sm policy-nav-card">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold mb-2">Returns & Refunds</h6>
+                            <p class="card-text text-muted small">30-day return window and refund process</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="{{ url_for('main.terms') }}" class="card h-100 text-decoration-none text-dark border-0 shadow-sm policy-nav-card">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold mb-2">Terms & Conditions</h6>
+                            <p class="card-text text-muted small">Usage terms, disclaimers, and limitations</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="{{ url_for('main.privacy') }}" class="card h-100 text-decoration-none text-dark border-0 shadow-sm policy-nav-card">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold mb-2">Privacy Policy</h6>
+                            <p class="card-text text-muted small">Data collection, usage, and protection</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.policy-content {
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+.policy-content h1,
+.policy-content h2,
+.policy-content h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.policy-content h1 {
+    font-size: 1.75rem;
+}
+
+.policy-content h2 {
+    font-size: 1.5rem;
+}
+
+.policy-content h3 {
+    font-size: 1.25rem;
+}
+
+.policy-content p {
+    margin-bottom: 1rem;
+}
+
+.policy-content ul,
+.policy-content ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.policy-content li {
+    margin-bottom: 0.5rem;
+}
+
+.policy-content a {
+    color: #d4a574;
+    text-decoration: none;
+    border-bottom: 1px solid #d4a574;
+}
+
+.policy-content a:hover {
+    color: #c99660;
+    border-bottom-color: #c99660;
+}
+
+.policy-nav-card {
+    transition: all 0.3s ease;
+}
+
+.policy-nav-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Mobile optimization */
+@media (max-width: 576px) {
+    .policy-content {
+        font-size: 0.95rem;
+    }
+    
+    .policy-content h2 {
+        font-size: 1.25rem;
+    }
+    
+    .policy-content h3 {
+        font-size: 1.1rem;
+    }
+}
+</style>
+{% endblock %}

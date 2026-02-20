@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{% if product %}Edit{% else %}Add{% endif %} Product - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="fw-bold mb-4">
+                {% if product %}
+                    Edit Product: {{ product.name }}
+                {% else %}
+                    Add New Product
+                {% endif %}
+            </h2>
+
+            <form method="POST" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Product Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ product.name if product else '' }}" required>
+                    <div class="form-text">e.g., Premium Parallettes</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" required>{{ product.description if product else '' }}</textarea>
+                    <div class="form-text">Detailed product description for customers</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label">Price (₹)</label>
+                        <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{% if product %}{{ product.get_price_formatted() }}{% endif %}" required>
+                        <div class="form-text">Price in Indian Rupees</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="stock_quantity" class="form-label">Stock Quantity</label>
+                        <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" min="0" value="{{ product.stock_quantity if product else '0' }}" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="weight_grams" class="form-label">Weight (grams) *</label>
+                        <input type="number" class="form-control" id="weight_grams" name="weight_grams" min="1" value="{{ product.weight_grams if product else '' }}" required>
+                        <div class="form-text">Product weight in grams (e.g., 800)</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="dimensions" class="form-label">Dimensions (optional)</label>
+                        <input type="text" class="form-control" id="dimensions" name="dimensions" value="{{ product.dimensions if product else '' }}" placeholder="e.g., 30x15x12 cm">
+                        <div class="form-text">Format: Length x Width x Height in cm</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="image_url" class="form-label">Image URL (Optional)</label>
+                    <input type="url" class="form-control" id="image_url" name="image_url" value="{{ product.image_url if product else '' }}">
+                    <div class="form-text">Complete URL to product image</div>
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if product and product.is_active %}checked{% elif not product %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active">
+                        Active (visible to customers)
+                    </label>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        {% if product %}Update Product{% else %}Add Product{% endif %}
+                    </button>
+                    <a href="{{ url_for('admin.products_list') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            let forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

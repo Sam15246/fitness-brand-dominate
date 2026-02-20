@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Login - DOMINATE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <!-- Toggle Buttons -->
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="DOMINATE" height="50" class="mb-3">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="loginTabBtn" onclick="showLogin()">Login</button>
+                            <button type="button" class="btn btn-outline-primary" id="registerTabBtn" onclick="showRegister()">Register</button>
+                        </div>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div id="loginForm">
+                        <h3 class="fw-bold text-center mb-4">Welcome Back</h3>
+                        <form method="POST" action="{{ url_for('auth.login') }}">
+                            <div class="mb-3">
+                                <label for="login_email" class="form-label fw-bold">Email Address</label>
+                                <input type="email" class="form-control" id="login_email" name="email" required autofocus>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="login_password" class="form-label fw-bold">Password</label>
+                                <input type="password" class="form-control" id="login_password" name="password" required>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                                <label class="form-check-label" for="remember">
+                                    Remember me
+                                </label>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+                            </div>
+
+                            <div class="text-center">
+                                <p class="text-muted mb-0 small">
+                                    Don't have an account? 
+                                    <a href="javascript:void(0)" onclick="showRegister()" class="text-decoration-none fw-bold">Create one</a>
+                                </p>
+                            </div>
+                        </form>
+
+                        <div class="alert alert-info mt-4 mb-0">
+                            <strong>Demo Credentials:</strong>
+                            <ul class="mb-0 mt-2 small">
+                                <li>Email: admin@dominate.com</li>
+                                <li>Password: admin123</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="registerForm" style="display: none;">
+                        <h3 class="fw-bold text-center mb-4">Create Account</h3>
+                        <form method="POST" action="{{ url_for('auth.register') }}">
+                            <div class="mb-3">
+                                <label for="register_name" class="form-label fw-bold">Full Name</label>
+                                <input type="text" class="form-control" id="register_name" name="name" 
+                                       placeholder="Enter your full name" required minlength="3">
+                                <div class="form-text">At least 3 characters</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="register_email" class="form-label fw-bold">Email Address</label>
+                                <input type="email" class="form-control" id="register_email" name="email" 
+                                       placeholder="your@email.com" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="register_password" class="form-label fw-bold">Password</label>
+                                <input type="password" class="form-control" id="register_password" name="password" 
+                                       placeholder="Create a strong password" required minlength="6">
+                                <div class="form-text">At least 6 characters</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="register_confirm_password" class="form-label fw-bold">Confirm Password</label>
+                                <input type="password" class="form-control" id="register_confirm_password" name="confirm_password" 
+                                       placeholder="Re-enter your password" required>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+                            </div>
+
+                            <div class="text-center">
+                                <p class="text-muted mb-0 small">
+                                    Already have an account? 
+                                    <a href="javascript:void(0)" onclick="showLogin()" class="text-decoration-none fw-bold">Login here</a>
+                                </p>
+                            </div>
+                        </form>
+
+                        <div class="mt-4 pt-4 border-top">
+                            <p class="text-muted small text-center mb-2"><strong>Benefits of Creating Account:</strong></p>
+                            <ul class="list-unstyled text-muted small mb-0">
+                                <li>✓ Track your orders</li>
+                                <li>✓ View order history</li>
+                                <li>✓ Faster checkout</li>
+                                <li>✓ Become an affiliate partner</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <a href="{{ url_for('main.index') }}" class="text-decoration-none text-muted">← Back to Shop</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLogin() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginTabBtn').classList.add('active');
+    document.getElementById('registerTabBtn').classList.remove('active');
+}
+
+function showRegister() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('loginTabBtn').classList.remove('active');
+    document.getElementById('registerTabBtn').classList.add('active');
+}
+</script>
+{% endblock %}

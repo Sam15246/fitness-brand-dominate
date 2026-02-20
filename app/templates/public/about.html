@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - DOMINATE{% endblock %}
+
+{% block body_class %}public-page{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container py-5">
+        <p class="section-kicker mb-2">Our story</p>
+        <h1 class="display-5 fw-bold mb-3">About DOMINATE</h1>
+        <p class="lead text-muted mb-0">Handmade calisthenics gear built for athletes who demand precision.</p>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="about-content content-card">
+                <h3 class="fw-bold mt-4 mb-3">Our Mission</h3>
+                <p class="text-muted">
+                    We are dedicated to providing high-quality, handmade calisthenics equipment for athletes who demand excellence. 
+                    Every piece is crafted with precision and care to ensure durability and performance.
+                </p>
+
+                <h3 class="fw-bold mt-4 mb-3">Why Choose Us?</h3>
+                <ul class="text-muted">
+                    <li><strong>Handmade Quality:</strong> Each piece is individually crafted with attention to detail</li>
+                    <li><strong>Premium Materials:</strong> We use only the best materials available</li>
+                    <li><strong>Performance Tested:</strong> All equipment is tested by real athletes</li>
+                    <li><strong>Customer Support:</strong> Direct communication via WhatsApp</li>
+                </ul>
+
+                <h3 class="fw-bold mt-4 mb-3">Our Story</h3>
+                <p class="text-muted">
+                    Founded by a group of calisthenics enthusiasts, DOMINATE started with a simple mission: 
+                    create premium equipment that athletes deserve. What started as a passion project has grown into 
+                    a trusted brand for serious athletes.
+                </p>
+
+                <h3 class="fw-bold mt-4 mb-3">Our Promise</h3>
+                <p class="text-muted">
+                    We promise to maintain the highest standards of quality, provide exceptional customer service, 
+                    and continuously innovate to meet the needs of our growing community.
+                </p>
+            </div>
+
+            <div class="mt-5 pt-4 border-top">
+                <h3 class="fw-bold mb-3">Get in Touch</h3>
+                <p class="text-muted">Have questions? We'd love to hear from you!</p>
+                <a href="{{ url_for('main.contact') }}" class="btn btn-primary">Contact Us</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

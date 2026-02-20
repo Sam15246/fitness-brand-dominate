@@ -1,0 +1,72 @@
+# Render.com Infrastructure as Code Configuration
+# Deploy this by pushing to your Git repository
+# Render automatically detects render.yaml and creates services
+
+services:
+  # Main Web Application
+  - type: web
+    name: dominate-app
+    runtime: python
+    pythonVersion: "3.11"
+    plan: standard
+    region: singapore
+    
+    # Source code
+    repo: https://github.com/your-username/dominate-ecommerce.git  # Update with your repo
+    branch: main
+    
+    # Build and startup
+    buildCommand: pip install -r requirements.txt && python -m flask db upgrade
+    startCommand: gunicorn --workers 4 --worker-class sync --timeout 60 wsgi:app
+    
+    # Environment variables
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    
+    # Health check
+    healthCheckPath: /
+    healthCheckStartupFailureThresholdCount: 10
+    
+    # Auto-deploy on Git push
+    autoDeploy: true
+    
+    # Database connection
+    databases:
+      - name: dominate-db
+
+databases:
+  # PostgreSQL Database
+  - name: dominate-db
+    databaseName: dominate
+    user: postgres
+    plan: free  # Change to 'standard' for production
+    region: singapore
+    version: 15
+
+# Environment variable groups (reference in services above)
+envGroups:
+  - name: production-env
+    environments:
+      staging:
+        envVars:
+          - key: FLASK_ENV
+            value: staging
+          - key: DEBUG
+            value: "False"
+      production:
+        envVars:
+          - key: FLASK_ENV
+            value: production
+          - key: DEBUG
+            value: "False"
+
+# Cron jobs (optional, for future use)
+# cronJobs:
+#   - name: cleanup-old-images
+#     schedule: "0 2 * * *"  # Daily at 2 AM
+#     command: python -m scripts.cleanup_images

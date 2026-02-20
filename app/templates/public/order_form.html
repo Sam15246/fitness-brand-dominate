@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Order {{ product.name }} - DOMINATE{% endblock %}
+
+{% block body_class %}public-page{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+    <div class="container py-4 py-md-5">
+        <p class="section-kicker mb-2">Checkout</p>
+        <h1 class="display-6 fw-bold mb-2">Secure your gear</h1>
+        <p class="text-muted mb-0">Complete your details and we'll confirm via WhatsApp.</p>
+    </div>
+</section>
+
+<div class="container py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            
+            <!-- Checkout Header -->
+            <div class="mb-5">
+                {% if current_user.is_authenticated %}
+                    <p class="text-muted small">Ordering as: <strong>{{ current_user.name }}</strong></p>
+                    <h2 class="fw-bold">Complete Your Order</h2>
+                {% else %}
+                    <p class="text-muted small">Guest Checkout</p>
+                    <h2 class="fw-bold">Complete Your Order</h2>
+                {% endif %}
+            </div>
+
+            <!-- Product Summary Card -->
+            <div class="card border-0 mb-4 bg-light order-summary-card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Order Summary</h6>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ product.name }}</h5>
+                            <p class="text-muted small mb-0">{{ product.description[:80] }}...</p>
+                        </div>
+                        <p class="fw-bold text-color-primary fs-5 mb-0">{{ product.get_price_display() }}</p>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between">
+                        <p class="mb-0 small">Price per unit</p>
+                        <p class="mb-0 small fw-bold">{{ product.get_price_display() }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Form -->
+            <form method="POST" class="order-form" novalidate>
+                
+                <!-- Contact Information Section -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3 text-uppercase text-muted">Contact Information</h6>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ current_user.name if current_user.is_authenticated else '' }}"
+                               placeholder="Enter your full name" required>
+                        <div class="form-text">We'll use this for your order receipt</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="phone" name="phone" 
+                               value="{{ current_user.phone if current_user.is_authenticated and current_user.phone else '' }}"
+                               placeholder="+91 XXXXX XXXXX" required>
+                        <div class="form-text">We'll WhatsApp you order confirmation</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ current_user.email if current_user.is_authenticated else '' }}"
+                               placeholder="your@email.com" required>
+                        <div class="form-text">For order receipt and updates</div>
+                    </div>
+                </div>
+
+                <!-- Delivery Information Section -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3 text-uppercase text-muted">Delivery Information</h6>
+                    
+                    <div class="mb-3">
+                        <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="city" name="city" 
+                               placeholder="Your city" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Delivery Address <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="address" name="address" rows="3" 
+                                  placeholder="Street address, apartment, etc." required></textarea>
+                        <div class="form-text">Expected delivery: 5-7 business days</div>
+                    </div>
+                </div>
+
+                <!-- Quantity Section -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3 text-uppercase text-muted">Order Details</h6>
+                    
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="number" class="form-control" id="quantity" name="quantity" 
+                                   value="{{ qty_default or 1 }}" min="1" max="{{ product.stock_quantity }}" 
+                                   style="max-width: 100px;" required>
+                            <span class="text-muted small">Stock available: {{ product.stock_quantity }} units</span>
+                        </div>
+                    </div>
+
+                    <!-- Total Price Display -->
+                    <div class="card border-0 bg-light">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <p class="mb-0 fw-bold">Total Amount</p>
+                            <p class="mb-0 fs-5 fw-bold text-color-primary" id="total-price">
+                                {{ product.get_price_display() }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Marketing Opt-in -->
+                <div class="mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="email_opt_in" name="email_opt_in">
+                        <label class="form-check-label" for="email_opt_in">
+                            <span class="small">I agree to receive product updates and special offers</span>
+                        </label>
+                    </div>
+                    <div class="form-text small">We respect your inbox. Unsubscribe anytime.</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-lg btn-primary">
+                        <strong>Place Order & WhatsApp Confirmation</strong>
+                    </button>
+                    <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-outline-secondary">
+                        Back to Product
+                    </a>
+                </div>
+
+                <!-- Trust Indicators -->
+                <div class="trust-badges mt-4">
+                    <span>✓ Secure checkout</span>
+                    <span>✓ No charges yet</span>
+                    <span>✓ Quick WhatsApp confirmation</span>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- Scripts for dynamic pricing -->
+<script>
+document.getElementById('quantity').addEventListener('change', function() {
+    const quantity = parseInt(this.value) || 1;
+    const price = {{ product.price }};  {# Price in paise #}
+    const totalPaise = price * quantity;
+    const totalRupees = totalPaise / 100;
+    
+    document.getElementById('total-price').textContent = '₹' + totalRupees.toFixed(2);
+});
+</script>
+
+{% endblock %}

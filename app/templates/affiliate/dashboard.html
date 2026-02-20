@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Affiliate Dashboard - DOMINATE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">Affiliate Dashboard</h2>
+    <p class="lead">Welcome, {{ current_user.name }}! Track your referrals and earnings here.</p>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="display-5 fw-bold text-success">{{ affiliate.get_wallet_balance_display() }}</h3>
+                    <p class="text-muted">Wallet Balance</p>
+                    <small class="text-muted">Available for redemption</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="display-5 fw-bold text-primary">{{ affiliate.get_total_earned_display() }}</h3>
+                    <p class="text-muted">Total Earned</p>
+                    <small class="text-muted">All-time earnings</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="display-5 fw-bold">{{ total_referrals }}</h3>
+                    <p class="text-muted">Total Referrals</p>
+                    <small class="text-muted">Successful orders</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="display-5 fw-bold text-warning">{{ affiliate.get_pending_commission_display() }}</h3>
+                    <p class="text-muted">Pending Commission</p>
+                    <small class="text-muted">Awaiting approval</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Affiliate Info -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="fw-bold mb-0">Your Affiliate Code</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Code:</strong> <span class="badge bg-primary fs-5">{{ affiliate.affiliate_code }}</span></p>
+                    <p><strong>Commission Rate:</strong> {{ affiliate.commission_percent }}%</p>
+                    <p class="text-muted mb-0">Share your code with friends and earn {{ affiliate.commission_percent }}% commission on every purchase!</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="fw-bold mb-0">Your Referral Link</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="{{ referral_link }}" id="referralLink" readonly>
+                        <button class="btn btn-primary" type="button" onclick="copyLink()">Copy</button>
+                    </div>
+                    <p class="text-muted mb-0">
+                        <small>Share this link on social media, blogs, or with friends. Anyone who orders using your link will be tracked automatically!</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Referrals -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="fw-bold mb-0">Recent Referral Orders</h5>
+        </div>
+        <div class="card-body">
+            {% if recent_orders %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Order Amount</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+                            <td>{{ order.product.name }}</td>
+                            <td>{{ order.get_total_price_display() }}</td>
+                            <td class="fw-bold">{{ order.get_commission_amount_display() }}</td>
+                            <td>
+                                <span class="badge {% if order.commission_status == 'approved' %}bg-success{% elif order.commission_status == 'rejected' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ order.commission_status.upper() }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-4">
+                <p>No referral orders yet. Start sharing your referral link to earn commissions!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Help Section -->
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="fw-bold mb-0">How It Works</h5>
+        </div>
+        <div class="card-body">
+            <ol>
+                <li class="mb-2"><strong>Share your referral link</strong> with friends, followers, or on social media</li>
+                <li class="mb-2"><strong>When someone orders</strong> using your link, you earn {{ affiliate.commission_percent }}% commission</li>
+                <li class="mb-2"><strong>Commission is pending</strong> until the order is confirmed by our team</li>
+                <li class="mb-2"><strong>Once approved</strong>, the commission is added to your wallet balance</li>
+                <li class="mb-2"><strong>Use your wallet balance</strong> to place orders on our store (no cash withdrawals)</li>
+            </ol>
+            <div class="alert alert-info">
+                <strong>Note:</strong> You cannot use your own referral code. Commission is earned as store credit only.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyLink() {
+    const link = document.getElementById('referralLink');
+    link.select();
+    link.setSelectionRange(0, 99999); // For mobile devices
+    document.execCommand('copy');
+    
+    // Show confirmation
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-primary');
+    }, 2000);
+}
+</script>
+{% endblock %}
