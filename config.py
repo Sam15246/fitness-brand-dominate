@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from pathlib import Path
 from datetime import timedelta
 
@@ -154,11 +155,17 @@ class ProductionConfig(Config):
     
     # PostgreSQL for production with SSL enabled for external databases
     _db_url = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost:5432/fitness_brand')
-    # Auto-add SSL mode for external databases (like Render) that require it
-    if _db_url and '?sslmode=' not in _db_url:
-        SQLALCHEMY_DATABASE_URI = _db_url + '?sslmode=require'
-    else:
-        SQLALCHEMY_DATABASE_URI = _db_url
+    # Auto-add sslmode=require even when the URL already has query parameters
+    if _db_url:
+        parsed = urlparse(_db_url)
+        query = parse_qs(parsed.query)
+        if 'sslmode' not in query:
+            query['sslmode'] = ['require']
+            SQLALCHEMY_DATABASE_URI = urlunparse(
+                parsed._replace(query=urlencode(query, doseq=True))
+            )
+        else:
+            SQLALCHEMY_DATABASE_URI = _db_url
     
     # WARNING: SECRET_KEY MUST be set in environment
     # Validation moved to __init__ to allow import without requiring env vars
