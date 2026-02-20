@@ -335,13 +335,19 @@ class OrderManager:
         Args:
             product_id: Product ID
             quantity: Order quantity
-            customer_data: Dict with name, phone, email, address, city
+            customer_data: Dict with name, phone, email, address, city, state, pincode
             affiliate_code: Optional affiliate referral code
             user_id: Optional user ID (for registered users)
             
         Returns:
             tuple: (Order or None, str message)
         """
+        # Validate required customer data fields (CRITICAL for database integrity)
+        required_fields = ['name', 'phone', 'email', 'address', 'city', 'state', 'pincode']
+        for field in required_fields:
+            if field not in customer_data or not customer_data[field] or (isinstance(customer_data[field], str) and customer_data[field].strip() == ''):
+                return None, f'Missing required field: {field}'
+        
         # Validate product availability
         available, msg = StockManager.check_availability(product_id, quantity)
         if not available:
@@ -373,7 +379,7 @@ class OrderManager:
         while Order.query.filter_by(order_number=order_number).first():
             order_number = f'ORD{datetime.utcnow().strftime("%Y%m%d")}{random.randint(1000, 9999)}'
         
-        # Create order
+        # Create order with all required fields
         order = Order(
             order_number=order_number,
             user_id=user_id,
@@ -386,6 +392,8 @@ class OrderManager:
             guest_email=customer_data['email'],
             address=customer_data['address'],
             city=customer_data['city'],
+            state=customer_data['state'],  # REQUIRED - no longer optional
+            pincode=customer_data['pincode'],  # REQUIRED - no longer optional
             status=OrderStatus.PENDING.value,
             shipping_status=ShippingStatus.PENDING.value,
             commission_amount=0,  # Calculated on confirmation
