@@ -32,7 +32,7 @@ def create_superadmin():
         # Check if user already exists
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            print(f'ℹ️  Superadmin user exists: {email}')
+            print(f'ℹ️  Superadmin user exists')
             return
         
         # Create superadmin user
@@ -47,7 +47,7 @@ def create_superadmin():
         db.session.add(superadmin)
         db.session.commit()
         
-        print(f'✅ Superadmin created successfully: {email}')
+        print(f'✅ Superadmin created successfully')
 
 
 if __name__ == '__main__':

@@ -52,7 +52,7 @@ class Config:
     WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '919876543210')
 
     # Social Links
-    INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://instagram.com/yourbrand')
+    INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/dominate.cali')
     
     # FUTURE SECURITY FEATURES (Structure for easy addition)
     # Rate Limiting
@@ -178,6 +178,11 @@ class ProductionConfig(Config):
     
     # Never echo SQL in production
     SQLALCHEMY_ECHO = False
+
+    SQLALCHEMY_ENGINE_OPTIONS = {
+    "pool_pre_ping": True,
+     "pool_recycle": 300
+    }
     
     def __init__(self):
         """Validate required environment variables when config is actually used."""
