@@ -23,13 +23,20 @@ result = handler.save_upload(file_obj, product_id)
 if result['success']:
     # Access result['original_path'] and result['thumbnail_path']
     pass
+
+DEPRECATION NOTE:
+=================
+This module is now superseded by app/storage/ (pluggable storage system).
+Kept for backwards compatibility. New code should use:
+    from app.storage import get_storage
+    storage = get_storage()
+    result = storage.upload(file_obj, filename)
 """
 
 import os
 import uuid
 from pathlib import Path
 from PIL import Image
-from pillow_heif import register_heif_opener
 from werkzeug.utils import secure_filename
 from flask import current_app
 
@@ -39,6 +46,16 @@ MAX_FILE_SIZE_MB = 10
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 MAX_IMAGE_WIDTH = 1000
 THUMBNAIL_WIDTH = 300
+
+
+def _register_heif_support():
+    """Register HEIF/HEIC support for Pillow (lazy import)."""
+    try:
+        from pillow_heif import register_heif_opener
+        register_heif_opener()
+    except ImportError:
+        pass  # pillow-heif not installed, HEIF won't work but other formats do
+
 
 
 class ImageUploadError(Exception):
@@ -65,7 +82,7 @@ class ImageUploadHandler:
     
     def __init__(self):
         """Initialize image handler."""
-        register_heif_opener()
+        _register_heif_support()
         self.base_path = self._get_base_path()
         self.original_dir = os.path.join(self.base_path, 'static', 'images', 'original')
         self.thumbnail_dir = os.path.join(self.base_path, 'static', 'images', 'thumbnails')

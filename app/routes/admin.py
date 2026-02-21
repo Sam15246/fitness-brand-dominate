@@ -5,7 +5,7 @@ from app.models import db, Product, Order, User, UserRole, OrderStatus, Shipping
 from app.decorators import admin_required, superadmin_required
 from app.security import get_client_ip, log_admin_action
 from app.business_logic import StockManager, AffiliateManager, OrderManager
-from app.utils.image_handler import create_image_upload, ImageUploadError
+from app.storage import get_storage
 import secrets
 
 admin_bp = Blueprint('admin', __name__)
@@ -351,55 +351,73 @@ def delete_product(product_id):
 def manage_product_images(product_id):
     """
     Manage product images (upload, reorder, set primary, delete).
-    
+
+    Uses pluggable storage system (local or R2) based on STORAGE_BACKEND config.
+
     GET: Display image management interface
     POST: Handle image upload
-    
-    IMAGE UPLOAD FLOW:
-    1. Validate file (type, size)
-    2. Resize to max 1000px width
-    3. Generate 300px thumbnail
-    4. Save both versions to /static/images/
-    5. Store relative paths in database
-    6. Save original image for listing
-    
+
+    STORAGE ABSTRACTION:
+    ====================
+    Images stored via get_storage() factory function.
+    - If STORAGE_BACKEND='local': Saves to /app/static/uploads/
+    - If STORAGE_BACKEND='r2': Saves to Cloudflare R2
+    - No code changes needed when switching backends
+
+    UPLOAD FLOW:
+    1. Get storage backend from factory
+    2. Validate file (type, size) - done in image processor
+    3. Process image (resize, thumbnail, convert to WebP)
+    4. Upload to selected storage backend
+    5. Store returned URL in database
+    6. Create ProductImage record pointing to URL/path
+
+    ADMIN DOESN'T SEE:
+    - Storage complexity (local vs R2)
+    - File paths (only URLs)
+    - Image processing details (automatic)
+
     SECURITY:
-    - Admin only
+    - Admin only (@admin_required)
     - CSRF protected (Flask-WTF)
-    - File type validation
-    - Size limit (5MB)
-    - UUID-based filenames prevent collisions
+    - File validation from image_processor
+    - UUID filenames prevent collisions
+    - Safe file handling (no directory traversal)
     """
     product = Product.query.get_or_404(product_id)
-    
+
     if request.method == 'POST':
         # Handle image upload via AJAX
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file provided'}), 400
-        
+
         file = request.files['file']
-        
+
         try:
-            # Use image handler to process and save image
-            handler = create_image_upload()
-            result = handler.save_upload(file, product_id)
-            
+            # Get storage backend (local or R2)
+            storage = get_storage()
+
+            # Storage processes image and uploads
+            # Returns URL to display, storage_path for deletion
+            result = storage.upload(file, None)  # None = auto-generate UUID filename
+
             if not result['success']:
                 return jsonify({'success': False, 'error': result['error']}), 400
-            
+
             # Create ProductImage record
             # If this is the first image, make it primary
             is_primary = ProductImage.query.filter_by(product_id=product_id).count() == 0
-            
+
             image = ProductImage(
                 product_id=product_id,
-                image_path=result['original_path'],
+                image_path=result['url'],  # Store returned URL (works for local or R2)
                 is_primary=is_primary,
-                display_order=ProductImage.query.filter_by(product_id=product_id).count()
+                display_order=ProductImage.query.filter_by(product_id=product_id).count(),
+                storage_path=result['storage_path']  # For deletion later
             )
             db.session.add(image)
             db.session.commit()
-            
+
             # Log action
             AdminActionLog.create_log(
                 admin_id=current_user.id,
@@ -408,19 +426,19 @@ def manage_product_images(product_id):
                 ip_address=get_client_ip(),
                 description=f'Uploaded image for product: {product.name}'
             )
-            
+
             return jsonify({
                 'success': True,
                 'image_id': image.id,
-                'thumbnail_url': result['thumbnail_path'],
-                'original_url': result['original_path'],
+                'thumbnail_url': result['url'],  # Frontend uses same URL for now
+                'original_url': result['url'],   # Storage handles thumbnail serving
                 'is_primary': is_primary
             })
-        
+
         except Exception as e:
             current_app.logger.error(f'Image upload error: {str(e)}')
             return jsonify({'success': False, 'error': 'Upload failed. Please try again.'}), 500
-    
+
     # GET: Display image management interface
     images = ProductImage.get_product_images(product_id)
     return render_template('admin/product_images.html', product=product, images=images)
@@ -429,28 +447,45 @@ def manage_product_images(product_id):
 @admin_bp.route('/product-image/<int:image_id>/delete', methods=['POST'])
 @admin_required
 def delete_product_image(image_id):
-    """Delete a product image."""
+    """
+    Delete a product image using pluggable storage system.
+
+    Uses storage backend (local or R2) to delete files.
+    No code change needed when switching backends.
+
+    DELETION FLOW:
+    1. Get ProductImage record
+    2. Get storage backend from factory
+    3. Call storage.delete() with storage_path
+    4. Delete database record
+    5. Promote next image to primary if needed
+    6. Log the action
+    """
     image = ProductImage.query.get_or_404(image_id)
     product_id = image.product_id
     product = image.product
-    
+
     try:
-        # Delete files from filesystem
-        from app.utils.image_handler import ImageUploadHandler
-        success, error = ImageUploadHandler.delete_image_files(
-            image.image_path,
-            image.image_path.replace('original', 'thumbnails')
-        )
-        
+        # Delete from storage (local or R2)
+        storage = get_storage()
+        delete_result = storage.delete(image.storage_path)
+
+        if not delete_result['success']:
+            # Still log but notify admin of potential orphaned files
+            current_app.logger.warning(
+                f'Image delete from storage failed: {delete_result["error"]} '
+                f'(image_id={image_id}, storage_path={image.storage_path})'
+            )
+
         # Delete database record
         db.session.delete(image)
         db.session.commit()
-        
+
         # If this was primary, make the first remaining image primary
         remaining = ProductImage.query.filter_by(product_id=product_id).first()
         if remaining:
             ProductImage.set_primary_image(product_id, remaining.id)
-        
+
         # Log action
         AdminActionLog.create_log(
             admin_id=current_user.id,
@@ -459,13 +494,13 @@ def delete_product_image(image_id):
             ip_address=get_client_ip(),
             description=f'Deleted image from product: {product.name}'
         )
-        
+
         flash('Image deleted successfully!', 'success')
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f'Image delete error: {str(e)}')
         flash('Error deleting image. Please try again.', 'danger')
-    
+
     return redirect(url_for('admin.manage_product_images', product_id=product_id))
 
 

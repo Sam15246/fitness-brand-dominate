@@ -1220,7 +1220,8 @@ class ProductImage(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     
     # Image metadata
-    image_path = db.Column(db.String(255), nullable=False)  # Relative path from project root
+    image_path = db.Column(db.String(255), nullable=False)  # Relative path from project root or full URL
+    storage_path = db.Column(db.String(500), nullable=True)  # Backend-specific storage path (for deletion)
     is_primary = db.Column(db.Boolean, default=False, index=True)  # Primary image for listing
     display_order = db.Column(db.Integer, default=0)  # Sort order for gallery
     

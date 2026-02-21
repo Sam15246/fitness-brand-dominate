@@ -54,6 +54,44 @@ class Config:
     # Social Links
     INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/dominate.cali')
     
+    # ============= IMAGE STORAGE CONFIGURATION =============
+    # Pluggable storage system for product images
+    # 
+    # STORAGE_BACKEND options:
+    # - 'local': Save to /app/static/uploads/ (default, immediate launch)
+    # - 'r2': Save to Cloudflare R2 (scale, future migration)
+    #
+    # NO CODE CHANGES when switching backends.
+    # Just change environment variable and restart.
+    #
+    # LOCAL STORAGE (default):
+    # - Files saved at: /app/static/uploads/products/{original,thumbnails}/
+    # - URLs: /static/uploads/products/original/uuid.webp
+    # - Best for: Immediate launch, single server, development
+    # - Zero configuration needed
+    #
+    # R2 STORAGE (future):
+    # - Files saved in: Cloudflare R2 bucket
+    # - URLs: https://cdn.example.com/products/original/uuid.webp
+    # - Best for: Scale, high-traffic, backup, multi-region
+    # - Setup required: R2 bucket + API credentials in env vars
+    #
+    # SWITCHING TO R2 (when ready):
+    # 1. Create Cloudflare R2 bucket (e.g., 'fitness-brand-images')
+    # 2. Generate R2 API token
+    # 3. Set these environment variables:
+    #    - STORAGE_BACKEND=r2
+    #    - R2_ACCESS_KEY=your_key
+    #    - R2_SECRET_KEY=your_secret
+    #    - R2_BUCKET_NAME=fitness-brand-images
+    #    - R2_ENDPOINT_URL=https://xxx.r2.cloudflarestorage.com
+    #    - R2_PUBLIC_URL=https://images.example.com
+    # 4. Restart app
+    # 5. New uploads automatically go to R2
+    # 6. Old local images still accessible (batch migrate later)
+    #
+    STORAGE_BACKEND = os.getenv('STORAGE_BACKEND', 'local').lower()
+    
     # FUTURE SECURITY FEATURES (Structure for easy addition)
     # Rate Limiting
     # RATELIMIT_ENABLED = True
