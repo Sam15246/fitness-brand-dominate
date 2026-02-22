@@ -1341,10 +1341,13 @@ button, a, .card, .form-control {
 
 .password-input-wrapper {
     position: relative;
+    display: block;
 }
 
 .password-input-wrapper input {
-    padding-right: 45px;  /* Make room for eye icon */
+    padding-right: 50px;  /* Make room for eye icon */
+    position: relative;
+    z-index: 1;
 }
 
 .password-toggle-btn {
@@ -1362,6 +1365,9 @@ button, a, .card, .form-control {
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10;
+    min-width: 44px;  /* Touch-friendly tap target for mobile */
+    min-height: 44px;
 }
 
 .password-toggle-btn:hover {
