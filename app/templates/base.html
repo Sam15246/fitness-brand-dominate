@@ -109,11 +109,12 @@
                         <h5 class="fw-bold mb-0">DOMINATE</h5>
                     </div>
                     <p class="text-muted small">Handmade calisthenics equipment for serious athletes.</p>
-                    <p class="footer-tagline text-muted small">Train anywhere, <strong>Dominate</strong> everywhere.</p>
+                    <p class="footer-tagline text-muted small">Train anywhere, <a href="{{ url_for('main.index') }}" class="footer-link text-decoration-none"><strong>Dominate</strong></a> everywhere.</p>
                     
                     <!-- Social Links with Icons -->
                     <div class="footer-social mt-3">
                         {% if instagram_url %}
+                            <span class="footer-social-label">Instagram</span>
                             <a class="footer-social-link" href="{{ instagram_url }}" target="_blank" rel="noopener" title="Follow us on Instagram" aria-label="Instagram">
                                 <!-- Instagram SVG Icon -->
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

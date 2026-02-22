@@ -85,9 +85,17 @@ body {
     pointer-events: none;
 }
 
+.public-page .hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .public-page .hero-image img {
     box-shadow: 0 30px 60px rgba(66, 45, 24, 0.2);
-    border: 1px solid rgba(139, 111, 71, 0.15);
+    border: 2px solid var(--primary-color);
+    background-color: #FFFFFF;
+    display: block;
 }
 
 .public-page .page-hero {
@@ -955,10 +963,11 @@ a:hover {
 .footer-social {
     display: flex;
     gap: 1rem;
+    align-items: center;
 }
 
 .footer-social-link {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;                      /* Mobile touch target */
@@ -968,6 +977,7 @@ a:hover {
     border-radius: 50%;
     transition: all 0.2s ease;
     text-decoration: none;
+    flex-shrink: 0;
 }
 
 .footer-social-link:hover {
@@ -981,6 +991,14 @@ a:hover {
     width: 20px;
     height: 20px;
     stroke-width: 2;
+}
+
+.footer-social-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-right: 0.75rem;
+    white-space: nowrap;
+    color: var(--primary-color);
 }
 
 /* Footer columns - mobile stacked, desktop row */
@@ -1161,7 +1179,7 @@ footer {
 
 /* Mobile defaults - 320px - 767px */
 .hero-section {
-    padding: 2rem 0;
+    padding: 2rem 0 3rem 0;         /* More bottom padding on mobile */
 }
 
 .hero-section h1 {
@@ -1169,12 +1187,13 @@ footer {
 }
 
 .action-buttons {
+    display: flex;
     flex-direction: column;         /* Stack buttons vertically */
+    gap: 0.75rem;
 }
 
 .action-buttons .btn {
     width: 100%;                    /* Full-width buttons on mobile */
-    margin-bottom: 0.75rem;
 }
 
 .table-responsive {
@@ -1202,7 +1221,6 @@ footer {
     
     .action-buttons .btn {
         width: auto;                /* Auto width on tablet+ */
-        margin-bottom: 0;
     }
     
     .order-start-hero h2 {
@@ -2017,6 +2035,7 @@ button, a, .card, .form-control {
 
 /* Mobile: turn long sections into horizontal rails */
 @media (max-width: 768px) {
+    .featured-products-section .row,
     .why-choose-section .row,
     .how-to-order-section .row,
     .testimonials-section .row {
@@ -2028,6 +2047,7 @@ button, a, .card, .form-control {
         -webkit-overflow-scrolling: touch;
     }
 
+    .featured-products-section .row > [class*="col-"],
     .why-choose-section .row > [class*="col-"],
     .how-to-order-section .row > [class*="col-"],
     .testimonials-section .row > [class*="col-"] {
