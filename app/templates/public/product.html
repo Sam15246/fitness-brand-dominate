@@ -4,6 +4,11 @@
 
 {% block body_class %}public-page{% endblock %}
 
+{% block extra_css %}
+<!-- Swiper CSS for Image Slider -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <div class="product-header mb-4">
@@ -18,32 +23,53 @@
         <div class="col-lg-6 mb-4 mb-lg-0">
             {% set product_images = product.get_all_images() %}
             {% if product_images %}
-                <!-- Main Image Display -->
-                <div class="mb-3">
-                    {% set primary_image = product.get_primary_image() %}
-                    {% set main_path = primary_image.image_path.replace('\\', '/').replace('static/', '') %}
-                    <img id="mainProductImage" 
-                         src="{{ url_for('static', filename=main_path) }}" 
-                         alt="{{ product.name }}" 
-                         class="img-fluid rounded" 
-                         style="width: 100%; height: auto; max-height: 500px; object-fit: cover;">
-                </div>
-                
-                <!-- Thumbnail Gallery -->
                 {% if product_images|length > 1 %}
-                <div class="d-flex gap-2 flex-wrap">
-                    {% for image in product_images %}
-                    <div class="thumbnail-wrapper" style="cursor: pointer;">
-                        {% set thumb_path = image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
-                        {% set full_path = image.image_path.replace('\\', '/').replace('static/', '') %}
-                        <img src="{{ url_for('static', filename=thumb_path) }}" 
-                             alt="{{ product.name }}" 
-                             class="img-thumbnail {% if image.is_primary %}border-primary border-2{% endif %}"
-                             style="width: 80px; height: 80px; object-fit: cover;"
-                             onclick="changeMainImage('{{ url_for('static', filename=full_path) }}', this)">
+                    <!-- Swiper Image Slider (Multiple Images) -->
+                    <div class="product-image-slider">
+                        <div class="swiper product-swiper">
+                            <div class="swiper-wrapper">
+                                {% for image in product_images %}
+                                <div class="swiper-slide">
+                                    {% set img_path = image.image_path.replace('\\', '/').replace('static/', '') %}
+                                    <img src="{{ url_for('static', filename=img_path) }}" 
+                                         alt="{{ product.name }}" 
+                                         class="img-fluid rounded"
+                                         loading="lazy">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <!-- Navigation Arrows -->
+                            <div class="swiper-button-next"></div>
+                            <div class="swiper-button-prev"></div>
+                            <!-- Pagination -->
+                            <div class="swiper-pagination"></div>
+                        </div>
+                        
+                        <!-- Thumbnail Navigation -->
+                        <div class="swiper product-thumbs mt-3">
+                            <div class="swiper-wrapper">
+                                {% for image in product_images %}
+                                <div class="swiper-slide">
+                                    {% set thumb_path = image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
+                                    <img src="{{ url_for('static', filename=thumb_path) }}" 
+                                         alt="{{ product.name }}" 
+                                         class="img-thumbnail"
+                                         loading="lazy">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
-                    {% endfor %}
-                </div>
+                {% else %}
+                    <!-- Single Image (No Slider Needed) -->
+                    <div class="single-product-image">
+                        {% set primary_image = product.get_primary_image() %}
+                        {% set main_path = primary_image.image_path.replace('\\', '/').replace('static/', '') %}
+                        <img src="{{ url_for('static', filename=main_path) }}" 
+                             alt="{{ product.name }}" 
+                             class="img-fluid rounded" 
+                             style="width: 100%; height: auto; max-height: 500px; object-fit: cover;">
+                    </div>
                 {% endif %}
             {% elif product.image_url %}
                 <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-fluid rounded">
@@ -155,25 +181,61 @@
     </div>
 </div>
 
+{% block extra_js %}
+<!-- Swiper JS for Image Slider -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
 /**
- * Change the main product image when thumbnail is clicked
- * @param {string} imagePath - Full path to the image
- * @param {HTMLElement} thumbnail - The clicked thumbnail element
+ * Initialize Swiper Image Slider for Product Detail Page
+ * Only initializes if multiple product images exist
+ * Features:
+ * - Touch/swipe support on mobile
+ * - Keyboard navigation
+ * - Thumbnail navigation
+ * - Lazy loading for performance
+ * - Responsive breakpoints
  */
-function changeMainImage(imagePath, thumbnail) {
-    // Update the main image src
-    document.getElementById('mainProductImage').src = imagePath;
+(function() {
+    // Check if slider elements exist (only when multiple images)
+    const productSwiper = document.querySelector('.product-swiper');
+    if (!productSwiper) return; // No slider needed (single image or no images)
     
-    // Remove border from all thumbnails
-    document.querySelectorAll('.thumbnail-wrapper img').forEach(img => {
-        img.classList.remove('border-primary', 'border-2');
-        img.classList.add('border-secondary');
+    // Initialize thumbnail slider first
+    const thumbSwiper = new Swiper('.product-thumbs', {
+        spaceBetween: 10,
+        slidesPerView: 4,
+        freeMode: true,
+        watchSlidesProgress: true,
+        breakpoints: {
+            320: { slidesPerView: 3 },
+            480: { slidesPerView: 4 },
+            768: { slidesPerView: 5 },
+        }
     });
     
-    // Add border to clicked thumbnail
-    thumbnail.classList.remove('border-secondary');
-    thumbnail.classList.add('border-primary', 'border-2');
-}
+    // Initialize main product image slider
+    const mainSwiper = new Swiper('.product-swiper', {
+        spaceBetween: 10,
+        loop: false,
+        lazy: true,
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+            dynamicBullets: true,
+        },
+        thumbs: {
+            swiper: thumbSwiper,
+        },
+        keyboard: {
+            enabled: true,
+            onlyInViewport: true,
+        },
+    });
+})();
 </script>
+{% endblock %}
 {% endblock %}
