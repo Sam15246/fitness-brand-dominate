@@ -15,8 +15,12 @@ from app.models import db, PolicyPage, User, UserRole
 from datetime import datetime
 
 
-def init_policies():
-    """Initialize default policy pages with sample content."""
+def init_policies(silent=False):
+    """Initialize default policy pages with sample content.
+    
+    Args:
+        silent (bool): If True, suppress print output. Useful for production builds.
+    """
     
     app = create_app()
     with app.app_context():
@@ -181,7 +185,8 @@ def init_policies():
             existing_policy = PolicyPage.query.filter_by(slug=policy_data['slug']).first()
             
             if existing_policy:
-                print(f"✓ Policy '{policy_data['slug']}' already exists, skipping...")
+                if not silent:
+                    print(f"✓ Policy '{policy_data['slug']}' already exists, skipping...")
                 updated_count += 1
             else:
                 policy = PolicyPage(
@@ -193,16 +198,18 @@ def init_policies():
                     updated_at=datetime.utcnow()
                 )
                 db.session.add(policy)
-                print(f"✓ Created policy: {policy_data['slug']}")
+                if not silent:
+                    print(f"✓ Created policy: {policy_data['slug']}")
                 created_count += 1
         
         db.session.commit()
         
-        print(f"\n✅ Policy initialization complete!")
-        print(f"   Created: {created_count} new policies")
-        print(f"   Skipped: {updated_count} existing policies")
-        print(f"\n📝 Policies are now editable from the admin dashboard:")
-        print(f"   /admin/policies")
+        if not silent:
+            print(f"\n✅ Policy initialization complete!")
+            print(f"   Created: {created_count} new policies")
+            print(f"   Skipped: {updated_count} existing policies")
+            print(f"\n📝 Policies are now editable from the admin dashboard:")
+            print(f"   /admin/policies")
 
 
 if __name__ == '__main__':

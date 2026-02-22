@@ -16,8 +16,12 @@ from app import create_app, db
 from app.models import User, UserRole
 
 
-def create_superadmin():
-    """Create superadmin account from environment variables."""
+def create_superadmin(silent=False):
+    """Create superadmin account from environment variables.
+    
+    Args:
+        silent (bool): If True, suppress print output. Useful for production builds.
+    """
     app = create_app()
     
     with app.app_context():
@@ -26,13 +30,15 @@ def create_superadmin():
         name = os.environ.get('ADMIN_NAME', 'Admin')
         
         if not email or not password:
-            print('⚠️  ADMIN_EMAIL or ADMIN_PASSWORD not set, skipping superadmin creation')
+            if not silent:
+                print('⚠️  ADMIN_EMAIL or ADMIN_PASSWORD not set, skipping superadmin creation')
             return
         
         # Check if user already exists
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            print(f'ℹ️  Superadmin user exists')
+            if not silent:
+                print(f'ℹ️  Superadmin user exists')
             return
         
         # Create superadmin user
@@ -47,7 +53,8 @@ def create_superadmin():
         db.session.add(superadmin)
         db.session.commit()
         
-        print(f'✅ Superadmin created successfully')
+        if not silent:
+            print(f'✅ Superadmin created successfully')
 
 
 if __name__ == '__main__':

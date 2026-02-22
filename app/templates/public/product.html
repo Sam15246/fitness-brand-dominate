@@ -118,10 +118,10 @@
             <div class="product-rating mb-4">
                 <div class="stars-display">
                     {% set avg_rating = product.get_average_rating() %}
-                    {% for i in range(int(avg_rating)) %}
+                    {% for i in range(avg_rating|int) %}
                         <span class="star filled">★</span>
                     {% endfor %}
-                    {% for i in range(5 - int(avg_rating)) %}
+                    {% for i in range(5 - (avg_rating|int)) %}
                         <span class="star">★</span>
                     {% endfor %}
                 </div>
