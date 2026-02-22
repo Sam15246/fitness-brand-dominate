@@ -2015,6 +2015,56 @@ button, a, .card, .form-control {
     flex-wrap: wrap;
 }
 
+/* Mobile: turn long sections into horizontal rails */
+@media (max-width: 768px) {
+    .why-choose-section .row,
+    .how-to-order-section .row,
+    .testimonials-section .row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .why-choose-section .row > [class*="col-"],
+    .how-to-order-section .row > [class*="col-"],
+    .testimonials-section .row > [class*="col-"] {
+        flex: 0 0 82%;
+        max-width: 82%;
+        scroll-snap-align: start;
+    }
+
+    .why-choose-section .text-center.mb-5,
+    .how-to-order-section .text-center.mb-5,
+    .testimonials-section .text-center.mb-5 {
+        margin-bottom: 1.75rem !important;
+    }
+
+    .order-step-card,
+    .testimonial-card {
+        padding: 1.5rem;
+    }
+
+    .final-cta-section {
+        padding: 2.5rem 0 !important;
+    }
+
+    .cta-subtext {
+        font-size: 1rem;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cta-buttons .btn {
+        width: 100%;
+    }
+}
+
 /* =================
    PRODUCT PAGE REVIEWS
    ================= */

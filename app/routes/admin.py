@@ -1388,8 +1388,10 @@ def reviews_list():
     
     # Sort by newest first
     reviews = query.order_by(Review.created_at.desc()).paginate(page=page, per_page=20)
+
+    products = Product.query.order_by(Product.name.asc()).all()
     
-    return render_template('admin/reviews.html', reviews=reviews, status=status, product_id=product_id)
+    return render_template('admin/reviews.html', reviews=reviews, status=status, product_id=product_id, products=products)
 
 
 @admin_bp.route('/review/add/<int:product_id>', methods=['GET', 'POST'])
