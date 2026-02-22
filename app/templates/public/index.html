@@ -53,8 +53,10 @@
                                             </svg>
                                         </div>
                                     {% endif %}
-                                    <!-- Discount Badge (if applicable) -->
-                                    <!-- <span class="discount-badge-card">20% OFF</span> -->
+                                    <!-- Discount Badge -->
+                                    {% if product.has_active_discount() %}
+                                        <span class="discount-badge-card">{{ product.get_discount_percentage() }}% OFF</span>
+                                    {% endif %}
                                     
                                     {% if product.stock_quantity == 0 %}
                                         <span class="out-of-stock-overlay">Out of Stock</span>
@@ -77,9 +79,12 @@
                                     <span class="rating-count ms-1">(5.0)</span>
                                 </div>
                                 <div class="product-card-price-section mb-3">
-                                    <span class="product-card-price fw-bold">{{ product.get_price_display() }}</span>
-                                    <!-- Uncomment if you have original price -->
-                                    <!-- <span class="product-card-price-original ms-2">₹2,999</span> -->
+                                    {% if product.has_active_discount() %}
+                                        <span class="current-price fw-bold">{{ product.get_price_display() }}</span>
+                                        <span class="original-price ms-2">{{ product.get_original_price_display() }}</span>
+                                    {% else %}
+                                        <span class="product-card-price fw-bold">{{ product.get_price_display() }}</span>
+                                    {% endif %}
                                 </div>
                                 {% if product.stock_quantity > 0 %}
                                     <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-primary btn-sm w-100">

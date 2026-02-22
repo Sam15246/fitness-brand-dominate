@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import current_user
 from datetime import datetime
-from app.models import db, Product, Order, User, UserRole, OrderStatus, ShippingStatus, CommissionStatus, AdminActionLog, AffiliateProfile, ProductImage, PolicyPage
+from app.models import db, Product, Order, User, UserRole, OrderStatus, ShippingStatus, CommissionStatus, AdminActionLog, AffiliateProfile, ProductImage, PolicyPage, Review
 from app.decorators import admin_required, superadmin_required
 from app.security import get_client_ip, log_admin_action
 from app.business_logic import StockManager, AffiliateManager, OrderManager
@@ -114,6 +114,9 @@ def add_product():
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
         price_str = request.form.get('price', '').strip()
+        price_original_str = request.form.get('price_original', '').strip()
+        price_discounted_str = request.form.get('price_discounted', '').strip()
+        is_discount_active = request.form.get('is_discount_active') == 'on'
         stock_str = request.form.get('stock_quantity', '').strip()
         weight_str = request.form.get('weight_grams', '').strip()
         dimensions = request.form.get('dimensions', '').strip()
@@ -135,6 +138,27 @@ def add_product():
                 errors.append('Price must be greater than 0')
         except (ValueError, TypeError):
             errors.append('Invalid price')
+        
+        # Pricing validation
+        price_original = None
+        price_discounted = None
+        
+        if is_discount_active:
+            if not price_original_str or not price_discounted_str:
+                errors.append('Original and discounted prices required when discount is active')
+            else:
+                try:
+                    price_original = int(float(price_original_str) * 100)
+                    price_discounted = int(float(price_discounted_str) * 100)
+                    
+                    if price_original <= 0:
+                        errors.append('Original price must be greater than 0')
+                    if price_discounted <= 0:
+                        errors.append('Discounted price must be greater than 0')
+                    if price_discounted >= price_original:
+                        errors.append('Discounted price must be less than original price')
+                except (ValueError, TypeError):
+                    errors.append('Invalid pricing values')
         
         try:
             stock_quantity = int(stock_str)
@@ -163,6 +187,9 @@ def add_product():
                 slug=slug,
                 description=description,
                 price=price,
+                price_original=price_original,
+                price_discounted=price_discounted,
+                is_discount_active=is_discount_active,
                 stock_quantity=stock_quantity,
                 weight_grams=weight_grams,
                 dimensions=dimensions if dimensions else None,
@@ -219,6 +246,9 @@ def edit_product(product_id):
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
         price_str = request.form.get('price', '').strip()
+        price_original_str = request.form.get('price_original', '').strip()
+        price_discounted_str = request.form.get('price_discounted', '').strip()
+        is_discount_active = request.form.get('is_discount_active') == 'on'
         stock_str = request.form.get('stock_quantity', '').strip()
         weight_str = request.form.get('weight_grams', '').strip()
         dimensions = request.form.get('dimensions', '').strip()
@@ -240,6 +270,27 @@ def edit_product(product_id):
                 errors.append('Price must be greater than 0')
         except (ValueError, TypeError):
             errors.append('Invalid price')
+        
+        # Pricing validation
+        price_original = None
+        price_discounted = None
+        
+        if is_discount_active:
+            if not price_original_str or not price_discounted_str:
+                errors.append('Original and discounted prices required when discount is active')
+            else:
+                try:
+                    price_original = int(float(price_original_str) * 100)
+                    price_discounted = int(float(price_discounted_str) * 100)
+                    
+                    if price_original <= 0:
+                        errors.append('Original price must be greater than 0')
+                    if price_discounted <= 0:
+                        errors.append('Discounted price must be greater than 0')
+                    if price_discounted >= price_original:
+                        errors.append('Discounted price must be less than original price')
+                except (ValueError, TypeError):
+                    errors.append('Invalid pricing values')
         
         try:
             stock_quantity = int(stock_str)
@@ -270,6 +321,9 @@ def edit_product(product_id):
             product.name = name
             product.description = description
             product.price = price
+            product.price_original = price_original
+            product.price_discounted = price_discounted
+            product.is_discount_active = is_discount_active
             product.stock_quantity = stock_quantity
             product.weight_grams = weight_grams
             product.dimensions = dimensions if dimensions else None
@@ -1310,6 +1364,231 @@ def edit_policy(slug):
     return render_template('admin/policy_edit.html', policy=policy)
 
 
+# ============= REVIEW MANAGEMENT ROUTES =============
+
+@admin_bp.route('/reviews')
+@admin_required
+def reviews_list():
+    """List all reviews with filtering."""
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', 'all')  # all / approved / pending
+    product_id = request.args.get('product_id', type=int)
+    
+    query = Review.query
+    
+    # Filter by approval status
+    if status == 'approved':
+        query = query.filter_by(is_approved=True)
+    elif status == 'pending':
+        query = query.filter_by(is_approved=False)
+    
+    # Filter by product
+    if product_id:
+        query = query.filter_by(product_id=product_id)
+    
+    # Sort by newest first
+    reviews = query.order_by(Review.created_at.desc()).paginate(page=page, per_page=20)
+    
+    return render_template('admin/reviews.html', reviews=reviews, status=status, product_id=product_id)
+
+
+@admin_bp.route('/review/add/<int:product_id>', methods=['GET', 'POST'])
+@admin_required
+def add_review(product_id):
+    """Add new review to product."""
+    product = Product.query.get_or_404(product_id)
+    
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        role = request.form.get('role', '').strip()
+        rating_str = request.form.get('rating', '').strip()
+        title = request.form.get('title', '').strip()
+        comment = request.form.get('comment', '').strip()
+        is_approved = request.form.get('is_approved') == 'on'
+        
+        # Validation
+        errors = []
+        
+        if not name or len(name) < 2:
+            errors.append('Reviewer name must be at least 2 characters')
+        
+        if not comment or len(comment) < 10:
+            errors.append('Review comment must be at least 10 characters')
+        
+        try:
+            rating = int(rating_str)
+            if rating < 1 or rating > 5:
+                errors.append('Rating must be between 1 and 5')
+        except (ValueError, TypeError):
+            errors.append('Invalid rating')
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('admin/review_form.html', product=product, review=None)
+        
+        # Create review
+        try:
+            review = Review(
+                product_id=product_id,
+                name=name,
+                role=role if role else None,
+                rating=rating,
+                title=title if title else None,
+                comment=comment,
+                is_approved=is_approved
+            )
+            
+            db.session.add(review)
+            db.session.commit()
+            
+            # Log the creation action
+            AdminActionLog.create_log(
+                admin_id=current_user.id,
+                action_type='CREATE_REVIEW',
+                target_id=review.id,
+                ip_address=get_client_ip(),
+                description=f'Created review for product: {product.name}'
+            )
+            
+            flash(f'Review added successfully for "{product.name}"!', 'success')
+            return redirect(url_for('admin.reviews_list'))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash('Error adding review. Please try again.', 'danger')
+            current_app.logger.error(f'Review add error: {str(e)}')
+            return render_template('admin/review_form.html', product=product, review=None)
+    
+    return render_template('admin/review_form.html', product=product, review=None)
+
+
+@admin_bp.route('/review/<int:review_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_review(review_id):
+    """Edit existing review."""
+    review = Review.query.get_or_404(review_id)
+    product = review.product
+    
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        role = request.form.get('role', '').strip()
+        rating_str = request.form.get('rating', '').strip()
+        title = request.form.get('title', '').strip()
+        comment = request.form.get('comment', '').strip()
+        is_approved = request.form.get('is_approved') == 'on'
+        
+        # Validation
+        errors = []
+        
+        if not name or len(name) < 2:
+            errors.append('Reviewer name must be at least 2 characters')
+        
+        if not comment or len(comment) < 10:
+            errors.append('Review comment must be at least 10 characters')
+        
+        try:
+            rating = int(rating_str)
+            if rating < 1 or rating > 5:
+                errors.append('Rating must be between 1 and 5')
+        except (ValueError, TypeError):
+            errors.append('Invalid rating')
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('admin/review_form.html', product=product, review=review)
+        
+        # Update review
+        try:
+            review.name = name
+            review.role = role if role else None
+            review.rating = rating
+            review.title = title if title else None
+            review.comment = comment
+            review.is_approved = is_approved
+            
+            db.session.commit()
+            
+            # Log the update action
+            AdminActionLog.create_log(
+                admin_id=current_user.id,
+                action_type='UPDATE_REVIEW',
+                target_id=review_id,
+                ip_address=get_client_ip(),
+                description=f'Updated review for product: {product.name}'
+            )
+            
+            flash(f'Review updated successfully!', 'success')
+            return redirect(url_for('admin.reviews_list'))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash('Error updating review. Please try again.', 'danger')
+            current_app.logger.error(f'Review edit error: {str(e)}')
+            return render_template('admin/review_form.html', product=product, review=review)
+    
+    return render_template('admin/review_form.html', product=product, review=review)
+
+
+@admin_bp.route('/review/<int:review_id>/delete', methods=['POST'])
+@admin_required
+def delete_review(review_id):
+    """Delete review."""
+    review = Review.query.get_or_404(review_id)
+    product_name = review.product.name
+    
+    try:
+        db.session.delete(review)
+        db.session.commit()
+        
+        # Log the deletion action
+        AdminActionLog.create_log(
+            admin_id=current_user.id,
+            action_type='DELETE_REVIEW',
+            target_id=review_id,
+            ip_address=get_client_ip(),
+            description=f'Deleted review from product: {product_name}'
+        )
+        
+        flash('Review deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error deleting review. Please try again.', 'danger')
+        current_app.logger.error(f'Review delete error: {str(e)}')
+    
+    return redirect(url_for('admin.reviews_list'))
+
+
+@admin_bp.route('/review/<int:review_id>/toggle-approval', methods=['POST'])
+@admin_required
+def toggle_review_approval(review_id):
+    """Toggle review approval status (for ajax)."""
+    review = Review.query.get_or_404(review_id)
+    
+    try:
+        review.is_approved = not review.is_approved
+        db.session.commit()
+        
+        # Log the approval action
+        AdminActionLog.create_log(
+            admin_id=current_user.id,
+            action_type='TOGGLE_REVIEW_APPROVAL',
+            target_id=review_id,
+            ip_address=get_client_ip(),
+            description=f'Review approval status: {review.is_approved}'
+        )
+        
+        return jsonify({
+            'success': True,
+            'is_approved': review.is_approved
+        })
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Review approval toggle error: {str(e)}')
+        return jsonify({'success': False, 'error': str(e)})
+
+
 # FUTURE: Advanced features
 # - Inventory export to CSV
 # - Order export to CSV
@@ -1325,3 +1604,7 @@ def edit_policy(slug):
 # - Policy version history and rollback
 # - Policy approval workflow
 # - Multi-language policies
+# - Review moderation with comments
+# - Bulk review approval
+# - Review filtering by rating
+# - Review export for testimonials

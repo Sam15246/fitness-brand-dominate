@@ -31,12 +31,43 @@
                     <div class="col-md-6 mb-3">
                         <label for="price" class="form-label">Price (₹)</label>
                         <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{% if product %}{{ product.get_price_formatted() }}{% endif %}" required>
-                        <div class="form-text">Price in Indian Rupees</div>
+                        <div class="form-text">Regular selling price in Indian Rupees</div>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="stock_quantity" class="form-label">Stock Quantity</label>
                         <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" min="0" value="{{ product.stock_quantity if product else '0' }}" required>
+                    </div>
+                </div>
+
+                <!-- Smart Pricing Section -->
+                <div class="card mb-4 border-primary border-opacity-25">
+                    <div class="card-header bg-light py-2">
+                        <h6 class="mb-0">
+                            <input type="checkbox" id="is_discount_active" name="is_discount_active" class="form-check-input" {% if product and product.is_discount_active %}checked{% endif %}>
+                            <label for="is_discount_active" class="form-check-label">Enable Discount</label>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="price_original" class="form-label">Original Price (MRP) (₹)</label>
+                                <input type="number" class="form-control" id="price_original" name="price_original" step="0.01" min="0" value="{% if product and product.price_original %}{{ product.price_original / 100 }}{% endif %}">
+                                <div class="form-text">Maximum retail price (before discount)</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="price_discounted" class="form-label">Discounted Price (₹)</label>
+                                <input type="number" class="form-control" id="price_discounted" name="price_discounted" step="0.01" min="0" value="{% if product and product.price_discounted %}{{ product.price_discounted / 100 }}{% endif %}">
+                                <div class="form-text">Sale price (must be lower than MRP)</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Real-time Discount Preview -->
+                        <div class="alert alert-info mt-3 mb-0" id="discount_preview" style="display: none;">
+                            <strong>Discount Preview:</strong> <span id="discount_percentage">0</span>% OFF
+                            <br><small>Original: <del id="preview_original">₹0</del> → Now: <strong id="preview_discounted">₹0</strong></small>
+                        </div>
                     </div>
                 </div>
 
@@ -81,6 +112,8 @@
 <script>
     (function() {
         'use strict';
+        
+        // Form validation
         window.addEventListener('load', function() {
             let forms = document.querySelectorAll('.needs-validation');
             Array.prototype.slice.call(forms).forEach(function(form) {
@@ -93,6 +126,40 @@
                 }, false);
             });
         }, false);
+        
+        // Discount preview calculation
+        const discountCheckbox = document.getElementById('is_discount_active');
+        const priceOriginal = document.getElementById('price_original');
+        const priceDiscounted = document.getElementById('price_discounted');
+        const previewDiv = document.getElementById('discount_preview');
+        
+        function updateDiscountPreview() {
+            if (!discountCheckbox.checked || !priceOriginal.value || !priceDiscounted.value) {
+                previewDiv.style.display = 'none';
+                return;
+            }
+            
+            const original = parseFloat(priceOriginal.value);
+            const discounted = parseFloat(priceDiscounted.value);
+            
+            if (original > 0 && discounted > 0 && discounted < original) {
+                const percentage = Math.round(((original - discounted) / original) * 100);
+                document.getElementById('discount_percentage').textContent = percentage;
+                document.getElementById('preview_original').textContent = '₹' + original.toFixed(2);
+                document.getElementById('preview_discounted').textContent = '₹' + discounted.toFixed(2);
+                previewDiv.style.display = 'block';
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        }
+        
+        // Event listeners for real-time preview
+        discountCheckbox.addEventListener('change', updateDiscountPreview);
+        priceOriginal.addEventListener('input', updateDiscountPreview);
+        priceDiscounted.addEventListener('input', updateDiscountPreview);
+        
+        // Initial preview check
+        updateDiscountPreview();
     })();
 </script>
 {% endblock %}

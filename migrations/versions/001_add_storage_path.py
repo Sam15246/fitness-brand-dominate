@@ -31,17 +31,21 @@ depends_on = None
 
 def upgrade():
     """Add storage_path column to product_images table."""
-    # Add nullable column (safe for existing records)
-    op.add_column(
-        'product_images',
-        sa.Column('storage_path', sa.String(500), nullable=True)
-    )
-    
-    # Populate storage_path with image_path for existing images
-    # (LocalStorage uses image_path as storage key)
-    op.execute(
-        "UPDATE product_images SET storage_path = image_path WHERE storage_path IS NULL"
-    )
+    # Check if column already exists before adding
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    if 'storage_path' not in [c['name'] for c in inspector.get_columns('product_images')]:
+        # Add nullable column (safe for existing records)
+        op.add_column(
+            'product_images',
+            sa.Column('storage_path', sa.String(500), nullable=True)
+        )
+        
+        # Populate storage_path with image_path for existing images
+        # (LocalStorage uses image_path as storage key)
+        op.execute(
+            "UPDATE product_images SET storage_path = image_path WHERE storage_path IS NULL"
+        )
 
 
 def downgrade():

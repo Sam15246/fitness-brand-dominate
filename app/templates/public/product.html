@@ -102,15 +102,30 @@
             <div class="product-price-section mb-4">
                 <div class="d-flex align-items-center gap-3 mb-2">
                     <span class="current-price fw-bold">{{ product.get_price_display() }}</span>
-                    <!-- Uncomment if you have original price/discount -->
-                    <!-- <span class="original-price text-muted">₹3,499</span>
-                    <span class="discount-badge">20% OFF</span> -->
+                    {% if product.has_active_discount() %}
+                        <span class="original-price text-muted">{{ product.get_original_price_display() }}</span>
+                        <span class="discount-badge">{{ product.get_discount_percentage() }}% OFF</span>
+                    {% endif %}
                 </div>
                 {% if product.stock_quantity > 0 %}
                     <span class="stock-badge in-stock">✓ In Stock ({{ product.stock_quantity }} available)</span>
                 {% else %}
                     <span class="stock-badge out-of-stock">Out of Stock</span>
                 {% endif %}
+            </div>
+            
+            <!-- Star Rating -->
+            <div class="product-rating mb-4">
+                <div class="stars-display">
+                    {% set avg_rating = product.get_average_rating() %}
+                    {% for i in range(int(avg_rating)) %}
+                        <span class="star filled">★</span>
+                    {% endfor %}
+                    {% for i in range(5 - int(avg_rating)) %}
+                        <span class="star">★</span>
+                    {% endfor %}
+                </div>
+                <span class="rating-text text-muted ms-2">({{ "%.1f"|format(avg_rating) }}) | {{ product.get_review_count() }} reviews</span>
             </div>
             
             <!-- Short Description -->
@@ -189,6 +204,69 @@
             </div>
         </div>
     </div>
+
+    <!-- Reviews Section -->
+    {% set reviews = product.get_approved_reviews() %}
+    {% if reviews %}
+        <div class="row mt-5 pt-5 border-top">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1">Customer Reviews</h4>
+                        <p class="text-muted mb-0">{{ product.get_review_count() }} verified reviews</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                            <span class="text-warning" style="font-size: 1.25rem;">★</span>
+                            <span class="fw-bold" style="font-size: 1.5rem;">{{ "%.1f"|format(product.get_average_rating()) }}</span>
+                        </div>
+                        <small class="text-muted">out of 5</small>
+                    </div>
+                </div>
+                
+                <div class="row g-4">
+                    {% for review in reviews[:3] %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="review-card">
+                                <!-- Star Rating -->
+                                <div class="review-rating mb-2">
+                                    {% for i in range(review.rating) %}
+                                        <span class="star filled">★</span>
+                                    {% endfor %}
+                                    {% for i in range(5 - review.rating) %}
+                                        <span class="star">★</span>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- Review Title -->
+                                {% if review.title %}
+                                    <h6 class="fw-bold mb-2">{{ review.title }}</h6>
+                                {% endif %}
+                                
+                                <!-- Review Comment -->
+                                <p class="review-comment text-muted mb-3">{{ review.comment[:150] }}...</p>
+                                
+                                <!-- Reviewer Info -->
+                                <div class="review-author">
+                                    <p class="fw-bold mb-0">{{ review.name }}</p>
+                                    {% if review.role %}
+                                        <p class="text-muted small mb-0">{{ review.role }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">{{ review.created_at.strftime('%B %d, %Y') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                {% if reviews|length > 3 %}
+                    <div class="text-center mt-4">
+                        <p class="text-muted">Showing 3 of {{ product.get_review_count() }} reviews</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 
     <!-- Related Products Section -->
     <div class="row mt-5 pt-5 border-top">

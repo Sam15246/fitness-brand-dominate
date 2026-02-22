@@ -2016,6 +2016,96 @@ button, a, .card, .form-control {
 }
 
 /* =================
+   PRODUCT PAGE REVIEWS
+   ================= */
+
+.review-card {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.review-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(88, 60, 32, 0.12);
+}
+
+.review-rating {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 0.75rem;
+}
+
+.review-card .star {
+    font-size: 0.95rem;
+    color: #D1C4B0;
+}
+
+.review-card .star.filled {
+    color: #F5A623;
+}
+
+.review-comment {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #666;
+}
+
+.review-author {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.review-author p {
+    font-size: 0.85rem;
+}
+
+/* =================
+   DISCOUNT BADGE STYLING
+   ================= */
+
+.discount-badge {
+    background-color: #DC3545;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.35rem 0.65rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+}
+
+.discount-badge-card {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background-color: #DC3545;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.4rem 0.7rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    z-index: 2;
+}
+
+.original-price {
+    font-size: 1.1rem;
+    text-decoration: line-through;
+    color: #999;
+}
+
+.current-price {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+/* =================
    PRINT STYLES
    ================= */
 

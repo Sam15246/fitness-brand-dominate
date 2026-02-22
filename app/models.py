@@ -297,6 +297,11 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=False)
     price = db.Column(db.Integer, nullable=False)  # Stored in paise (100 paise = ₹1)
     
+    # Pricing System (Smart Discounts)
+    price_original = db.Column(db.Integer, nullable=True)  # Original MRP in paise
+    price_discounted = db.Column(db.Integer, nullable=True)  # Discounted price in paise
+    is_discount_active = db.Column(db.Boolean, default=False)  # Discount toggle
+    
     # Inventory Management
     stock_quantity = db.Column(db.Integer, nullable=False, default=0, index=True)
     
@@ -315,6 +320,7 @@ class Product(db.Model):
     
     # Relationships
     orders = db.relationship('Order', backref='product', cascade='all, delete-orphan')
+    reviews = db.relationship('Review', backref='product', cascade='all, delete-orphan')
     # images relationship is defined in ProductImage model
     
     # FUTURE: Analytics integration
@@ -327,8 +333,82 @@ class Product(db.Model):
         return self.price / 100
     
     def get_price_display(self):
-        """Return formatted price string."""
+        """
+        Return formatted price string based on discount status.
+        
+        PRICING LOGIC:
+        - If discount is active and discounted price is set, use discounted price
+        - Otherwise use regular price
+        - Returns formatted string with currency symbol
+        """
+        if self.is_discount_active and self.price_discounted:
+            return f'₹{self.price_discounted / 100:.2f}'
         return f'₹{self.get_price_formatted():.2f}'
+    
+    def get_original_price_display(self):
+        """Get original price formatted (for strikethrough display)."""
+        if self.price_original:
+            return f'₹{self.price_original / 100:.2f}'
+        return f'₹{self.get_price_formatted():.2f}'
+    
+    def get_discount_percentage(self):
+        """
+        Calculate discount percentage automatically.
+        
+        LOGIC:
+        - If discount active and both prices set: calculate percentage
+        - Otherwise return 0
+        
+        Returns:
+            int: Discount percentage (0-100)
+        """
+        if not self.is_discount_active:
+            return 0
+        
+        if not self.price_original or not self.price_discounted:
+            return 0
+        
+        if self.price_original <= 0:
+            return 0
+        
+        discount = ((self.price_original - self.price_discounted) / self.price_original) * 100
+        return int(discount)
+    
+    def has_active_discount(self):
+        """Check if discount badge should be displayed."""
+        return (
+            self.is_discount_active and 
+            self.price_original and 
+            self.price_discounted and 
+            self.price_original > self.price_discounted
+        )
+    
+    def get_average_rating(self):
+        """Calculate average rating from approved reviews."""
+        approved_reviews = Review.query.filter_by(
+            product_id=self.id,
+            is_approved=True
+        ).all()
+        
+        if not approved_reviews:
+            return 0
+        
+        total_rating = sum(r.rating for r in approved_reviews)
+        return round(total_rating / len(approved_reviews), 1)
+    
+    def get_review_count(self):
+        """Get count of approved reviews."""
+        return Review.query.filter_by(
+            product_id=self.id,
+            is_approved=True
+        ).count()
+    
+    def get_approved_reviews(self):
+        """Get all approved reviews for display."""
+        return Review.query.filter_by(
+            product_id=self.id,
+            is_approved=True
+        ).order_by(Review.created_at.desc()).all()
     
     def get_primary_image(self):
         """
@@ -1299,16 +1379,63 @@ class ProductImage(db.Model):
 
 
 # FUTURE: Additional models for scalability
-# class Review(db.Model):
-#     """Product reviews and ratings."""
-#     __tablename__ = 'reviews'
-#     id = db.Column(db.Integer, primary_key=True)
-#     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-#     customer_name = db.Column(db.String(120), nullable=False)
-#     rating = db.Column(db.Integer, nullable=False)  # 1-5
-#     review_text = db.Column(db.Text)
-#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-#     products = db.relationship('Product', backref='reviews')
+
+class Review(db.Model):
+    """
+    Product reviews and ratings (admin-controlled).
+    
+    ADMIN CONTROL:
+    ==============
+    - Reviews are added/edited by admin only (for now)
+    - Future: Enable customer-submitted reviews with approval workflow
+    
+    APPROVAL WORKFLOW:
+    ==================
+    - is_approved = True: Visible on product page
+    - is_approved = False: Hidden from customers (for moderation)
+    
+    RATING SYSTEM:
+    ==============
+    - Rating is 1-5 scale
+    - Average rating auto-calculated from approved reviews
+    - Displayed on product cards and product page
+    
+    FUTURE ENHANCEMENTS:
+    ====================
+    - verified_purchase: Only show reviews from actual buyers
+    - helpful_count: Users mark review as helpful
+    - author_email: For verified purchase checks
+    - response_by_admin: Admin can reply to reviews
+    - images: Allow review images
+    - upvote/downvote system
+    """
+    
+    __tablename__ = 'reviews'
+    __table_args__ = (
+        CheckConstraint('rating >= 1 AND rating <= 5', name='ck_reviews_rating_range'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    
+    # Reviewer Information
+    name = db.Column(db.String(120), nullable=False)  # e.g., "Rahul Sharma"
+    role = db.Column(db.String(100), nullable=True)  # e.g., "Fitness Coach", "Powerlifter", "Calisthenics Athlete"
+    
+    # Review Content
+    rating = db.Column(db.Integer, nullable=False)  # 1-5 scale
+    title = db.Column(db.String(150), nullable=True)  # Optional short headline
+    comment = db.Column(db.Text, nullable=False)  # Main review text
+    
+    # Approval Status
+    is_approved = db.Column(db.Boolean, default=True, index=True)  # Admin controlled
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Review {self.id} - Product {self.product_id} - {self.rating}★>'
 
 
 # class Inventory_Alert(db.Model):
