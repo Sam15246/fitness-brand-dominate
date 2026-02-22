@@ -56,13 +56,13 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="price_original" class="form-label">Original Price (MRP) (₹)</label>
-                                <input type="number" class="form-control" id="price_original" name="price_original" step="0.01" min="0" value="{% if product and product.price_original %}{{ product.price_original / 100 }}{% endif %}" required>
+                                <input type="number" class="form-control" id="price_original" name="price_original" step="0.01" min="0" value="{% if product and product.price_original %}{{ product.price_original / 100 }}{% endif %}">
                                 <div class="form-text">Maximum retail price / List price</div>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label for="price_discounted" class="form-label">Selling Price (₹)</label>
-                                <input type="number" class="form-control" id="price_discounted" name="price_discounted" step="0.01" min="0" value="{% if product and product.price_discounted %}{{ product.price_discounted / 100 }}{% endif %}" required>
+                                <input type="number" class="form-control" id="price_discounted" name="price_discounted" step="0.01" min="0" value="{% if product and product.price_discounted %}{{ product.price_discounted / 100 }}{% endif %}">
                                 <div class="form-text">Current selling price (leave same as MRP for no discount)</div>
                             </div>
                         </div>
@@ -143,13 +143,21 @@
             }
         }
         
+        function updateFieldRequirements() {
+            // Make pricing fields required only when discount is active
+            priceOriginal.required = discountCheckbox.checked;
+            priceDiscounted.required = discountCheckbox.checked;
+        }
+        
         // Event listeners for real-time preview
         discountCheckbox.addEventListener('change', updateDiscountPreview);
+        discountCheckbox.addEventListener('change', updateFieldRequirements);
         priceOriginal.addEventListener('input', updateDiscountPreview);
         priceDiscounted.addEventListener('input', updateDiscountPreview);
         
         // Initial preview check
         updateDiscountPreview();
+        updateFieldRequirements();
     })();
 </script>
 {% endblock %}

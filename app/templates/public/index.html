@@ -18,7 +18,7 @@
             </div>
             <div class="col-lg-6 text-center">
                 <div class="hero-image">
-                    <img src="{{ url_for('static', filename='images/dominate-parallettes.jpg') }}" alt="Premium wooden parallettes" class="img-fluid rounded">
+                    <img src="{{ url_for('static', filename='images/home-page-image.png') }}" alt="Dominate calisthenics equipment collection" class="img-fluid rounded">
                 </div>
             </div>
         </div>
@@ -43,8 +43,9 @@
                                 <div class="product-card-image-wrapper">
                                     {% set primary_image = product.get_primary_image() %}
                                     {% if primary_image %}
-                                        {% set thumb_path = primary_image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
-                                        <img src="{{ url_for('static', filename=thumb_path) }}" class="product-card-image" alt="{{ product.name }}">
+                                        {% set thumb_path = primary_image.image_path.replace('\\', '/').replace('static/', '') %}
+                                        {% set thumb_path = thumb_path.replace('original', 'thumbnails') %}
+                                        <img src="{{ url_for('static', filename=thumb_path) }}" class="product-card-image" alt="{{ product.name }}" onerror="this.src='{{ url_for('static', filename=primary_image.image_path.replace('\\', '/').replace('static/', '')) }}'">
                                     {% elif product.image_url %}
                                         <img src="{{ product.image_url }}" class="product-card-image" alt="{{ product.name }}">
                                     {% else %}

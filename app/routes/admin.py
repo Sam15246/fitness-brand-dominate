@@ -272,8 +272,9 @@ def edit_product(product_id):
             errors.append('Invalid price')
         
         # Pricing validation
-        price_original = None
-        price_discounted = None
+        # Preserve existing pricing if discount is being disabled
+        price_original = product.price_original
+        price_discounted = product.price_discounted
         
         if is_discount_active:
             if not price_original_str or not price_discounted_str:
