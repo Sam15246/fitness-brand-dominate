@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import current_user
 from datetime import datetime
 from app.models import db, Product, Order, User, UserRole, OrderStatus, ShippingStatus, CommissionStatus, AdminActionLog, AffiliateProfile, ProductImage, PolicyPage, Review
+from sqlalchemy import or_
 from app.decorators import admin_required, superadmin_required
 from app.security import get_client_ip, log_admin_action
 from app.business_logic import StockManager, AffiliateManager, OrderManager
@@ -1345,13 +1346,12 @@ def edit_policy(slug):
             db.session.commit()
             
             # Log the action
-            log_admin_action(
-                user_id=current_user.id,
-                action='edit_policy',
-                resource_id=policy.id,
-                resource_type='PolicyPage',
-                details=f'Edited policy: {policy.slug}',
-                ip_address=get_client_ip()
+            AdminActionLog.create_log(
+                admin_id=current_user.id,
+                action_type='EDIT_POLICY',
+                target_id=policy.id,
+                ip_address=get_client_ip(),
+                description=f'Edited policy: {policy.slug}'
             )
             
             flash(f'Policy "{policy.title}" updated successfully', 'success')
@@ -1374,6 +1374,8 @@ def reviews_list():
     page = request.args.get('page', 1, type=int)
     status = request.args.get('status', 'all')  # all / approved / pending
     product_id = request.args.get('product_id', type=int)
+    rating = request.args.get('rating', type=int)
+    search = request.args.get('search', '').strip()
     
     query = Review.query
     
@@ -1386,13 +1388,36 @@ def reviews_list():
     # Filter by product
     if product_id:
         query = query.filter_by(product_id=product_id)
+
+    # Filter by rating
+    if rating:
+        query = query.filter_by(rating=rating)
+
+    # Search by reviewer name, title, or comment
+    if search:
+        like_term = f'%{search}%'
+        query = query.filter(
+            or_(
+                Review.name.ilike(like_term),
+                Review.title.ilike(like_term),
+                Review.comment.ilike(like_term)
+            )
+        )
     
     # Sort by newest first
     reviews = query.order_by(Review.created_at.desc()).paginate(page=page, per_page=20)
 
     products = Product.query.order_by(Product.name.asc()).all()
     
-    return render_template('admin/reviews.html', reviews=reviews, status=status, product_id=product_id, products=products)
+    return render_template(
+        'admin/reviews.html',
+        reviews=reviews,
+        status=status,
+        product_id=product_id,
+        rating=rating,
+        search=search,
+        products=products
+    )
 
 
 @admin_bp.route('/review/add/<int:product_id>', methods=['GET', 'POST'])
@@ -1563,6 +1588,39 @@ def delete_review(review_id):
     return redirect(url_for('admin.reviews_list'))
 
 
+@admin_bp.route('/review/<int:review_id>/set-approval', methods=['POST'])
+@admin_required
+def set_review_approval(review_id):
+    """Set review approval status explicitly (approve/reject)."""
+    review = Review.query.get_or_404(review_id)
+    approval_value = request.form.get('is_approved', '').strip().lower()
+    is_approved = approval_value in ('1', 'true', 'yes', 'on')
+
+    if review.is_approved == is_approved:
+        return redirect(url_for('admin.reviews_list'))
+
+    try:
+        review.is_approved = is_approved
+        db.session.commit()
+
+        action_type = 'APPROVE_REVIEW' if is_approved else 'REJECT_REVIEW'
+        AdminActionLog.create_log(
+            admin_id=current_user.id,
+            action_type=action_type,
+            target_id=review_id,
+            ip_address=get_client_ip(),
+            description=f'{action_type} for review {review_id}'
+        )
+
+        flash('Review approval updated.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Review approval update error: {str(e)}')
+        flash('Error updating review approval.', 'danger')
+
+    return redirect(url_for('admin.reviews_list'))
+
+
 @admin_bp.route('/review/<int:review_id>/toggle-approval', methods=['POST'])
 @admin_required
 def toggle_review_approval(review_id):
@@ -1573,13 +1631,13 @@ def toggle_review_approval(review_id):
         review.is_approved = not review.is_approved
         db.session.commit()
         
-        # Log the approval action
+        action_type = 'APPROVE_REVIEW' if review.is_approved else 'REJECT_REVIEW'
         AdminActionLog.create_log(
             admin_id=current_user.id,
-            action_type='TOGGLE_REVIEW_APPROVAL',
+            action_type=action_type,
             target_id=review_id,
             ip_address=get_client_ip(),
-            description=f'Review approval status: {review.is_approved}'
+            description=f'{action_type} for review {review_id}'
         )
         
         return jsonify({

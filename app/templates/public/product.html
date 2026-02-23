@@ -23,8 +23,7 @@
                             <div class="swiper-wrapper">
                                 {% for image in product_images %}
                                 <div class="swiper-slide">
-                                    {% set img_path = image.image_path.replace('\\', '/').replace('static/', '') %}
-                                    <img src="{{ url_for('static', filename=img_path) }}" 
+                                     <img src="{{ image_url(image.image_path) }}" 
                                          alt="{{ product.name }}" 
                                          class="img-fluid rounded"
                                          loading="lazy">
@@ -43,8 +42,7 @@
                             <div class="swiper-wrapper">
                                 {% for image in product_images %}
                                 <div class="swiper-slide">
-                                    {% set thumb_path = image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
-                                    <img src="{{ url_for('static', filename=thumb_path) }}" 
+                                     <img src="{{ image_thumb_url(image.image_path) }}" 
                                          alt="{{ product.name }}" 
                                          class="img-thumbnail"
                                          loading="lazy">
@@ -57,15 +55,14 @@
                     <!-- Single Image (No Slider Needed) -->
                     <div class="single-product-image">
                         {% set primary_image = product.get_primary_image() %}
-                        {% set main_path = primary_image.image_path.replace('\\', '/').replace('static/', '') %}
-                        <img src="{{ url_for('static', filename=main_path) }}" 
+                            <img src="{{ image_url(primary_image.image_path) }}" 
                              alt="{{ product.name }}" 
                              class="img-fluid rounded" 
                              style="width: 100%; height: auto; max-height: 500px; object-fit: cover;">
                     </div>
                 {% endif %}
             {% elif product.image_url %}
-                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-fluid rounded">
+                <img src="{{ image_url(product.image_url) }}" alt="{{ product.name }}" class="img-fluid rounded">
             {% else %}
                 <div class="placeholder-product-image-large">
                     <svg width="100%" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -274,18 +271,18 @@
             <h4 class="fw-bold mb-4">More Products You'll Love</h4>
         </div>
         <div class="col-12">
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                {% for other_product in related_products %}
+            <div class="products-scroll-wrapper">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 related-products-section">
+                    {% for other_product in related_products %}
                     <div class="col">
                         <div class="product-card-enhanced h-100">
                             <a href="{{ url_for('main.product_detail', slug=other_product.slug) }}" class="text-decoration-none">
                                 <div class="product-card-image-wrapper">
                                     {% set other_primary_image = other_product.get_primary_image() %}
                                     {% if other_primary_image %}
-                                        {% set other_thumb_path = other_primary_image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
-                                        <img src="{{ url_for('static', filename=other_thumb_path) }}" class="product-card-image" alt="{{ other_product.name }}">
+                                        <img src="{{ image_thumb_url(other_primary_image.image_path) }}" class="product-card-image" alt="{{ other_product.name }}">
                                     {% elif other_product.image_url %}
-                                        <img src="{{ other_product.image_url }}" class="product-card-image" alt="{{ other_product.name }}">
+                                        <img src="{{ image_url(other_product.image_url) }}" class="product-card-image" alt="{{ other_product.name }}">
                                     {% else %}
                                         <div class="placeholder-product-image">
                                             <svg width="100%" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -294,8 +291,9 @@
                                             </svg>
                                         </div>
                                     {% endif %}
-                                    <!-- Discount Badge (if applicable) -->
-                                    <!-- <span class="discount-badge-card">20% OFF</span> -->
+                                    {% if other_product.has_active_discount() %}
+                                        <span class="discount-badge-card">{{ other_product.get_discount_percentage() }}% OFF</span>
+                                    {% endif %}
                                 </div>
                             </a>
                             <div class="product-card-body">
@@ -314,9 +312,12 @@
                                     <span class="rating-count ms-1">(5.0)</span>
                                 </div>
                                 <div class="product-card-price-section mb-3">
-                                    <span class="product-card-price fw-bold">{{ other_product.get_price_display() }}</span>
-                                    <!-- Uncomment if you have original price -->
-                                    <!-- <span class="product-card-price-original ms-2">₹2,999</span> -->
+                                    {% if other_product.has_active_discount() %}
+                                        <span class="current-price fw-bold">{{ other_product.get_price_display() }}</span>
+                                        <span class="original-price ms-2">{{ other_product.get_original_price_display() }}</span>
+                                    {% else %}
+                                        <span class="product-card-price fw-bold">{{ other_product.get_price_display() }}</span>
+                                    {% endif %}
                                 </div>
                                 <a href="{{ url_for('main.product_detail', slug=other_product.slug) }}" class="btn btn-outline-primary btn-sm w-100">
                                     View Details
@@ -324,7 +325,8 @@
                             </div>
                         </div>
                     </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

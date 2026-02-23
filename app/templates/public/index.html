@@ -43,11 +43,10 @@
                                 <div class="product-card-image-wrapper">
                                     {% set primary_image = product.get_primary_image() %}
                                     {% if primary_image %}
-                                        {% set thumb_path = primary_image.image_path.replace('\\', '/').replace('static/', '') %}
-                                        {% set thumb_path = thumb_path.replace('original', 'thumbnails') %}
-                                        <img src="{{ url_for('static', filename=thumb_path) }}" class="product-card-image" alt="{{ product.name }}" onerror="this.src='{{ url_for('static', filename=primary_image.image_path.replace('\\', '/').replace('static/', '')) }}'">
+                                        {% set thumb_url = image_thumb_url(primary_image.image_path) %}
+                                        <img src="{{ thumb_url }}" class="product-card-image" alt="{{ product.name }}" onerror="this.src='{{ image_url(primary_image.image_path) }}'">
                                     {% elif product.image_url %}
-                                        <img src="{{ product.image_url }}" class="product-card-image" alt="{{ product.name }}">
+                                        <img src="{{ image_url(product.image_url) }}" class="product-card-image" alt="{{ product.name }}">
                                     {% else %}
                                         <div class="placeholder-product-image">
                                             <svg width="100%" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -73,20 +72,40 @@
                                     </a>
                                 </h6>
                                 <!-- Rating -->
-                                <div class="product-card-rating mb-2">
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
-                                    <span class="rating-count ms-1">(5.0)</span>
-                                </div>
-                                <div class="product-card-price-section mb-3">
+                                {% set review_count = product.get_review_count() %}
+                                {% if review_count > 0 %}
+                                    {% set avg_rating = product.get_average_rating() %}
+                                    <div class="product-card-rating mb-2">
+                                        {% for i in range(avg_rating|int) %}
+                                            <span class="star-small filled">★</span>
+                                        {% endfor %}
+                                        {% for i in range(5 - (avg_rating|int)) %}
+                                            <span class="star-small">★</span>
+                                        {% endfor %}
+                                        <span class="rating-count ms-1">({{ "%.1f"|format(avg_rating) }})</span>
+                                    </div>
+                                {% else %}
+                                    <div class="product-card-rating mb-2">
+                                        <span class="rating-count">No reviews yet</span>
+                                    </div>
+                                {% endif %}
+                                <div class="product-card-price-section mb-2">
                                     {% if product.has_active_discount() %}
-                                        <span class="current-price fw-bold">{{ product.get_price_display() }}</span>
-                                        <span class="original-price ms-2">{{ product.get_original_price_display() }}</span>
+                                        <div class="d-flex flex-wrap align-items-center gap-2">
+                                            <span class="current-price fw-bold">{{ product.get_price_display() }}</span>
+                                            <span class="original-price">{{ product.get_original_price_display() }}</span>
+                                            <span class="discount-badge">{{ product.get_discount_percentage() }}% OFF</span>
+                                        </div>
                                     {% else %}
                                         <span class="product-card-price fw-bold">{{ product.get_price_display() }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="product-card-stock mb-3">
+                                    {% if product.stock_quantity > 0 %}
+                                        <span class="in-stock">In stock</span>
+                                        <span class="stock-count">{{ product.stock_quantity }} available</span>
+                                    {% else %}
+                                        <span class="out-of-stock">Out of stock</span>
                                     {% endif %}
                                 </div>
                                 {% if product.stock_quantity > 0 %}

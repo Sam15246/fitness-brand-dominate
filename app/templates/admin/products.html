@@ -74,7 +74,12 @@
                                 {% for product in products.items %}
                                     <tr>
                                         <td class="fw-bold">{{ product.name }}</td>
-                                        <td>{{ product.get_price_display() }}</td>
+                                        <td>
+                                            <div class="fw-bold">{{ product.get_price_display() }}</div>
+                                            {% if product.has_active_discount() %}
+                                                <div class="small text-muted">MRP {{ product.get_original_price_display() }} · {{ product.get_discount_percentage() }}% OFF</div>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             <span class="badge {% if product.stock_quantity > 10 %}bg-success{% elif product.stock_quantity > 0 %}bg-warning{% else %}bg-danger{% endif %}">
                                                 {{ product.stock_quantity }}

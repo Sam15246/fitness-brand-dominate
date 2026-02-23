@@ -61,16 +61,16 @@
         </div>
 
         {% if products.items %}
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                {% for product in products.items %}
+            <div class="products-scroll-wrapper">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 products-page-section">
+                    {% for product in products.items %}
                     <div class="col">
                         <div class="product-card h-100">
                             {% set primary_image = product.get_primary_image() %}
                             {% if primary_image %}
-                                {% set thumb_path = primary_image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
-                                <img src="{{ url_for('static', filename=thumb_path) }}" class="card-img-top" alt="{{ product.name }}">
+                                <img src="{{ image_thumb_url(primary_image.image_path) }}" class="card-img-top" alt="{{ product.name }}">
                             {% elif product.image_url %}
-                                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                                <img src="{{ image_url(product.image_url) }}" class="card-img-top" alt="{{ product.name }}">
                             {% else %}
                                 <div class="placeholder-product-image">
                                     <svg width="100%" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -82,8 +82,18 @@
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title fw-bold">{{ product.name }}</h5>
                                 <p class="card-text text-muted flex-grow-1">{{ product.description[:90] }}...</p>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="price fw-bold">{{ product.get_price_display() }}</span>
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="product-card-price-section">
+                                        {% if product.has_active_discount() %}
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <span class="current-price fw-bold">{{ product.get_price_display() }}</span>
+                                                <span class="original-price">{{ product.get_original_price_display() }}</span>
+                                                <span class="discount-badge">{{ product.get_discount_percentage() }}% OFF</span>
+                                            </div>
+                                        {% else %}
+                                            <span class="product-card-price fw-bold">{{ product.get_price_display() }}</span>
+                                        {% endif %}
+                                    </div>
                                     {% if product.stock_quantity == 0 %}
                                         <span class="badge bg-danger">Out of Stock</span>
                                     {% endif %}
@@ -94,7 +104,8 @@
                             </div>
                         </div>
                     </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
         {% else %}
             <div class="empty-state text-center py-5">

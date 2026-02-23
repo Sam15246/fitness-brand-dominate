@@ -96,7 +96,7 @@
                                     {% for order in recent_orders %}
                                         <tr>
                                             <td class="fw-bold">{{ order.order_number }}</td>
-                                            <td>{{ order.customer_name }}</td>
+                                            <td>{{ order.guest_name }}</td>
                                             <td>{{ order.product.name }}</td>
                                             <td class="fw-bold">{{ order.get_total_price_display() }}</td>
                                             <td>

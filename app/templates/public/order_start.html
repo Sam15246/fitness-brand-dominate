@@ -21,13 +21,18 @@
                 <div class="card-body text-center">
                     {% set summary_image = product.get_primary_image() %}
                     {% if summary_image %}
-                        {% set summary_path = summary_image.image_path.replace('\\', '/').replace('static/', '').replace('original', 'thumbnails') %}
-                        <img src="{{ url_for('static', filename=summary_path) }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;">
+                        <img src="{{ image_thumb_url(summary_image.image_path) }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;">
                     {% elif product.image_url %}
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;">
+                        <img src="{{ image_url(product.image_url) }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;">
                     {% endif %}
                     <h4 class="fw-bold mb-2">{{ product.name }}</h4>
-                    <p class="fs-5 fw-bold text-color-primary mb-0">{{ product.get_price_display() }}</p>
+                    <div class="d-flex justify-content-center align-items-center flex-wrap gap-2">
+                        <span class="fw-bold text-color-primary">{{ product.get_price_display() }}</span>
+                        {% if product.has_active_discount() %}
+                            <span class="original-price">{{ product.get_original_price_display() }}</span>
+                            <span class="discount-badge">{{ product.get_discount_percentage() }}% OFF</span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 

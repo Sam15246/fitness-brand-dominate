@@ -282,7 +282,7 @@ def order_form(product_id):
         if errors:
             for error in errors:
                 flash(error, 'danger')
-            return render_template('public/order.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
+            return render_template('public/order_form.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
         
         # Create order using OrderManager
         try:
@@ -306,7 +306,7 @@ def order_form(product_id):
             
             if not order:
                 flash(message, 'danger')
-                return render_template('public/order.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
+                return render_template('public/order_form.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
             
             # Send confirmation email (async in future)
             send_order_confirmation_email(order)
@@ -324,9 +324,9 @@ def order_form(product_id):
             db.session.rollback()
             flash('An error occurred while processing your order. Please try again.', 'danger')
             current_app.logger.error(f'Order creation error: {str(e)}')
-            return render_template('public/order.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
+            return render_template('public/order_form.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
     
-    return render_template('public/order.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
+    return render_template('public/order_form.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
 
 
 @main_bp.route('/order/confirmation/<order_number>')

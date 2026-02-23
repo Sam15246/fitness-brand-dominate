@@ -47,8 +47,12 @@ def create_app(config=None):
 
     @app.context_processor
     def inject_brand_links():
+        from app.utils.image_urls import resolve_image_url, resolve_image_thumbnail_url
+
         return {
-            'instagram_url': app.config.get('INSTAGRAM_URL')
+            'instagram_url': app.config.get('INSTAGRAM_URL'),
+            'image_url': resolve_image_url,
+            'image_thumb_url': resolve_image_thumbnail_url,
         }
     
     # Create tables if they don't exist

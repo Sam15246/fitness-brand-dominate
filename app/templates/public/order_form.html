@@ -37,12 +37,23 @@
                             <h5 class="fw-bold mb-1">{{ product.name }}</h5>
                             <p class="text-muted small mb-0">{{ product.description[:80] }}...</p>
                         </div>
-                        <p class="fw-bold text-color-primary fs-5 mb-0">{{ product.get_price_display() }}</p>
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <span class="fw-bold text-color-primary fs-5 mb-0">{{ product.get_price_display() }}</span>
+                            {% if product.has_active_discount() %}
+                                <span class="original-price">{{ product.get_original_price_display() }}</span>
+                                <span class="discount-badge">{{ product.get_discount_percentage() }}% OFF</span>
+                            {% endif %}
+                        </div>
                     </div>
                     <hr class="my-2">
                     <div class="d-flex justify-content-between">
                         <p class="mb-0 small">Price per unit</p>
-                        <p class="mb-0 small fw-bold">{{ product.get_price_display() }}</p>
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <span class="mb-0 small fw-bold">{{ product.get_price_display() }}</span>
+                            {% if product.has_active_discount() %}
+                                <span class="original-price small">{{ product.get_original_price_display() }}</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -55,17 +66,17 @@
                     <h6 class="fw-bold mb-3 text-uppercase text-muted">Contact Information</h6>
                     
                     <div class="mb-3">
-                        <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" 
-                               value="{{ current_user.name if current_user.is_authenticated else '' }}"
+                              <label for="customer_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                              <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                  value="{{ current_user.name if current_user.is_authenticated else '' }}"
                                placeholder="Enter your full name" required>
                         <div class="form-text">We'll use this for your order receipt</div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                        <input type="tel" class="form-control" id="phone" name="phone" 
-                               value="{{ current_user.phone if current_user.is_authenticated and current_user.phone else '' }}"
+                              <label for="phone_number" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                              <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                  value="{{ current_user.phone if current_user.is_authenticated and current_user.phone else '' }}"
                                placeholder="+91 XXXXX XXXXX" required>
                         <div class="form-text">We'll WhatsApp you order confirmation</div>
                     </div>
@@ -77,6 +88,14 @@
                                placeholder="your@email.com" required>
                         <div class="form-text">For order receipt and updates</div>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="affiliate_code" class="form-label">Referral Code <span class="text-muted">(optional)</span></label>
+                        <input type="text" class="form-control" id="affiliate_code" name="affiliate_code" 
+                               value="{{ affiliate_code if affiliate_code else '' }}"
+                               placeholder="Enter influencer code">
+                        <div class="form-text">Support your favorite creator with their code</div>
+                    </div>
                 </div>
 
                 <!-- Delivery Information Section -->
@@ -87,6 +106,58 @@
                         <label for="city" class="form-label">City <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="city" name="city" 
                                placeholder="Your city" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                        <select class="form-select" id="state" name="state" required>
+                            <option value="">Select a state...</option>
+                            <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Chandigarh">Chandigarh</option>
+                            <option value="Chhattisgarh">Chhattisgarh</option>
+                            <option value="Dadra and Nagar Haveli">Dadra and Nagar Haveli</option>
+                            <option value="Daman and Diu">Daman and Diu</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Jharkhand">Jharkhand</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Lakshadweep">Lakshadweep</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Manipur">Manipur</option>
+                            <option value="Meghalaya">Meghalaya</option>
+                            <option value="Mizoram">Mizoram</option>
+                            <option value="Nagaland">Nagaland</option>
+                            <option value="Odisha">Odisha</option>
+                            <option value="Puducherry">Puducherry</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Sikkim">Sikkim</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Tripura">Tripura</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="pincode" class="form-label">Pincode <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="pincode" name="pincode" 
+                               placeholder="6-digit pincode (e.g., 226001)"
+                               inputmode="numeric"
+                               pattern="[0-9]{6}"
+                               maxlength="6"
+                               required>
                     </div>
 
                     <div class="mb-3">
@@ -159,8 +230,8 @@
 <script>
 document.getElementById('quantity').addEventListener('change', function() {
     const quantity = parseInt(this.value) || 1;
-    const price = {{ product.price }};  {# Price in paise #}
-    const totalPaise = price * quantity;
+    const unitPrice = {{ product.price_discounted if product.has_active_discount() and product.price_discounted else product.price }};  {# Price in paise #}
+    const totalPaise = unitPrice * quantity;
     const totalRupees = totalPaise / 100;
     
     document.getElementById('total-price').textContent = '₹' + totalRupees.toFixed(2);

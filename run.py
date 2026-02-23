@@ -68,7 +68,8 @@ def seed_db():
             slug='premium-parallettes-dominate',
             description='High-quality wooden parallettes designed for calisthenics training. Perfect for L-sits, muscle-ups, and bodyweight training. Handmade with premium materials. Features the DOMINATE branding for serious athletes.',
             price=49900,  # ₹499
-            stock=15,
+            stock_quantity=15,
+            weight_grams=1200,
             image_url='/static/images/dominate-parallettes.jpg',
             is_active=True,
             created_by=superadmin.id
@@ -79,7 +80,8 @@ def seed_db():
             slug='portable-pull-up-bar',
             description='Compact and durable pull-up bar for home training. Fits standard doorframes. Great for pull-ups, chin-ups, and hanging exercises.',
             price=39900,  # ₹399
-            stock=20,
+            stock_quantity=20,
+            weight_grams=3500,
             image_url='/static/images/pullupbar.jpg',
             is_active=True,
             created_by=superadmin.id

@@ -1991,6 +1991,28 @@ button, a, .card, .form-control {
     color: #999;
 }
 
+.product-card-stock {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    font-size: 0.85rem;
+    color: #6B5A45;
+}
+
+.product-card-stock .in-stock {
+    font-weight: 600;
+    color: #2D5016;
+}
+
+.product-card-stock .out-of-stock {
+    font-weight: 600;
+    color: #A94442;
+}
+
+.product-card-stock .stock-count {
+    color: #8B7A66;
+}
+
 /* =================
    TESTIMONIALS SECTION
    ================= */
@@ -2196,6 +2218,110 @@ button, a, .card, .form-control {
 
     .cta-buttons .btn {
         width: 100%;
+    }
+}
+
+/* =================
+   PRODUCTS PAGE - HORIZONTAL CAROUSEL (MOBILE)
+   ================= */
+
+@media (max-width: 768px) {
+    /* Scroll container wrapper for horizontal scrolling */
+    .products-scroll-wrapper {
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        padding: 0;
+        overflow-x: visible;  /* Allow overflow to be visible */
+    }
+
+    /* Products listing page - horizontal scroll with peek */
+    .products-page-section {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 1rem 0.75rem 1rem;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .products-page-section .col {
+        flex: 0 0 calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
+        scroll-snap-align: start;
+        width: calc(100vw - 2rem) !important;
+        margin: 0 !important;
+    }
+
+    /* Related products section - horizontal scroll with peek */
+    .related-products-section {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 1rem 0.75rem 1rem;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .related-products-section .col {
+        flex: 0 0 calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
+        scroll-snap-align: start;
+        width: calc(100vw - 2rem) !important;
+        margin: 0 !important;
+    }
+}
+
+/* Desktop - restore normal grid layout */
+@media (min-width: 769px) {
+    .products-scroll-wrapper {
+        width: 100%;
+        position: static;
+        margin: 0;
+        padding: 0;
+    }
+
+    .products-page-section {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        overflow-x: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .products-page-section .col {
+        flex: unset !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .related-products-section {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        overflow-x: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .related-products-section .col {
+        flex: unset !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
     }
 }
 

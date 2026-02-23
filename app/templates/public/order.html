@@ -20,7 +20,15 @@
                         </div>
                         <div class="col-4 text-end">
                                 <p class="mb-1"><strong>Price</strong></p>
-                            <p class="text-muted">{{ product.get_price_display() }}</p>
+                            {% if product.has_active_discount() %}
+                                <div class="d-flex justify-content-end align-items-center flex-wrap gap-2">
+                                    <span class="text-muted">{{ product.get_price_display() }}</span>
+                                    <span class="original-price small">{{ product.get_original_price_display() }}</span>
+                                    <span class="discount-badge">{{ product.get_discount_percentage() }}% OFF</span>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">{{ product.get_price_display() }}</p>
+                            {% endif %}
                         </div>
                     </div>
                     <hr>
