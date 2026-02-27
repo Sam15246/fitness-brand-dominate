@@ -1128,7 +1128,9 @@ class AdminActionLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     
     # Who performed the action
-    admin_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    # NOTE: Nullable to preserve audit trail when admin user is deleted
+    # Orphaned logs (admin_id = NULL) represent actions by deleted admins
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True, index=True)
     
     # What action
     action_type = db.Column(
