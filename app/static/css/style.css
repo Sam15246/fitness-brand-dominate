@@ -1441,50 +1441,68 @@ button, a, .card, .form-control {
 
 .password-input-wrapper {
     position: relative;
-    display: block;
 }
 
 .password-input-wrapper input {
-    padding-right: 50px;  /* Make room for eye icon */
-    position: relative;
-    z-index: 1;
+    padding-right: 50px;
+    width: 100%;
+}
+
+/* Hide browser's native password reveal button */
+.password-input-wrapper input::-ms-reveal,
+.password-input-wrapper input::-ms-clear {
+    display: none;
+}
+
+.password-input-wrapper input::-webkit-credentials-auto-fill-button,
+.password-input-wrapper input::-webkit-contacts-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+    height: 0;
+    width: 0;
+    margin: 0;
 }
 
 .password-toggle-btn {
     position: absolute;
-    right: 10px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
     padding: 8px;
-    color: #6B5337;
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
+    color: #666;
+    font-size: 20px;
+    line-height: 1;
+    transition: color 0.2s;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10;
-    min-width: 44px;  /* Touch-friendly tap target for mobile */
-    min-height: 44px;
 }
 
 .password-toggle-btn:hover {
-    opacity: 1;
+    color: #333;
 }
 
-.password-toggle-btn:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-    border-radius: 4px;
-}
-
-/* Ensure icons display correctly */
-.password-toggle-btn svg {
+.password-toggle-btn i {
     display: block;
-    width: 20px;
-    height: 20px;
+    font-size: 20px;
+}
+
+/* Mobile: make eye icon bigger and more tappable */
+@media (max-width: 768px) {
+    .password-toggle-btn {
+        padding: 12px;
+        font-size: 22px;
+        right: 8px;
+    }
+    
+    .password-toggle-btn i {
+        font-size: 22px;
+    }
 }
 
 /* =================
@@ -2171,7 +2189,40 @@ button, a, .card, .form-control {
 
 /* Mobile: turn long sections into horizontal rails */
 @media (max-width: 768px) {
-    .featured-products-section .row,
+    /* Featured products - break out of container to show horizontal scroll */
+    .featured-products-section {
+        overflow: visible;  /* Allow row to overflow section */
+    }
+
+    .featured-products-section .container {
+        overflow: hidden;  /* Constrain container but let row escape */
+    }
+
+    .featured-products-section .row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .featured-products-section .row > [class*="col-"] {
+        flex: 0 0 calc(100vw - 2rem);
+        max-width: calc(100vw - 2rem);
+        scroll-snap-align: start;
+    }
+
+    /* Other sections - keep original behavior */
     .why-choose-section .row,
     .how-to-order-section .row,
     .testimonials-section .row {
@@ -2183,7 +2234,6 @@ button, a, .card, .form-control {
         -webkit-overflow-scrolling: touch;
     }
 
-    .featured-products-section .row > [class*="col-"],
     .why-choose-section .row > [class*="col-"],
     .how-to-order-section .row > [class*="col-"],
     .testimonials-section .row > [class*="col-"] {
@@ -2218,6 +2268,33 @@ button, a, .card, .form-control {
 
     .cta-buttons .btn {
         width: 100%;
+    }
+}
+
+/* Desktop - restore featured products normal grid layout */
+@media (min-width: 769px) {
+    .featured-products-section {
+        overflow: auto;
+    }
+
+    .featured-products-section .container {
+        overflow: visible;
+    }
+
+    .featured-products-section .row {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        width: auto;
+        position: static;
+        left: auto;
+        right: auto;
+        margin: 0;
+        padding: 0;
+    }
+
+    .featured-products-section .row > [class*="col-"] {
+        flex: unset;
+        max-width: 100%;
     }
 }
 

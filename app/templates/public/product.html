@@ -144,18 +144,36 @@
             <!-- CTA Buttons -->
             {% if product.stock_quantity > 0 %}
                 <div class="product-cta-section mb-4">
-                    <form method="GET" action="{{ url_for('main.order_start', product_id=product.id) }}" class="mb-3">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-4">
-                                <label class="form-label small fw-bold mb-1" for="qty">Quantity</label>
-                                <input id="qty" name="qty" type="number" class="form-control" value="1" min="1" max="{{ product.stock_quantity }}" required>
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold mb-2" for="qty">Quantity</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Add to Cart Form -->
+                    <form method="POST" action="{{ url_for('main.add_to_cart', product_id=product.id) }}" id="addToCartForm">
+                        <div class="row g-2 mb-2">
+                            <div class="col-4 col-md-3">
+                                <input id="qty" name="quantity" type="number" class="form-control" value="1" min="1" max="{{ product.stock_quantity }}" required>
                             </div>
-                            <div class="col-8">
-                                <button type="submit" class="btn btn-primary btn-lg w-100 cta-primary">
-                                    <span>Buy Now</span>
+                            <div class="col-8 col-md-9">
+                                <button type="submit" class="btn btn-outline-primary btn-lg w-100">
+                                    <svg width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                                        <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zm3.915 10L3.102 4h10.796l-1.313 7h-8.17zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                    </svg>
+                                    Add to Cart
                                 </button>
                             </div>
                         </div>
+                        
+                        <!-- Buy Now Button (adds to cart and redirects to cart)  -->
+                        <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-lg w-100 cta-primary mb-2">
+                            <svg width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                                <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                                <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
+                            </svg>
+                            Buy Now
+                        </button>
                     </form>
                     
                     <!-- WhatsApp Order Button -->

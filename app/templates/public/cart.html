@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - DOMINATE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4 fw-bold">Shopping Cart</h1>
+
+            {% if cart['items'] %}
+                <!-- Cart Items -->
+                <div class="card mb-4">
+                    <div class="card-body p-0">
+                            {% for item in cart['items'] %}
+                            <div class="cart-item border-bottom p-3 {% if not loop.last %}{% endif %}">
+                                <div class="row align-items-center">
+                                    <!-- Product Image -->
+                                    <div class="col-3 col-md-2">
+                                        <a href="{{ url_for('main.product_detail', slug=item.product.slug) }}">
+                                            {% if item.product.images|length > 0 %}
+                                                <img src="{{ url_for('static', filename=item.product.images[0].image_path) }}" 
+                                                     alt="{{ item.product.name }}" 
+                                                     class="img-fluid rounded"
+                                                     style="max-height: 120px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded text-center py-4">
+                                                    <small class="text-muted">No Image</small>
+                                                </div>
+                                            {% endif %}
+                                        </a>
+                                    </div>
+
+                                    <!-- Product Details -->
+                                    <div class="col-9 col-md-4">
+                                        <h6 class="mb-1 fw-bold">
+                                            <a href="{{ url_for('main.product_detail', slug=item.product.slug) }}" class="text-decoration-none text-dark">
+                                                {{ item.product.name }}
+                                            </a>
+                                        </h6>
+                                        <p class="mb-0 small text-muted">
+                                            {{ item.product.get_price_display() }} each
+                                        </p>
+                                    </div>
+
+                                    <!-- Quantity -->
+                                    <div class="col-6 col-md-3 mt-2 mt-md-0">
+                                        <form method="POST" action="{{ url_for('main.update_cart', product_id=item.product.id) }}" class="d-flex align-items-center quantity-update-form" style="max-width: 130px;">
+                                            <input type="number" 
+                                                   name="quantity" 
+                                                   value="{{ item.quantity }}" 
+                                                   min="1" 
+                                                   max="{{ item.product.stock_quantity }}" 
+                                                   class="form-control form-control-sm text-center quantity-input"
+                                                   style="width: 70px;">
+                                        </form>
+                                    </div>
+
+                                    <!-- Subtotal & Remove -->
+                                    <div class="col-6 col-md-3 mt-2 mt-md-0 text-end">
+                                        <p class="mb-1 fw-bold">₹{{ "%.2f"|format(item.subtotal / 100) }}</p>
+                                        <form method="POST" action="{{ url_for('main.remove_from_cart', product_id=item.product.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Remove from cart">
+                                                Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <form method="POST" action="{{ url_for('main.clear_cart') }}" onsubmit="return confirm('Clear all items from cart?');">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <svg width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/>
+                                </svg>
+                                Clear Cart
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span>Subtotal ({{ cart.count }} items):</span>
+                                    <strong class="fs-5">₹{{ "%.2f"|format(cart.total / 100) }}</strong>
+                                </div>
+                                <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary w-100 mb-2">
+                                    Continue Shopping
+                                </a>
+                                <button class="btn btn-primary btn-lg w-100" onclick="alert('Checkout from cart coming soon! For now, use Buy Now on product pages.')">
+                                    Proceed to Checkout
+                                </button>
+                                <p class="small text-muted text-center mt-2 mb-0">
+                                    Shipping & taxes calculated at checkout
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% else %}
+                <!-- Empty Cart -->
+                <div class="text-center py-5">
+                    <svg width="100" height="100" fill="currentColor" class="text-muted mb-4" viewBox="0 0 16 16">
+                        <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </svg>
+                    <h3 class="mb-3">Your cart is empty</h3>
+                    <p class="text-muted mb-4">Start adding some amazing products!</p>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg">
+                        Browse Products
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.cart-item:hover {
+    background-color: #f8f9fa;
+}
+
+.quantity-update-form input::-webkit-inner-spin-button,
+.quantity-update-form input::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+.quantity-input:change {
+    /* Auto-submit on change */
+}
+</style>
+
+<script>
+// Auto-update cart when quantity changes
+document.querySelectorAll('.quantity-input').forEach(input => {
+    input.addEventListener('change', function() {
+        const min = parseInt(this.min) || 1;
+        const max = parseInt(this.max) || 999;
+        let value = parseInt(this.value);
+        
+        // Validate range
+        if (isNaN(value) || value < min) value = min;
+        if (value > max) value = max;
+        
+        this.value = value;
+        
+        // Submit form immediately
+        this.closest('.quantity-update-form').submit();
+    });
+});
+</script>
+
+{% endblock %}

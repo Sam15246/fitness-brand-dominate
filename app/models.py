@@ -895,8 +895,8 @@ class AffiliateProfile(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     
-    # Link to User (one-to-one)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True, index=True)
+    # Link to User (one-to-one) with cascade delete
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, unique=True, index=True)
     
     # Affiliate Code (unique referral code)
     affiliate_code = db.Column(db.String(20), unique=True, nullable=False, index=True)

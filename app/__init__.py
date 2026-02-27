@@ -59,6 +59,14 @@ def create_app(config=None):
     with app.app_context():
         db.create_all()
     
+    # Context processor - make cart count available in all templates
+    @app.context_processor
+    def inject_cart_count():
+        from flask import session
+        cart = session.get('cart', {})
+        cart_count = sum(cart.values()) if cart else 0
+        return dict(cart_count=cart_count)
+    
     # Error handlers
     @app.errorhandler(404)
     def not_found(e):

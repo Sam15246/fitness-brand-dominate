@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import current_user, login_required
 from datetime import datetime
 import secrets
@@ -53,6 +53,65 @@ def get_whatsapp_redirect_url(order):
     encoded_message = quote(message)
     
     return f'https://wa.me/{wa_number}?text={encoded_message}'
+
+
+# ============= CART HELPER FUNCTIONS =============
+
+def get_cart():
+    """Get cart from session or initialize empty cart."""
+    if 'cart' not in session:
+        session['cart'] = {}
+    return session['cart']
+
+
+def get_cart_count():
+    """Get total number of items in cart."""
+    cart = get_cart()
+    return sum(cart.values())
+
+
+def get_cart_items():
+    """
+    Get cart items with product details and totals.
+    
+    Returns:
+        dict: {
+            'items': [{product, quantity, price, subtotal}, ...],
+            'total': total_price,
+            'count': total_items
+        }
+    """
+    cart = get_cart()
+    items = []
+    total = 0
+    
+    for product_id, quantity in cart.items():
+        product = Product.query.get(int(product_id))
+        if product and product.is_active:
+            # Calculate price (use discounted price if discount is active)
+            if product.is_discount_active and product.price_discounted and product.price_discounted > 0:
+                price = product.price_discounted
+            else:
+                price = product.price
+            
+            subtotal = price * quantity
+            
+            items.append({
+                'product': product,
+                'quantity': quantity,
+                'price': price,
+                'subtotal': subtotal
+            })
+            total += subtotal
+    
+    return {
+        'items': items,
+        'total': total,
+        'count': sum(item['quantity'] for item in items)
+    }
+
+
+# ============= END CART HELPER FUNCTIONS =============
 
 
 @main_bp.route('/')
@@ -126,6 +185,121 @@ def product_detail(slug):
     # db.session.commit()
     
     return render_template('public/product.html', product=product, related_products=related_products)
+
+
+# ============= SHOPPING CART ROUTES =============
+
+@main_bp.route('/cart')
+def cart():
+    """Display shopping cart."""
+    cart_data = get_cart_items()
+    return render_template('public/cart.html', cart=cart_data)
+
+
+@main_bp.route('/cart/add/<int:product_id>', methods=['POST'])
+def add_to_cart(product_id):
+    """Add product to cart."""
+    product = Product.query.get_or_404(product_id)
+    
+    if not product.is_active:
+        flash('This product is no longer available.', 'danger')
+        return redirect(url_for('main.product_detail', slug=product.slug))
+    
+    if product.stock_quantity < 1:
+        flash('This product is out of stock.', 'danger')
+        return redirect(url_for('main.product_detail', slug=product.slug))
+    
+    # Get quantity from form (default 1)
+    quantity = request.form.get('quantity', 1, type=int)
+    quantity = max(1, min(quantity, product.stock_quantity))  # Ensure valid range
+    
+    # Get or initialize cart
+    cart = get_cart()
+    product_id_str = str(product_id)
+    
+    # Update quantity (add to existing or set new)
+    if product_id_str in cart:
+        new_qty = cart[product_id_str] + quantity
+        # Check stock limit
+        if new_qty > product.stock_quantity:
+            cart[product_id_str] = product.stock_quantity
+            flash(f'Updated quantity to maximum available stock ({product.stock_quantity}).', 'warning')
+        else:
+            cart[product_id_str] = new_qty
+            flash(f'Added {quantity} more {product.name} to cart!', 'success')
+    else:
+        cart[product_id_str] = quantity
+        flash(f'{product.name} added to cart!', 'success')
+    
+    session['cart'] = cart
+    session.modified = True
+    
+    # Return to cart if "buy_now" is clicked
+    if request.form.get('buy_now'):
+        return redirect(url_for('main.cart'))
+    return redirect(url_for('main.product_detail', slug=product.slug))
+
+
+@main_bp.route('/cart/update/<int:product_id>', methods=['POST'])
+def update_cart(product_id):
+    """Update product quantity in cart."""
+    cart = get_cart()
+    product_id_str = str(product_id)
+    
+    if product_id_str not in cart:
+        flash('Product not in cart.', 'warning')
+        return redirect(url_for('main.cart'))
+    
+    quantity = request.form.get('quantity', type=int)
+    
+    if quantity < 1:
+        # Remove if quantity is 0 or negative
+        del cart[product_id_str]
+        session['cart'] = cart
+        session.modified = True
+        flash('Item removed from cart.', 'info')
+        return redirect(url_for('main.cart'))
+    
+    # Check stock
+    product = Product.query.get(product_id)
+    if product:
+        if quantity > product.stock_quantity:
+            quantity = product.stock_quantity
+            flash(f'Quantity adjusted to available stock ({product.stock_quantity}).', 'warning')
+        
+        cart[product_id_str] = quantity
+        session['cart'] = cart
+        session.modified = True
+        flash('Cart updated.', 'success')
+    
+    return redirect(url_for('main.cart'))
+
+
+@main_bp.route('/cart/remove/<int:product_id>', methods=['POST'])
+def remove_from_cart(product_id):
+    """Remove product from cart."""
+    cart = get_cart()
+    product_id_str = str(product_id)
+    
+    if product_id_str in cart:
+        del cart[product_id_str]
+        session['cart'] = cart
+        session.modified = True
+        flash('Item removed from cart.', 'success')
+    
+    return redirect(url_for('main.cart'))
+
+
+@main_bp.route('/cart/clear', methods=['POST'])
+def clear_cart():
+    """Clear all items from cart."""
+    session['cart'] = {}
+    session.modified = True
+    flash('Cart cleared.', 'info')
+    return redirect(url_for('main.cart'))
+
+
+# ============= END SHOPPING CART ROUTES =============
 
 
 @main_bp.route('/order/<int:product_id>/start')

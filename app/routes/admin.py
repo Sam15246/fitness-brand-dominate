@@ -911,6 +911,69 @@ def deactivate_user(user_id):
     return redirect(url_for('admin.users_list'))
 
 
+@admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@superadmin_required
+def delete_user(user_id):
+    """
+    Permanently delete user account (SUPERADMIN ONLY).
+    
+    CRITICAL SECURITY RULES:
+    - Only superadmin can delete users
+    - Cannot delete yourself (prevents account lockout)
+    - Cannot delete last superadmin (prevents system orphaning)
+    - Irreversible action - requires confirmation
+    
+    DATA HANDLING:
+    - Deletes user and related data (cascade)
+    - Preserves order history (orders remain with customer snapshot data)
+    - Removes affiliate profile if exists
+    - Audit log entry created before deletion
+    
+    FUTURE ENHANCEMENTS:
+    - Soft delete option (mark deleted but preserve data)
+    - Data export before deletion (GDPR compliance)
+    - Reassign affiliate commissions to another user
+    - Email confirmation requirement for critical deletions
+    - Deletion reason logging
+    """
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent self-deletion
+    if user.id == current_user.id:
+        flash('You cannot delete your own account.', 'danger')
+        return redirect(url_for('admin.users_list'))
+    
+    # SUPERADMIN SAFETY CHECK: Prevent deleting last superadmin
+    if user.is_superadmin() and not user.can_be_deactivated():
+        flash('Cannot delete the last remaining superadmin. This would orphan the system.', 'danger')
+        return redirect(url_for('admin.users_list'))
+    
+    try:
+        user_email = user.email
+        user_name = user.name
+        
+        # Log the deletion action BEFORE deleting (so we have the record)
+        AdminActionLog.create_log(
+            admin_id=current_user.id,
+            action_type='DELETE_USER',
+            target_id=user_id,
+            ip_address=get_client_ip(),
+            description=f'Permanently deleted user account: {user_email} (Name: {user_name})'
+        )
+        
+        # Delete the user (cascade will handle related data)
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'User "{user_name}" permanently deleted', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error deleting user. User may have related data that needs to be handled first.', 'danger')
+        current_app.logger.error(f'User deletion error: {str(e)}')
+    
+    return redirect(url_for('admin.users_list'))
+
+
 # ============= STOCK MANAGEMENT ROUTES =============
 
 @admin_bp.route('/product/<int:product_id>/stock', methods=['POST'])
