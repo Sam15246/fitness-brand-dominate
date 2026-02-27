@@ -63,8 +63,7 @@
                             <div class="mb-3">
                                 <label for="register_name" class="form-label fw-bold">Full Name</label>
                                 <input type="text" class="form-control" id="register_name" name="name" 
-                                       placeholder="Enter your full name" required minlength="3" autofocus>
-                                <div class="form-text">At least 3 characters</div>
+                                       placeholder="Enter your full name (min 3 characters)" required minlength="3" autofocus>
                             </div>
 
                             <div class="mb-3">
@@ -75,23 +74,22 @@
 
                             <div class="mb-3">
                                 <label for="register_password" class="form-label fw-bold">Password</label>
-                                <div class="password-input-wrapper">
+                                <div class="password-input-wrapper" style="position: relative;">
                                     <input type="password" class="form-control" id="register_password" name="password" 
-                                           placeholder="Create a strong password" required minlength="6">
-                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password')" aria-label="Toggle password visibility">
-                                        <i class="bi bi-eye"></i>
+                                           placeholder="At least 6 characters" required minlength="6" style="padding-right: 50px;">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password')" aria-label="Toggle password visibility" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; z-index: 10;">
+                                        <i class="bi bi-eye" style="font-size: 20px; color: #666;"></i>
                                     </button>
                                 </div>
-                                <div class="form-text">At least 6 characters</div>
                             </div>
 
                             <div class="mb-4">
                                 <label for="register_confirm_password" class="form-label fw-bold">Confirm Password</label>
-                                <div class="password-input-wrapper">
+                                <div class="password-input-wrapper" style="position: relative;">
                                     <input type="password" class="form-control" id="register_confirm_password" name="confirm_password" 
-                                           placeholder="Re-enter your password" required>
-                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password')" aria-label="Toggle password visibility">
-                                        <i class="bi bi-eye"></i>
+                                           placeholder="Re-enter your password" required style="padding-right: 50px;">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password')" aria-label="Toggle password visibility" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; z-index: 10;">
+                                        <i class="bi bi-eye" style="font-size: 20px; color: #666;"></i>
                                     </button>
                                 </div>
                             </div>
