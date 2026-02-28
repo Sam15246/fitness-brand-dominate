@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 from datetime import datetime
 import secrets
 from urllib.parse import quote
-from app.models import db, Product, Order, User, AffiliateProfile, PolicyPage
+from app.models import db, Product, Order, User, AffiliateProfile, PolicyPage, CartItem
 from app.business_logic import OrderManager, AffiliateManager
 from app.utils import send_order_confirmation_email
 
@@ -58,10 +58,137 @@ def get_whatsapp_redirect_url(order):
 # ============= CART HELPER FUNCTIONS =============
 
 def get_cart():
-    """Get cart from session or initialize empty cart."""
-    if 'cart' not in session:
+    """
+    Get cart from database (logged-in) or session (guest).
+    
+    Returns:
+        dict: {product_id: quantity, ...}
+    """
+    if current_user.is_authenticated:
+        # Load cart from database
+        cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+        return {str(item.product_id): item.quantity for item in cart_items if item.product and item.product.is_active}
+    else:
+        # Load cart from session
+        if 'cart' not in session:
+            session['cart'] = {}
+        return session['cart']
+
+
+def sync_session_cart_to_db():
+    """
+    Sync session cart to database when user logs in.
+    Merges session cart with existing database cart.
+    """
+    if not current_user.is_authenticated:
+        return
+    
+    session_cart = session.get('cart', {})
+    if not session_cart:
+        return
+    
+    for product_id_str, quantity in session_cart.items():
+        product_id = int(product_id_str)
+        product = Product.query.get(product_id)
+        
+        if not product or not product.is_active:
+            continue
+        
+        # Check if item already in DB cart
+        cart_item = CartItem.query.filter_by(
+            user_id=current_user.id,
+            product_id=product_id
+        ).first()
+        
+        if cart_item:
+            # Update quantity (add to existing)
+            cart_item.quantity = min(cart_item.quantity + quantity, product.stock_quantity)
+            cart_item.updated_at = datetime.utcnow()
+        else:
+            # Create new cart item
+            cart_item = CartItem(
+                user_id=current_user.id,
+                product_id=product_id,
+                quantity=min(quantity, product.stock_quantity)
+            )
+            db.session.add(cart_item)
+    
+    db.session.commit()
+    
+    # Clear session cart after sync
+    session['cart'] = {}
+    session.modified = True
+
+
+def save_cart_item(product_id, quantity):
+    """
+    Save cart item to database (logged-in) or session (guest).
+    
+    Args:
+        product_id (int): Product ID
+        quantity (int): Quantity to set
+    """
+    if current_user.is_authenticated:
+        # Save to database
+        cart_item = CartItem.query.filter_by(
+            user_id=current_user.id,
+            product_id=product_id
+        ).first()
+        
+        if cart_item:
+            cart_item.quantity = quantity
+            cart_item.updated_at = datetime.utcnow()
+        else:
+            cart_item = CartItem(
+                user_id=current_user.id,
+                product_id=product_id,
+                quantity=quantity
+            )
+            db.session.add(cart_item)
+        
+        db.session.commit()
+    else:
+        # Save to session
+        cart = get_cart()
+        cart[str(product_id)] = quantity
+        session['cart'] = cart
+        session.modified = True
+
+
+def remove_cart_item(product_id):
+    """
+    Remove cart item from database (logged-in) or session (guest).
+    
+    Args:
+        product_id (int): Product ID to remove
+    """
+    if current_user.is_authenticated:
+        # Remove from database
+        CartItem.query.filter_by(
+            user_id=current_user.id,
+            product_id=product_id
+        ).delete()
+        db.session.commit()
+    else:
+        # Remove from session
+        cart = get_cart()
+        product_id_str = str(product_id)
+        if product_id_str in cart:
+            del cart[product_id_str]
+            session['cart'] = cart
+            session.modified = True
+
+
+def clear_cart():
+    """Clear all cart items from database (logged-in) or session (guest)."""
+    if current_user.is_authenticated:
+        # Clear database cart
+        CartItem.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+    else:
+        # Clear session cart
         session['cart'] = {}
-    return session['cart']
+        session.modified = True
 
 
 def get_cart_count():
@@ -204,7 +331,7 @@ def cart_count():
 
 @main_bp.route('/cart/add/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
-    """Add product to cart."""
+    """Add product to cart (database for logged-in, session for guests)."""
     product = Product.query.get_or_404(product_id)
     
     if not product.is_active:
@@ -219,26 +346,25 @@ def add_to_cart(product_id):
     quantity = request.form.get('quantity', 1, type=int)
     quantity = max(1, min(quantity, product.stock_quantity))  # Ensure valid range
     
-    # Get or initialize cart
+    # Get current cart
     cart = get_cart()
     product_id_str = str(product_id)
     
-    # Update quantity (add to existing or set new)
+    # Calculate new quantity
     if product_id_str in cart:
         new_qty = cart[product_id_str] + quantity
         # Check stock limit
         if new_qty > product.stock_quantity:
-            cart[product_id_str] = product.stock_quantity
+            new_qty = product.stock_quantity
             flash(f'Updated quantity to maximum available stock ({product.stock_quantity}).', 'warning')
         else:
-            cart[product_id_str] = new_qty
             flash(f'Added {quantity} more {product.name} to cart!', 'success')
     else:
-        cart[product_id_str] = quantity
+        new_qty = quantity
         flash(f'{product.name} added to cart!', 'success')
     
-    session['cart'] = cart
-    session.modified = True
+    # Save to database or session
+    save_cart_item(product_id, new_qty)
     
     # Return JSON response for AJAX request
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -258,7 +384,7 @@ def add_to_cart(product_id):
 
 @main_bp.route('/cart/update/<int:product_id>', methods=['POST'])
 def update_cart(product_id):
-    """Update product quantity in cart."""
+    """Update product quantity in cart (database for logged-in, session for guests)."""
     cart = get_cart()
     product_id_str = str(product_id)
     
@@ -270,9 +396,7 @@ def update_cart(product_id):
     
     if quantity < 1:
         # Remove if quantity is 0 or negative
-        del cart[product_id_str]
-        session['cart'] = cart
-        session.modified = True
+        remove_cart_item(product_id)
         flash('Item removed from cart.', 'info')
         return redirect(url_for('main.cart'))
     
@@ -283,9 +407,7 @@ def update_cart(product_id):
             quantity = product.stock_quantity
             flash(f'Quantity adjusted to available stock ({product.stock_quantity}).', 'warning')
         
-        cart[product_id_str] = quantity
-        session['cart'] = cart
-        session.modified = True
+        save_cart_item(product_id, quantity)
         flash('Cart updated.', 'success')
     
     return redirect(url_for('main.cart'))
@@ -293,30 +415,179 @@ def update_cart(product_id):
 
 @main_bp.route('/cart/remove/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
-    """Remove product from cart."""
-    cart = get_cart()
-    product_id_str = str(product_id)
-    
-    if product_id_str in cart:
-        del cart[product_id_str]
-        session['cart'] = cart
-        session.modified = True
-        flash('Item removed from cart.', 'success')
-    
+    """Remove product from cart (database for logged-in, session for guests)."""
+    remove_cart_item(product_id)
+    flash('Item removed from cart.', 'success')
     return redirect(url_for('main.cart'))
 
 
 @main_bp.route('/cart/clear', methods=['POST'])
-def clear_cart():
-    """Clear all items from cart."""
-    session['cart'] = {}
-    session.modified = True
+def clear_cart_route():
+    """Clear all items from cart (database for logged-in, session for guests)."""
+    clear_cart()
     flash('Cart cleared.', 'info')
     return redirect(url_for('main.cart'))
 
 
 # ============= END SHOPPING CART ROUTES =============
 
+# ============= CHECKOUT FROM CART =============
+
+@main_bp.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    """
+    Unified checkout page for cart items.
+    
+    WORKFLOW:
+    =========
+    1. GET: Display cart items + order form
+    2. POST: Process order submission
+    
+    DESIGN:
+    - Creates ONE order per product in cart (matches Order model)
+    - Shows all cart items with prices
+    - Single order form for delivery details
+    - Processes all cart items in transaction
+    - Returns WhatsApp link (if successful) or shows errors
+    
+    FUTURE IMPROVEMENTS:
+    - Multi-product order model (single order for all items)
+    - Coupon/discount codes at checkout
+    - Shipping cost calculation
+    - Payment gateway integration
+    """
+    
+    # Get cart data
+    cart_data = get_cart_items()
+    
+    # Redirect to shopping cart if empty
+    if not cart_data['items']:
+        flash('Your cart is empty. Add some products first!', 'info')
+        return redirect(url_for('main.cart'))
+    
+    # Get affiliate code from URL (optional referral)
+    affiliate_code = request.args.get('ref', '').strip().upper()
+    affiliate_profile = None
+    
+    if affiliate_code:
+        affiliate_profile, msg = AffiliateManager.validate_affiliate_code(affiliate_code)
+        if not affiliate_profile:
+            flash(f'Invalid affiliate code: {msg}', 'warning')
+            affiliate_code = None
+    
+    if request.method == 'POST':
+        # Extract form data
+        name = request.form.get('customer_name', '').strip()
+        phone = request.form.get('phone_number', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        city = request.form.get('city', '').strip()
+        state = request.form.get('state', '').strip()
+        pincode = request.form.get('pincode', '').strip()
+        address = request.form.get('address', '').strip()
+        email_opt_in = request.form.get('email_opt_in', False) == 'on'
+        affiliate_code_form = request.form.get('affiliate_code', '').strip().upper() or affiliate_code
+        
+        # Validation
+        errors = []
+        
+        if not name or len(name) < 3:
+            errors.append('Please provide a valid name (at least 3 characters)')
+        
+        if not phone or len(phone) != 10 or not phone.isdigit() or phone[0] < '6':
+            errors.append('Please provide a valid 10-digit phone number (start with 6-9)')
+        
+        if not email or '@' not in email:
+            errors.append('Please provide a valid email address')
+        
+        if not city or len(city) < 2:
+            errors.append('Please provide a valid city name')
+        
+        if not state:
+            errors.append('Please select a state')
+        
+        if not pincode or len(pincode) != 6 or not pincode.isdigit():
+            errors.append('Please provide a valid 6-digit pincode')
+        
+        if not address or len(address) < 10:
+            errors.append('Please provide a valid delivery address (at least 10 characters)')
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+        
+        # Process checkout - create orders for all cart items
+        try:
+            customer_data = {
+                'name': name,
+                'phone': phone,
+                'email': email,
+                'city': city,
+                'state': state,
+                'pincode': pincode,
+                'address': address
+            }
+            
+            orders_created = []
+            first_order = None
+            
+            # Create order for each product in cart
+            for item in cart_data['items']:
+                product = item['product']
+                quantity = item['quantity']
+                
+                # Validate stock for each item
+                if quantity > product.stock_quantity:
+                    flash(f'{product.name}: Only {product.stock_quantity} available in stock', 'danger')
+                    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+                
+                # Create order using OrderManager
+                order, message = OrderManager.place_order(
+                    product_id=product.id,
+                    quantity=quantity,
+                    customer_data=customer_data,
+                    affiliate_code=affiliate_code_form if len(orders_created) == 0 else None,  # Only first order gets affiliate
+                    user_id=current_user.id if current_user.is_authenticated else None
+                )
+                
+                if not order:
+                    flash(f'Error creating order for {product.name}: {message}', 'danger')
+                    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+                
+                orders_created.append(order)
+                if first_order is None:
+                    first_order = order
+                
+                # Send confirmation email
+                send_order_confirmation_email(order)
+            
+            # Update user email opt-in if logged in
+            if current_user.is_authenticated and email_opt_in:
+                current_user.email_marketing_opt_in = True
+                db.session.commit()
+            
+            # Clear the cart (database or session)
+            clear_cart()
+            
+            # Redirect to WhatsApp with first order number
+            wa_url = get_whatsapp_redirect_url(first_order)
+            
+            # Store order numbers for confirmation page
+            session['checkout_orders'] = [order.order_number for order in orders_created]
+            session.modified = True
+            
+            return redirect(wa_url)
+        
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while processing your order. Please try again.', 'danger')
+            current_app.logger.error(f'Checkout error: {str(e)}')
+            return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+    
+    # GET request - show checkout form with cart items
+    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+
+# ============= END CHECKOUT =============
 
 @main_bp.route('/order/<int:product_id>/start')
 def order_start(product_id):

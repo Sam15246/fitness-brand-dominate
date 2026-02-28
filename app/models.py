@@ -1497,6 +1497,68 @@ class PolicyPage(db.Model):
     def __repr__(self):
         return f'<PolicyPage {self.slug}>'
 
+class CartItem(db.Model):
+    """
+    Shopping cart items for logged-in users.
+    
+    DESIGN:
+    =======
+    - Only stores cart items for authenticated users
+    - Each item is a product + quantity combination
+    - Persists across sessions and devices
+    - Clears when user checks out or explicitly removes
+    
+    BUSINESS RULES:
+    - One row per product per user (unique constraint)
+    - Cannot exceed product stock quantity
+    - Auto-removes if product is deactivated
+    
+    FUTURE:
+    - Save abandoned carts for recovery emails
+    - Cart history/audit trail
+    - Analytics on cart abandonment
+    - ML-based product recommendations from cart
+    """
+    
+    __tablename__ = 'cart_items'
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'product_id', name='uq_user_product_cart'),
+        CheckConstraint('quantity > 0', name='ck_cart_quantity_positive'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='cart_items', foreign_keys=[user_id])
+    product = db.relationship('Product', backref='in_carts', foreign_keys=[product_id])
+    
+    def get_subtotal(self):
+        """Calculate subtotal for this cart item in paise."""
+        if not self.product:
+            return 0
+        # Use discounted price if active, else regular price
+        if self.product.is_discount_active and self.product.price_discounted:
+            price = self.product.price_discounted
+        else:
+            price = self.product.price
+        return price * self.quantity
+    
+    def get_subtotal_display(self):
+        """Return formatted subtotal string."""
+        return f'₹{self.get_subtotal() / 100:.2f}'
+    
+    def is_stock_available(self):
+        """Check if requested quantity is in stock."""
+        return self.product and self.product.stock_quantity >= self.quantity
+    
+    def __repr__(self):
+        return f'<CartItem user={self.user_id} product={self.product_id} qty={self.quantity}>'
 
 # class Email_Notification(db.Model):
 #     """Queued email notifications."""
