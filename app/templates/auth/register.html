@@ -76,9 +76,9 @@
                                 <label for="register_password" class="form-label fw-bold">Password</label>
                                 <div class="password-input-wrapper" style="position: relative;">
                                     <input type="password" class="form-control" id="register_password" name="password" 
-                                           placeholder="At least 6 characters" required minlength="6" style="padding-right: 50px;">
-                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_password')" aria-label="Toggle password visibility" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; z-index: 10;">
-                                        <i class="bi bi-eye" style="font-size: 20px; color: #666;"></i>
+                                           placeholder="At least 6 characters" required minlength="6" style="padding-right: 60px;">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordSimple('register_password', this)" aria-label="Toggle password visibility" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; z-index: 10; padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #666;">
+                                        Show
                                     </button>
                                 </div>
                             </div>
@@ -87,9 +87,9 @@
                                 <label for="register_confirm_password" class="form-label fw-bold">Confirm Password</label>
                                 <div class="password-input-wrapper" style="position: relative;">
                                     <input type="password" class="form-control" id="register_confirm_password" name="confirm_password" 
-                                           placeholder="Re-enter your password" required style="padding-right: 50px;">
-                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('register_confirm_password')" aria-label="Toggle password visibility" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; z-index: 10;">
-                                        <i class="bi bi-eye" style="font-size: 20px; color: #666;"></i>
+                                           placeholder="Re-enter your password" required style="padding-right: 60px;">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordSimple('register_confirm_password', this)" aria-label="Toggle password visibility" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #f8f9fa; border: 1px solid #ddd; cursor: pointer; z-index: 10; padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #666;">
+                                        Show
                                     </button>
                                 </div>
                             </div>
@@ -156,6 +156,23 @@ function togglePassword(inputId) {
     } else {
         input.type = 'password';
         icon.className = 'bi bi-eye';
+    }
+}
+
+/**
+ * Simple text-based password toggle (mobile-friendly)
+ * @param {string} inputId - ID of the password input field
+ * @param {HTMLElement} button - The button element
+ */
+function togglePasswordSimple(inputId, button) {
+    const input = document.getElementById(inputId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        button.textContent = 'Hide';
+    } else {
+        input.type = 'password';
+        button.textContent = 'Show';
     }
 }
 </script>
