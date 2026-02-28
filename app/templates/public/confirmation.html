@@ -38,32 +38,34 @@
 
                     <hr>
 
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Product</p>
-                            <p class="fw-bold">{{ order.product.name }}</p>
-                        </div>
-                        <div class="col-6 text-end">
-                            <p class="text-muted small mb-1">Quantity</p>
-                            <p class="fw-bold">{{ order.quantity }}</p>
-                        </div>
-                    </div>
+                    <div class="mb-3">
+                        <p class="text-muted small mb-2">Products Ordered</p>
+                        {% for item in order.items %}
+                        <div class="mb-3 p-3 border rounded">
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="fw-bold">{{ item.product.name }}</p>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <p class="text-muted small mb-1">Quantity</p>
+                                    <p class="fw-bold">{{ item.quantity }}</p>
+                                </div>
+                            </div>
 
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Unit Price</p>
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="fw-bold">{{ order.product.get_price_display() }}</span>
-                                {% if order.product.has_active_discount() %}
-                                    <span class="original-price">{{ order.product.get_original_price_display() }}</span>
-                                    <span class="discount-badge">{{ order.product.get_discount_percentage() }}% OFF</span>
-                                {% endif %}
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="text-muted small mb-1">Unit Price</p>
+                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                        <span class="fw-bold">{{ item.get_unit_price_display() }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <p class="text-muted small mb-1">Item Total</p>
+                                    <p class="fw-bold price">{{ item.get_subtotal_display() }}</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-6 text-end">
-                            <p class="text-muted small mb-1">Total Price</p>
-                            <p class="fw-bold price">{{ order.get_total_price_display() }}</p>
-                        </div>
+                        {% endfor %}
                     </div>
 
                     <hr>
@@ -74,8 +76,8 @@
                             <p class="small">{{ order.created_at.strftime('%d %b %Y, %H:%M') }}</p>
                         </div>
                         <div class="col-6 text-end">
-                            <p class="text-muted small mb-1">Status</p>
-                            <p class="small">Awaiting confirmation</p>
+                            <p class="text-muted small mb-1">Order Total</p>
+                            <p class="fw-bold price">{{ order.get_total_price_display() }}</p>
                         </div>
                     </div>
                 </div>

@@ -81,7 +81,11 @@
                                             <div>{{ order.guest_name }}</div>
                                             <small class="text-muted">{{ order.guest_phone }}</small>
                                         </td>
-                                        <td>{{ order.product.name }}</td>
+                                        <td>
+                                            {% for item in order.items %}
+                                                <div>{{ item.product.name }}</div>
+                                            {% endfor %}
+                                        </td>
                                         <td class="fw-bold">{{ order.get_total_price_display() }}</td>
                                         <td>
                                             <span class="badge 

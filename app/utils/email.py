@@ -18,11 +18,16 @@ def send_order_confirmation_email(order):
     """
     Send order confirmation email to customer.
     
+    MULTI-ITEM ORDERS:
+    - Supports multiple products per order
+    - Lists all order items with quantities and prices
+    - Shows total amount across all items
+    
     CURRENT: Placeholder implementation
     SCALABILITY: Replace with SMTP/SendGrid/Mailgun after initial launch
     
     Args:
-        order: Order object with customer details
+        order: Order object with multiple OrderItems
         
     Returns:
         dict: {'success': bool, 'message': str}
@@ -32,8 +37,16 @@ def send_order_confirmation_email(order):
     try:
         customer_email = order.guest_email
         order_number = order.order_number
-        product_name = order.product.name
-        quantity = order.quantity
+        
+        # Build email content with all items
+        items_text = ""
+        for idx, item in enumerate(order.items, 1):
+            product_name = item.product.name if item.product else "Product"
+            unit_price = item.get_unit_price_display()
+            quantity = item.quantity
+            subtotal = item.get_subtotal_display()
+            items_text += f"\n  {idx}. {product_name}\n     Qty: {quantity} × {unit_price} = {subtotal}"
+        
         total_price = order.get_total_price_display()
         
         # Build email content
@@ -42,8 +55,8 @@ def send_order_confirmation_email(order):
         
         Thank you for your order!
         
-        Product: {product_name}
-        Quantity: {quantity}
+        ORDER ITEMS:{items_text}
+        
         Total: {total_price}
         
         Order Details:

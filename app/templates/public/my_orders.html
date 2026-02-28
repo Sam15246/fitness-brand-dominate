@@ -47,13 +47,12 @@
                             <!-- Order Details -->
                             <div class="row small mb-3">
                                 <div class="col-md-6">
-                                    <p class="mb-1"><strong>Product</strong></p>
-                                    <p class="text-muted mb-2">{{ order.product.name }}</p>
-                                    
-                                    <p class="mb-1"><strong>Quantity</strong></p>
-                                    <p class="text-muted mb-2">{{ order.quantity }} unit(s)</p>
+                                    <p class="mb-1"><strong>Products</strong></p>
+                                    {% for item in order.items %}
+                                    <p class="text-muted mb-1">{{ item.product.name }} (Qty: {{ item.quantity }})</p>
+                                    {% endfor %}
 
-                                    <p class="mb-1"><strong>Delivery To</strong></p>
+                                    <p class="mb-1 mt-2"><strong>Delivery To</strong></p>
                                     <p class="text-muted">{{ order.city }}</p>
                                 </div>
 
@@ -83,6 +82,13 @@
                             <!-- Collapsed Details -->
                             <div class="collapse mt-3" id="order-details-{{ order.id }}">
                                 <div class="bg-light p-3 rounded">
+                                    <p class="small mb-2"><strong>Items Ordered:</strong></p>
+                                    <ul class="small text-muted mb-3 ps-3">
+                                        {% for item in order.items %}
+                                        <li>{{ item.product.name }} - Qty: {{ item.quantity }} × {{ item.get_unit_price_display() }} = {{ item.get_subtotal_display() }}</li>
+                                        {% endfor %}
+                                    </ul>
+
                                     <p class="small mb-2"><strong>Full Address:</strong></p>
                                     <p class="text-muted small mb-3">{{ order.address }}</p>
                                     

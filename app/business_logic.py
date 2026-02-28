@@ -430,16 +430,17 @@ class OrderManager:
         
         # Confirm order (reduces stock and calculates commission)
         if order.confirm_order():
-            # Log admin action
+            # Log admin action - calculate total items
             from app.models import AdminActionLog
             from app.security import get_client_ip
             
+            total_qty = sum(item.quantity for item in order.items)
             AdminActionLog.create_log(
                 admin_id=admin_id,
                 action_type='CONFIRM_ORDER',
                 target_id=order_id,
                 ip_address=get_client_ip(),
-                description=f'Confirmed order {order.order_number} - Stock reduced by {order.quantity}'
+                description=f'Confirmed order {order.order_number} - Stock reduced for {len(order.items)} item(s) (total qty: {total_qty})'
             )
             
             return True, f'Order confirmed: {order.order_number}'

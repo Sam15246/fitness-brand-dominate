@@ -51,20 +51,32 @@
 
                     <hr>
 
-                    <h6 class="fw-bold mb-3">Product Details</h6>
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <p class="text-muted small">Product</p>
-                            <p class="fw-bold">{{ order.product.name }}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <p class="text-muted small">Unit Price</p>
-                            <p class="fw-bold">{{ order.product.get_price_display() }}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <p class="text-muted small">Quantity</p>
-                            <p class="fw-bold">{{ order.quantity }}</p>
-                        </div>
+                    <h6 class="fw-bold mb-3">Order Items</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td class="text-end">{{ item.get_unit_price_display() }}</td>
+                                    <td class="text-end">{{ item.quantity }}</td>
+                                    <td class="text-end fw-bold">{{ item.get_subtotal_display() }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">Total:</td>
+                                    <td class="text-end fw-bold price">{{ order.get_total_price_display() }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
                     <hr>
@@ -285,17 +297,30 @@
                 <div class="card-body">
                     <h6 class="fw-bold mb-3">Order Summary</h6>
                     <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <td class="text-muted" colspan="2"><strong>Items</strong></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td class="text-muted">{{ item.product.name }}</td>
+                                <td class="text-end">{{ item.quantity }}×</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <hr>
+                    <table class="table table-sm">
                         <tr>
-                            <td class="text-muted">Product</td>
-                            <td class="text-end fw-bold">{{ order.product.name }}</td>
+                            <td class="text-muted">Items Count</td>
+                            <td class="text-end fw-bold">{{ order.items | length }}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted">Qty</td>
-                            <td class="text-end fw-bold">{{ order.quantity }}</td>
+                            <td class="text-muted">Total Qty</td>
+                            <td class="text-end fw-bold">{{ order.items | map(attribute='quantity') | sum }}</td>
                         </tr>
-                        <tr>
-                            <td class="text-muted">Unit Price</td>
-                            <td class="text-end fw-bold">{{ order.product.get_price_display() }}</td>
                         </tr>
                         <tr class="border-top">
                             <td class="fw-bold">Total</td>

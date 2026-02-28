@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 from datetime import datetime
 import secrets
 from urllib.parse import quote
-from app.models import db, Product, Order, User, AffiliateProfile, PolicyPage, CartItem
+from app.models import db, Product, Order, OrderItem, User, AffiliateProfile, PolicyPage, CartItem
 from app.business_logic import OrderManager, AffiliateManager
 from app.utils import send_order_confirmation_email
 
@@ -22,16 +22,16 @@ def generate_order_number():
     return f'ORD-{timestamp}-{random_suffix}'
 
 
-def get_whatsapp_redirect_url(orders, customer_data=None):
+def get_whatsapp_redirect_url(order, customer_data=None):
     """
     Generate WhatsApp redirect URL with comprehensive order details.
     
-    COMPREHENSIVE ORDER MESSAGE:
-    ============================
-    - Lists ALL products with quantities and prices
-    - Includes complete delivery address
-    - Shows order totals and customer details
-    - Formatted for readability on WhatsApp
+    STANDARDS-COMPLIANT:
+    ====================
+    - One order number for entire purchase
+    - All product items included in WhatsApp message
+    - Complete delivery address
+    - Order totals and customer details
     
     SCALABILITY:
     - WhatsApp has no strict message size limit
@@ -39,76 +39,63 @@ def get_whatsapp_redirect_url(orders, customer_data=None):
     - Messages remain readable for customer confirmation
     
     Args:
-        orders: Single Order or list of Order objects
+        order: Single Order object (contains multiple OrderItems)
         customer_data: Optional dict with delivery details {name, phone, email, city, state, pincode, address}
         
     Returns:
         str: WhatsApp web URL with encoded pre-filled message
     """
-    # Normalize to list
-    if not isinstance(orders, list):
-        orders = [orders]
-    
-    if not orders:
+    if not order:
         return f'https://wa.me/{current_app.config["WHATSAPP_NUMBER"]}'
     
-    # Get customer data from first order or passed parameter
-    first_order = orders[0]
+    # Get customer data from order or passed parameter
     if customer_data is None:
         customer_data = {
-            'name': first_order.guest_name,
-            'phone': first_order.guest_phone,
-            'email': first_order.guest_email,
-            'city': first_order.city,
-            'state': first_order.state,
-            'pincode': first_order.pincode,
-            'address': first_order.address
+            'name': order.guest_name,
+            'phone': order.guest_phone,
+            'email': order.guest_email,
+            'city': order.city,
+            'state': order.state,
+            'pincode': order.pincode,
+            'address': order.address
         }
     
-    # Build comprehensive message
+    # Build comprehensive message in customer-facing format
     message_lines = [
-        "🛍️ *NEW ORDER RECEIVED* 🛍️",
+        "Dominate -train anywhere Dominate everywhere",
         "",
-        "*CUSTOMER DETAILS:*",
+        "My DETAILS:",
         f"Name: {customer_data['name']}",
         f"Phone: {customer_data['phone']}",
         f"Email: {customer_data['email']}",
         "",
-        "*DELIVERY ADDRESS:*",
+        "DELIVERY ADDRESS:",
         f"{customer_data['address']}",
         f"{customer_data['city']}, {customer_data['state']} {customer_data['pincode']}",
         "",
-        "*ORDER ITEMS:*"
+        "Need to order the following ITEMS:"
     ]
     
-    # Add all products with details
-    total_amount = 0
-    for idx, order in enumerate(orders, 1):
-        product_name = order.product.name if order.product else "Product"
-        price_display = f"₹{order.total_price / 100:.2f}" if order.total_price else "N/A"
+    # Add all items with details (from OrderItems)
+    for idx, item in enumerate(order.items, 1):
+        product_name = item.product.name if item.product else "Product"
+        price_display = f"₹{item.unit_price / 100:.2f}"
         message_lines.append(
             f"{idx}. {product_name}"
         )
         message_lines.append(
-            f"   Qty: {order.quantity} | Price: {price_display}"
+            f"   Qty: {item.quantity} | Price: {price_display}"
         )
         message_lines.append(
             f"   Order #: {order.order_number}"
         )
         message_lines.append("")
-        total_amount += order.total_price
     
-    # Add totals and action
+    # Add total summary
+    total_amount = order.get_total_price()
     message_lines.extend([
-        "*TOTAL AMOUNT:*",
-        f"₹{total_amount / 100:.2f}",
-        "",
-        "*NEXT STEPS:*",
-        "1. Confirm this order",
-        "2. We'll process payment & shipping",
-        "3. Track your order after dispatch",
-        "",
-        "✅ Please confirm to proceed"
+        "TOTAL AMOUNT:",
+        f"₹{total_amount / 100:.2f}"
     ])
     
     message = "\n".join(message_lines)
@@ -506,15 +493,17 @@ def checkout():
     1. GET: Display cart items + order form
     2. POST: Process order submission
     
-    DESIGN:
-    - Creates ONE order per product in cart (matches Order model)
+    DESIGN (STANDARDS-COMPLIANT):
+    =============================
+    - Creates ONE Order for the entire cart
+    - Creates ONE OrderItem per product in cart
+    - One order number for entire purchase
     - Shows all cart items with prices
     - Single order form for delivery details
     - Processes all cart items in transaction
     - Returns WhatsApp link (if successful) or shows errors
     
     FUTURE IMPROVEMENTS:
-    - Multi-product order model (single order for all items)
     - Coupon/discount codes at checkout
     - Shipping cost calculation
     - Payment gateway integration
@@ -579,7 +568,7 @@ def checkout():
                 flash(error, 'danger')
             return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
         
-        # Process checkout - create orders for all cart items
+        # Process checkout - create ONE order with multiple OrderItems
         try:
             customer_data = {
                 'name': name,
@@ -591,38 +580,59 @@ def checkout():
                 'address': address
             }
             
-            orders_created = []
-            first_order = None
+            # Validate stock for all items before creating order
+            for item in cart_data['items']:
+                product = item['product']
+                quantity = item['quantity']
+                if quantity > product.stock_quantity:
+                    flash(f'{product.name}: Only {product.stock_quantity} available in stock', 'danger')
+                    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
             
-            # Create order for each product in cart
+            # Create single order
+            order = Order(
+                order_number=generate_order_number(),
+                user_id=current_user.id if current_user.is_authenticated else None,
+                guest_name=name,
+                guest_phone=phone,
+                guest_email=email,
+                city=city,
+                state=state,
+                pincode=pincode,
+                address=address
+            )
+            
+            # Add affiliate if provided (only for first/main order)
+            if affiliate_code_form:
+                affiliate_profile_val, msg = AffiliateManager.validate_affiliate_code(affiliate_code_form)
+                if affiliate_profile_val:
+                    order.affiliate_id = affiliate_profile_val.user_id
+            
+            db.session.add(order)
+            db.session.flush()  # Generate order ID before creating items
+            
+            # Create OrderItems for each product in cart
             for item in cart_data['items']:
                 product = item['product']
                 quantity = item['quantity']
                 
-                # Validate stock for each item
-                if quantity > product.stock_quantity:
-                    flash(f'{product.name}: Only {product.stock_quantity} available in stock', 'danger')
-                    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+                # Get price snapshot (use discounted price if active)
+                if product.is_discount_active and product.price_discounted:
+                    unit_price = product.price_discounted
+                else:
+                    unit_price = product.price
                 
-                # Create order using OrderManager
-                order, message = OrderManager.place_order(
+                order_item = OrderItem(
+                    order_id=order.id,
                     product_id=product.id,
                     quantity=quantity,
-                    customer_data=customer_data,
-                    affiliate_code=affiliate_code_form if len(orders_created) == 0 else None,  # Only first order gets affiliate
-                    user_id=current_user.id if current_user.is_authenticated else None
+                    unit_price=unit_price
                 )
-                
-                if not order:
-                    flash(f'Error creating order for {product.name}: {message}', 'danger')
-                    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
-                
-                orders_created.append(order)
-                if first_order is None:
-                    first_order = order
-                
-                # Send confirmation email
-                send_order_confirmation_email(order)
+                db.session.add(order_item)
+            
+            db.session.commit()
+            
+            # Send confirmation email
+            send_order_confirmation_email(order)
             
             # Update user email opt-in if logged in
             if current_user.is_authenticated and email_opt_in:
@@ -632,11 +642,11 @@ def checkout():
             # Clear the cart (database or session)
             clear_cart()
             
-            # Redirect to WhatsApp with ALL orders and complete customer data
-            wa_url = get_whatsapp_redirect_url(orders_created, customer_data)
+            # Redirect to WhatsApp with complete order and customer data
+            wa_url = get_whatsapp_redirect_url(order, customer_data)
             
-            # Store order numbers for confirmation page
-            session['checkout_orders'] = [order.order_number for order in orders_created]
+            # Store order number for confirmation page
+            session['checkout_order'] = order.order_number
             session.modified = True
             
             return redirect(wa_url)
@@ -820,17 +830,43 @@ def order_form(product_id):
                 'address': address
             }
             
-            order, message = OrderManager.place_order(
-                product_id=product.id,
-                quantity=quantity,
-                customer_data=customer_data,
-                affiliate_code=affiliate_code_form,
-                user_id=current_user.id if current_user.is_authenticated else None
+            # Create order
+            order = Order(
+                order_number=generate_order_number(),
+                user_id=current_user.id if current_user.is_authenticated else None,
+                guest_name=name,
+                guest_phone=phone,
+                guest_email=email,
+                city=city,
+                state=state,
+                pincode=pincode,
+                address=address
             )
             
-            if not order:
-                flash(message, 'danger')
-                return render_template('public/order_form.html', product=product, qty_default=qty_default, affiliate_code=affiliate_code)
+            # Add affiliate if provided
+            if affiliate_code_form:
+                affiliate_profile_val, msg = AffiliateManager.validate_affiliate_code(affiliate_code_form)
+                if affiliate_profile_val:
+                    order.affiliate_id = affiliate_profile_val.user_id
+            
+            db.session.add(order)
+            db.session.flush()  # Generate order ID
+            
+            # Get price snapshot (use discounted price if active)
+            if product.is_discount_active and product.price_discounted:
+                unit_price = product.price_discounted
+            else:
+                unit_price = product.price
+            
+            # Create OrderItem for the product
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=product.id,
+                quantity=quantity,
+                unit_price=unit_price
+            )
+            db.session.add(order_item)
+            db.session.commit()
             
             # Send confirmation email (async in future)
             send_order_confirmation_email(order)
@@ -840,9 +876,8 @@ def order_form(product_id):
                 current_user.email_marketing_opt_in = True
                 db.session.commit()
             
-            # Redirect to WhatsApp
-                # Redirect to WhatsApp with comprehensive order details
-                wa_url = get_whatsapp_redirect_url(order, customer_data)
+            # Redirect to WhatsApp with comprehensive order details
+            wa_url = get_whatsapp_redirect_url(order, customer_data)
             return redirect(wa_url)
         
         except Exception as e:

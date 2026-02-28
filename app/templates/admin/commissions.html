@@ -95,7 +95,10 @@
                                 <strong>{{ order.affiliate.name }}</strong><br>
                                 <small class="text-muted">{{ order.affiliate.affiliate_profile.affiliate_code }}</small>
                             </td>
-                            <td>{{ order.product.name }}</td>
+                            <td>
+                                {% set items_str = order.items | map(attribute='product.name') | list | join(', ') %}
+                                {{ items_str[:40] }}{% if items_str | length > 40 %}...{% endif %}
+                            </td>
                             <td>{{ order.get_total_price_display() }}</td>
                             <td class="fw-bold">{{ order.get_commission_amount_display() }}</td>
                             <td>

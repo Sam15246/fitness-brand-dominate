@@ -97,7 +97,10 @@
                                         <tr>
                                             <td class="fw-bold">{{ order.order_number }}</td>
                                             <td>{{ order.guest_name }}</td>
-                                            <td>{{ order.product.name }}</td>
+                                            <td>
+                                                {% set items_str = order.items | map(attribute='product.name') | list | join(', ') %}
+                                                {{ items_str[:50] }}{% if items_str | length > 50 %}...{% endif %}
+                                            </td>
                                             <td class="fw-bold">{{ order.get_total_price_display() }}</td>
                                             <td>
                                                 <span class="badge 

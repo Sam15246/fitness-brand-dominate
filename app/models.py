@@ -261,6 +261,183 @@ class User(UserMixin, db.Model):
         return f'<User {self.email} ({self.role})>'
 
 
+class ProductCategory(db.Model):
+    """
+    Product category model for hierarchical organization.
+    
+    ARCHITECTURE:
+    =============
+    Self-referencing foreign key enables nested categories:
+    - parent_id = NULL → Top-level category
+    - parent_id = ID → Subcategory
+    
+    EXAMPLE TREE:
+    =============
+    BARS & STANDS (parent_id=NULL)
+    ├─ Pull-Up Bars (parent_id=1)
+    │  ├─ Wall Mounted (parent_id=2)
+    │  ├─ Doorway (parent_id=2)
+    │  └─ Standalone (parent_id=2)
+    ├─ Dip Stations (parent_id=1)
+    └─ Parallelettes (parent_id=1)
+    
+    RINGS (parent_id=NULL)
+    ├─ Gymnastics Rings (parent_id=6)
+    └─ Ring Stands (parent_id=6)
+    
+    URL STRUCTURE:
+    ==============
+    - /products/bars-stands (top level)
+    - /products/bars-stands/pull-up-bars (level 2)
+    - /products/bars-stands/pull-up-bars/wall-mounted (level 3)
+    
+    SCALABILITY:
+    ============
+    - Unlimited nesting depth supported
+    - Fast queries with proper indexing
+    - Easy breadcrumb trail generation
+    - Filter products by category + subcategories
+    
+    FUTURE ENHANCEMENTS:
+    ====================
+    - Category images/banners
+    - SEO metadata per category
+    - Category-specific filters
+    - Featured categories
+    - Analytics per category
+    """
+    
+    __tablename__ = 'product_categories'
+    __table_args__ = (
+        CheckConstraint('display_order >= 0', name='ck_category_display_order_non_negative'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    description = db.Column(db.Text)
+    
+    # Self-referencing foreign key for hierarchy
+    parent_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'), nullable=True, index=True)
+    
+    # Display settings
+    icon = db.Column(db.String(50))  # CSS class or emoji for display
+    display_order = db.Column(db.Integer, default=0)  # Sort order within parent
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    children = db.relationship(
+        'ProductCategory',
+        backref=db.backref('parent', remote_side=[id]),
+        cascade='all, delete-orphan',
+        order_by='ProductCategory.display_order'
+    )
+    
+    # Products in this category
+    products = db.relationship('Product', backref='category', lazy='dynamic')
+    
+    # FUTURE: SEO metadata
+    # meta_title = db.Column(db.String(200))
+    # meta_description = db.Column(db.String(300))
+    # image_url = db.Column(db.String(255))
+    
+    def get_breadcrumb_trail(self):
+        """
+        Generate breadcrumb trail from root to this category.
+        
+        Returns:
+            list: [root_category, ..., this_category]
+        """
+        trail = [self]
+        current = self
+        while current.parent:
+            trail.insert(0, current.parent)
+            current = current.parent
+        return trail
+    
+    def get_all_children(self, include_self=True):
+        """
+        Get all descendant categories recursively.
+        
+        Args:
+            include_self: Whether to include this category
+            
+        Returns:
+            list: All category objects in tree
+        """
+        categories = [self] if include_self else []
+        for child in self.children:
+            categories.extend(child.get_all_children(include_self=True))
+        return categories
+    
+    def get_all_products(self, include_subcategories=True):
+        """
+        Get all products in this category.
+        
+        Args:
+            include_subcategories: Include products from child categories
+            
+        Returns:
+            Query: Product query object
+        """
+        if include_subcategories:
+            category_ids = [cat.id for cat in self.get_all_children(include_self=True)]
+            return Product.query.filter(Product.category_id.in_(category_ids), Product.is_active == True)
+        else:
+            return self.products.filter_by(is_active=True)
+    
+    def get_product_count(self, include_subcategories=True):
+        """
+        Count active products in this category.
+        
+        Args:
+            include_subcategories: Include products from child categories
+            
+        Returns:
+            int: Number of products
+        """
+        return self.get_all_products(include_subcategories).count()
+    
+    def get_depth_level(self):
+        """
+        Calculate depth level in tree (root=0, children=1, etc).
+        
+        Returns:
+            int: Depth level
+        """
+        level = 0
+        current = self
+        while current.parent:
+            level += 1
+            current = current.parent
+        return level
+    
+    def is_root(self):
+        """Check if this is a top-level category."""
+        return self.parent_id is None
+    
+    def has_children(self):
+        """Check if this category has subcategories."""
+        return len(self.children) > 0
+    
+    @classmethod
+    def get_root_categories(cls):
+        """
+        Get all top-level categories.
+        
+        Returns:
+            Query: Root categories ordered by display_order
+        """
+        return cls.query.filter_by(parent_id=None, is_active=True).order_by(cls.display_order)
+    
+    def __repr__(self):
+        return f'<ProductCategory {self.name} (id={self.id}, parent_id={self.parent_id})>'
+
+
 class Product(db.Model):
     """
     Product model for handmade calisthenics equipment.
@@ -295,6 +472,10 @@ class Product(db.Model):
     name = db.Column(db.String(150), nullable=False, index=True)
     slug = db.Column(db.String(150), unique=True, nullable=False, index=True)
     description = db.Column(db.Text, nullable=False)
+    
+    # Category (nullable for backward compatibility)
+    category_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'), nullable=True, index=True)
+    
     price = db.Column(db.Integer, nullable=False)  # Stored in paise (100 paise = ₹1)
     
     # Pricing System (Smart Discounts)
@@ -319,7 +500,7 @@ class Product(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    orders = db.relationship('Order', backref='product', cascade='all, delete-orphan')
+    # Note: Orders accessed through OrderItem (Product → OrderItem → Order)
     reviews = db.relationship('Review', backref='product', cascade='all, delete-orphan')
     # images relationship is defined in ProductImage model
     
@@ -502,12 +683,79 @@ class Product(db.Model):
         return f'<Product {self.name}>'
 
 
+class OrderItem(db.Model):
+    """
+    Order line items - individual products within an order.
+    
+    DESIGN PRINCIPLE:
+    =================
+    One Order = one purchase transaction (one order number)
+    One Order contains many OrderItems (line items for each product)
+    One OrderItem = one product with quantity and unit price snapshot
+    
+    KEY FEATURES:
+    - Stores price snapshot (protects from product price changes)
+    - Links to Product for reference (but price is immutable snapshot)
+    - Tracks individual item status (shipped, delivered, etc. - future)
+    - Enables per-item commission calculation (if needed)
+    
+    SCALABILITY:
+    - Supports unlimited products per order
+    - Historical price tracking (prices in OrderItem never change)
+    - Per-item shipping tracking (future feature)
+    - Per-item return management (future feature)
+    """
+    
+    __tablename__ = 'order_items'
+    __table_args__ = (
+        CheckConstraint('quantity > 0', name='ck_orderitem_quantity_positive'),
+        CheckConstraint('unit_price > 0', name='ck_orderitem_price_positive'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Foreign key to Order
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False, index=True)
+    
+    # Product reference (immutable snapshot)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    
+    # Quantity and price (snapshot - never modified)
+    quantity = db.Column(db.Integer, nullable=False)  # How many units
+    unit_price = db.Column(db.Integer, nullable=False)  # Price per unit in paise (snapshot at time of order)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    order = db.relationship('Order', backref='items')
+    product = db.relationship('Product', backref='order_items')
+    
+    def get_subtotal(self):
+        """Calculate subtotal: quantity × unit_price (in paise)."""
+        return self.quantity * self.unit_price
+    
+    def get_subtotal_display(self):
+        """Return formatted subtotal string."""
+        return f'₹{self.get_subtotal() / 100:.2f}'
+    
+    def get_unit_price_display(self):
+        """Return formatted unit price string."""
+        return f'₹{self.unit_price / 100:.2f}'
+    
+    def __repr__(self):
+        return f'<OrderItem order_id={self.order_id} product_id={self.product_id} qty={self.quantity}>'
+
+
 class Order(db.Model):
     """
     Order model for customer purchases.
     
-    BUSINESS MODEL:
-    ===============
+    BUSINESS MODEL (STANDARDS-COMPLIANT):
+    ======================================
+    - ONE order = ONE order number = ONE purchase transaction
+    - ONE order contains multiple OrderItems (line items)
+    - Each OrderItem = one product with quantity and snapshot price
     - Supports BOTH guest checkout and logged-in user orders
     - Guest checkout is DEFAULT (low friction)
     - Stores complete order snapshot (name, phone, email, address) always
@@ -548,8 +796,6 @@ class Order(db.Model):
     
     __tablename__ = 'orders'
     __table_args__ = (
-        CheckConstraint('quantity > 0', name='ck_orders_quantity_positive'),
-        CheckConstraint('total_price > 0', name='ck_orders_total_price_positive'),
         CheckConstraint('commission_amount >= 0', name='ck_orders_commission_non_negative'),
     )
     
@@ -571,12 +817,7 @@ class Order(db.Model):
     pincode = db.Column(db.String(6), nullable=False)  # 6-digit pincode
     address = db.Column(db.Text, nullable=False)
     
-    # Product and quantity
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    total_price = db.Column(db.Integer, nullable=False)  # Stored in paise (100 paise = ₹1)
-    
-    # Affiliate Commission
+    # Affiliate Commission (calculated across all items)
     commission_amount = db.Column(db.Integer, nullable=False, default=0)  # In paise
     commission_status = db.Column(
         db.String(20),
@@ -613,8 +854,6 @@ class Order(db.Model):
     
     # Relationships
     affiliate = db.relationship('User', foreign_keys=[affiliate_id], backref='referral_orders')
-    
-    # FUTURE: Payment integration
     # payment_gateway = db.Column(db.String(50))  # razorpay, stripe, paypal, etc
     # transaction_id = db.Column(db.String(100), unique=True, index=True)
     # payment_status = db.Column(db.String(20), default='pending')  # pending, completed, failed
@@ -635,8 +874,12 @@ class Order(db.Model):
     # utm_campaign = db.Column(db.String(100))  # For tracking campaign
     
     def get_total_price_formatted(self):
-        """Return total price in rupees format."""
-        return self.total_price / 100
+        """Return total price in rupees format (calculated from items)."""
+        return self.get_total_price() / 100
+    
+    def get_total_price(self):
+        """Calculate total order value from all items (in paise)."""
+        return sum(item.get_subtotal() for item in self.items)
     
     def get_total_price_display(self):
         """Return formatted total price string."""
@@ -672,7 +915,7 @@ class Order(db.Model):
         - Commission calculated when order is CONFIRMED
         - No commission for self-referrals
         - No commission for cancelled orders
-        - Commission based on total_price (not including shipping)
+        - Commission based on total_price (sum of all items)
         
         Args:
             affiliate_profile: AffiliateProfile instance
@@ -686,8 +929,9 @@ class Order(db.Model):
         if self.status == OrderStatus.CANCELLED.value:
             return 0
         
-        # Calculate commission as percentage of total_price
-        commission = int(self.total_price * (affiliate_profile.commission_percent / 100.0))
+        # Calculate commission as percentage of total price from all items
+        total_price = self.get_total_price()
+        commission = int(total_price * (affiliate_profile.commission_percent / 100.0))
         return commission
     
     def approve_commission(self):
@@ -776,24 +1020,25 @@ class Order(db.Model):
     
     def confirm_order(self):
         """
-        Confirm order and reduce stock.
+        Confirm order and reduce stock for all items.
         
         BUSINESS LOGIC:
         - Mark order as CONFIRMED
-        - Reduce product stock by quantity
+        - Reduce product stock by quantity for EACH item
         - Calculate and set commission_amount
         - Set confirmed_at timestamp
         
         Returns:
-            bool: True if successful, False if insufficient stock
+            bool: True if successful, False if any item has insufficient stock
         """
         if self.status == OrderStatus.CONFIRMED.value:
             return False  # Already confirmed
         
-        # Reduce stock
-        product = Product.query.get(self.product_id)
-        if not product or not product.decrease_stock(self.quantity):
-            return False  # Insufficient stock
+        # Reduce stock for each item
+        for item in self.items:
+            product = item.product
+            if not product or not product.decrease_stock(item.quantity):
+                return False  # Insufficient stock for this item
         
         # Calculate commission if affiliate exists
         if self.has_affiliate() and not self.is_self_referral():
@@ -811,11 +1056,11 @@ class Order(db.Model):
     
     def cancel_order(self):
         """
-        Cancel order and restore stock.
+        Cancel order and restore stock for all items.
         
         BUSINESS LOGIC:
         - Mark order as CANCELLED
-        - Restore product stock if order was confirmed
+        - Restore product stock if order was confirmed for EACH item
         - Reject commission if applicable
         
         Returns:
@@ -824,11 +1069,12 @@ class Order(db.Model):
         if self.status == OrderStatus.CANCELLED.value:
             return False  # Already cancelled
         
-        # Restore stock if order was confirmed
+        # Restore stock for each item if order was confirmed
         if self.status == OrderStatus.CONFIRMED.value:
-            product = Product.query.get(self.product_id)
-            if product:
-                product.increase_stock(self.quantity)
+            for item in self.items:
+                product = item.product
+                if product:
+                    product.increase_stock(item.quantity)
         
         # Reject commission
         if self.has_affiliate():
