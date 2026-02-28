@@ -800,7 +800,7 @@ class Order(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    order_number = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    order_number = db.Column(db.String(30), unique=True, nullable=False, index=True)  # VARCHAR(30) for ORD-YYYYMMDDHHMMSS-XXXXXX format
     
     # User reference (nullable for guest orders)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)

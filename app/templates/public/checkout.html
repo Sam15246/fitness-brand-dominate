@@ -26,7 +26,7 @@
                                     <div class="col-3 col-md-2">
                                         <a href="{{ url_for('main.product_detail', slug=item.product.slug) }}">
                                             {% if item.product.images|length > 0 %}
-                                                <img src="{{ url_for('static', filename=item.product.images[0].image_path) }}" 
+                                                <img src="{{ image_thumb_url(item.product.images[0].image_path) }}" 
                                                      alt="{{ item.product.name }}" 
                                                      class="img-fluid rounded"
                                                      style="max-height: 120px; object-fit: cover;">
