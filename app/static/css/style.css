@@ -599,6 +599,12 @@ nav.navbar {
     border-radius: 10px;
     background-color: #FFFFFF;
 }
+
+/* Form visibility toggle */
+.form-container.hidden {
+    display: none;
+}
+
 /* =================
    ADMIN TAB STYLING
    ================= */
@@ -1065,7 +1071,7 @@ a:hover {
     text-decoration: underline !important;
 }
 
-/* Tablet and above - 2 columns on tablet */
+/* Tablet and above - enforce 4-column layout */
 @media (min-width: 576px) {
     .footer-section {
         padding: 2.5rem 0 !important;
@@ -1077,10 +1083,12 @@ a:hover {
     
     .footer-column {
         margin-bottom: 0;
+        flex: 0 0 25% !important;
+        max-width: 25% !important;
     }
 }
 
-/* Desktop - 4 columns, larger spacing */
+/* Tablet landscape & small desktop - 4 equal columns */
 @media (min-width: 768px) {
     .footer-section {
         padding: 3rem 0 !important;
@@ -1920,6 +1928,39 @@ button, a, .card, .form-control {
 /* Mobile-friendly spacing optimization */
 .product-card-body {
     padding: 1rem;                  /* Reduced padding on mobile */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.product-card-actions {
+    margin-top: auto;
+    padding-top: 1rem; /* Add some space above the buttons */
+}
+
+.product-card-actions .row > .col {
+    display: flex;
+}
+
+.product-card-actions .row > .col > .btn,
+.product-card-actions .row > .col > form {
+    width: 100%;
+}
+
+.product-card-actions .buy-now-form {
+    display: block;
+}
+
+/* Center labels inside action buttons */
+.product-card-actions .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-card-stock .stock-low {
+    color: #A94442;
+    font-weight: 600;
 }
 
 .product-card-title {

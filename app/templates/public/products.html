@@ -93,6 +93,11 @@
                                         {% else %}
                                             <span class="product-card-price fw-bold">{{ product.get_price_display() }}</span>
                                         {% endif %}
+                                        {% if product.stock_quantity > 0 and product.stock_quantity <= 5 %}
+                                            <div class="mt-1">
+                                                <span class="stock-low">Only {{ product.stock_quantity }} left</span>
+                                            </div>
+                                        {% endif %}
                                     </div>
                                     {% if product.stock_quantity == 0 %}
                                         <span class="badge bg-danger">Out of Stock</span>

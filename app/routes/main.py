@@ -196,6 +196,12 @@ def cart():
     return render_template('public/cart.html', cart=cart_data)
 
 
+@main_bp.route('/cart/count')
+def cart_count():
+    """Return current cart item count as JSON for frontend badge sync."""
+    return jsonify({'cart_count': get_cart_count()})
+
+
 @main_bp.route('/cart/add/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
     """Add product to cart."""
@@ -234,10 +240,20 @@ def add_to_cart(product_id):
     session['cart'] = cart
     session.modified = True
     
+    # Return JSON response for AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'success': True,
+            'message': f'{product.name} added to cart!',
+            'cart_count': get_cart_count()
+        })
+
     # Return to cart if "buy_now" is clicked
     if request.form.get('buy_now'):
         return redirect(url_for('main.cart'))
-    return redirect(url_for('main.product_detail', slug=product.slug))
+    
+    # Fallback for non-JS form submissions
+    return redirect(request.referrer or url_for('main.product_detail', slug=product.slug))
 
 
 @main_bp.route('/cart/update/<int:product_id>', methods=['POST'])
