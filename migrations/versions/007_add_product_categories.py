@@ -13,9 +13,12 @@ MIGRATION SAFETY:
 - New table (no data loss)
 - category_id is nullable (existing products unaffected)
 - Can assign categories post-migration
+
+IDEMPOTENT: Safe to run multiple times (checks for existing tables/columns)
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 from datetime import datetime
 
 
@@ -27,34 +30,41 @@ depends_on = None
 
 
 def upgrade():
-    # Create product_categories table
-    op.create_table(
-        'product_categories',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(length=100), nullable=False),
-        sa.Column('slug', sa.String(length=100), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('parent_id', sa.Integer(), nullable=True),
-        sa.Column('icon', sa.String(length=50), nullable=True),
-        sa.Column('display_order', sa.Integer(), nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['parent_id'], ['product_categories.id'], ),
-        sa.PrimaryKeyConstraint('id'),
-        sa.CheckConstraint('display_order >= 0', name='ck_category_display_order_non_negative'),
-    )
+    conn = op.get_bind()
+    inspector = inspect(conn)
     
-    # Create indexes
-    op.create_index(op.f('ix_product_categories_slug'), 'product_categories', ['slug'], unique=True)
-    op.create_index(op.f('ix_product_categories_parent_id'), 'product_categories', ['parent_id'], unique=False)
-    op.create_index(op.f('ix_product_categories_is_active'), 'product_categories', ['is_active'], unique=False)
+    # Create product_categories table (only if it doesn't exist)
+    if 'product_categories' not in inspector.get_table_names():
+        op.create_table(
+            'product_categories',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('name', sa.String(length=100), nullable=False),
+            sa.Column('slug', sa.String(length=100), nullable=False),
+            sa.Column('description', sa.Text(), nullable=True),
+            sa.Column('parent_id', sa.Integer(), nullable=True),
+            sa.Column('icon', sa.String(length=50), nullable=True),
+            sa.Column('display_order', sa.Integer(), nullable=True),
+            sa.Column('is_active', sa.Boolean(), nullable=True),
+            sa.Column('created_at', sa.DateTime(), nullable=True),
+            sa.Column('updated_at', sa.DateTime(), nullable=True),
+            sa.ForeignKeyConstraint(['parent_id'], ['product_categories.id'], ),
+            sa.PrimaryKeyConstraint('id'),
+            sa.CheckConstraint('display_order >= 0', name='ck_category_display_order_non_negative'),
+        )
+        
+        # Create indexes
+        op.create_index(op.f('ix_product_categories_slug'), 'product_categories', ['slug'], unique=True)
+        op.create_index(op.f('ix_product_categories_parent_id'), 'product_categories', ['parent_id'], unique=False)
+        op.create_index(op.f('ix_product_categories_is_active'), 'product_categories', ['is_active'], unique=False)
     
-    # Add category_id to products table
-    with op.batch_alter_table('products', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('category_id', sa.Integer(), nullable=True))
-        batch_op.create_index(batch_op.f('ix_products_category_id'), ['category_id'], unique=False)
-        batch_op.create_foreign_key('fk_products_category_id', 'product_categories', ['category_id'], ['id'])
+    # Add category_id to products table (only if it doesn't exist)
+    products_columns = [col['name'] for col in inspector.get_columns('products')]
+    
+    if 'category_id' not in products_columns:
+        with op.batch_alter_table('products', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('category_id', sa.Integer(), nullable=True))
+            batch_op.create_index(batch_op.f('ix_products_category_id'), ['category_id'], unique=False)
+            batch_op.create_foreign_key('fk_products_category_id', 'product_categories', ['category_id'], ['id'])
     
     # OPTIONAL: Seed with default category (uncommit if you want)
     # from datetime import datetime

@@ -8,9 +8,12 @@ This migration:
 1. Creates order_items table for line items
 2. Removes product_id, quantity, total_price from orders table
 3. Maintains data integrity for existing orders
+
+IDEMPOTENT: Safe to run multiple times (checks for existing tables/columns)
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 # revision identifiers, used by Alembic.
@@ -21,40 +24,56 @@ depends_on = None
 
 
 def upgrade():
-    # Create order_items table
-    op.create_table(
-        'order_items',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('order_id', sa.Integer(), nullable=False),
-        sa.Column('product_id', sa.Integer(), nullable=False),
-        sa.Column('quantity', sa.Integer(), nullable=False),
-        sa.Column('unit_price', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ),
-        sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
-        sa.PrimaryKeyConstraint('id'),
-        sa.CheckConstraint('quantity > 0', name='ck_orderitem_quantity_positive'),
-        sa.CheckConstraint('unit_price > 0', name='ck_orderitem_price_positive'),
-    )
-    op.create_index(op.f('ix_order_items_order_id'), 'order_items', ['order_id'], unique=False)
-    op.create_index(op.f('ix_order_items_product_id'), 'order_items', ['product_id'], unique=False)
+    conn = op.get_bind()
+    inspector = inspect(conn)
     
-    # MIGRATION: Copy existing orders to order_items (each order becomes one item)
-    # This preserves data integrity for existing standalone orders
-    # Note: In production, this would be done with careful SQL to maintain referential integrity
+    # Create order_items table (only if it doesn't exist)
+    if 'order_items' not in inspector.get_table_names():
+        op.create_table(
+            'order_items',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('order_id', sa.Integer(), nullable=False),
+            sa.Column('product_id', sa.Integer(), nullable=False),
+            sa.Column('quantity', sa.Integer(), nullable=False),
+            sa.Column('unit_price', sa.Integer(), nullable=False),
+            sa.Column('created_at', sa.DateTime(), nullable=True),
+            sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ),
+            sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
+            sa.PrimaryKeyConstraint('id'),
+            sa.CheckConstraint('quantity > 0', name='ck_orderitem_quantity_positive'),
+            sa.CheckConstraint('unit_price > 0', name='ck_orderitem_price_positive'),
+        )
+        op.create_index(op.f('ix_order_items_order_id'), 'order_items', ['order_id'], unique=False)
+        op.create_index(op.f('ix_order_items_product_id'), 'order_items', ['product_id'], unique=False)
     
-    # Update orders table - remove product_related columns
-    # Drop constraints first
-    op.drop_constraint('ck_orders_quantity_positive', 'orders', type_='check')
-    op.drop_constraint('ck_orders_total_price_positive', 'orders', type_='check')
+    # Check if orders table still has old columns
+    orders_columns = [col['name'] for col in inspector.get_columns('orders')]
     
-    # Drop foreign key to products
-    op.drop_constraint('orders_product_id_fkey', 'orders', type_='foreignkey')
-    
-    # Drop columns
-    op.drop_column('orders', 'product_id')
-    op.drop_column('orders', 'quantity')
-    op.drop_column('orders', 'total_price')
+    if 'product_id' in orders_columns:
+        # Drop constraints first (only if they exist)
+        try:
+            op.drop_constraint('ck_orders_quantity_positive', 'orders', type_='check')
+        except Exception:
+            pass  # Constraint might not exist
+        
+        try:
+            op.drop_constraint('ck_orders_total_price_positive', 'orders', type_='check')
+        except Exception:
+            pass
+        
+        # Drop foreign key to products (only if it exists)
+        try:
+            op.drop_constraint('orders_product_id_fkey', 'orders', type_='foreignkey')
+        except Exception:
+            pass
+        
+        # Drop columns (only if they exist)
+        if 'product_id' in orders_columns:
+            op.drop_column('orders', 'product_id')
+        if 'quantity' in orders_columns:
+            op.drop_column('orders', 'quantity')
+        if 'total_price' in orders_columns:
+            op.drop_column('orders', 'total_price')
 
 
 def downgrade():
