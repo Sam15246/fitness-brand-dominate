@@ -22,35 +22,98 @@ def generate_order_number():
     return f'ORD-{timestamp}-{random_suffix}'
 
 
-def get_whatsapp_redirect_url(order):
+def get_whatsapp_redirect_url(orders, customer_data=None):
     """
-    Generate WhatsApp redirect URL with pre-filled message.
+    Generate WhatsApp redirect URL with comprehensive order details.
     
-    FUTURE SCALABILITY:
-    - Add payment gateway confirmation before WhatsApp
-    - Include payment proof/receipt in message
-    - Add order tracking link
-    - Integrate with WhatsApp Business API for rich messages
+    COMPREHENSIVE ORDER MESSAGE:
+    ============================
+    - Lists ALL products with quantities and prices
+    - Includes complete delivery address
+    - Shows order totals and customer details
+    - Formatted for readability on WhatsApp
+    
+    SCALABILITY:
+    - WhatsApp has no strict message size limit
+    - URL can handle ~2000+ characters safely
+    - Messages remain readable for customer confirmation
     
     Args:
-        order: Order object with all details
+        orders: Single Order or list of Order objects
+        customer_data: Optional dict with delivery details {name, phone, email, city, state, pincode, address}
         
     Returns:
         str: WhatsApp web URL with encoded pre-filled message
     """
-    message = (
-        f"Hello, I would like to place an order:\n\n"
-        f"Order Number: {order.order_number}\n"
-        f"Product: {order.product.name}\n"
-        f"Quantity: {order.quantity}\n"
-        f"Total: {order.get_total_price_display()}\n"
-        f"Name: {order.guest_name}\n"
-        f"City: {order.city}\n"
-        f"Phone: {order.guest_phone}"
-    )
+    # Normalize to list
+    if not isinstance(orders, list):
+        orders = [orders]
     
-    wa_number = current_app.config['WHATSAPP_NUMBER']
+    if not orders:
+        return f'https://wa.me/{current_app.config["WHATSAPP_NUMBER"]}'
+    
+    # Get customer data from first order or passed parameter
+    first_order = orders[0]
+    if customer_data is None:
+        customer_data = {
+            'name': first_order.guest_name,
+            'phone': first_order.guest_phone,
+            'email': first_order.guest_email,
+            'city': first_order.city,
+            'state': first_order.state,
+            'pincode': first_order.pincode,
+            'address': first_order.address
+        }
+    
+    # Build comprehensive message
+    message_lines = [
+        "🛍️ *NEW ORDER RECEIVED* 🛍️",
+        "",
+        "*CUSTOMER DETAILS:*",
+        f"Name: {customer_data['name']}",
+        f"Phone: {customer_data['phone']}",
+        f"Email: {customer_data['email']}",
+        "",
+        "*DELIVERY ADDRESS:*",
+        f"{customer_data['address']}",
+        f"{customer_data['city']}, {customer_data['state']} {customer_data['pincode']}",
+        "",
+        "*ORDER ITEMS:*"
+    ]
+    
+    # Add all products with details
+    total_amount = 0
+    for idx, order in enumerate(orders, 1):
+        product_name = order.product.name if order.product else "Product"
+        price_display = f"₹{order.total_price / 100:.2f}" if order.total_price else "N/A"
+        message_lines.append(
+            f"{idx}. {product_name}"
+        )
+        message_lines.append(
+            f"   Qty: {order.quantity} | Price: {price_display}"
+        )
+        message_lines.append(
+            f"   Order #: {order.order_number}"
+        )
+        message_lines.append("")
+        total_amount += order.total_price
+    
+    # Add totals and action
+    message_lines.extend([
+        "*TOTAL AMOUNT:*",
+        f"₹{total_amount / 100:.2f}",
+        "",
+        "*NEXT STEPS:*",
+        "1. Confirm this order",
+        "2. We'll process payment & shipping",
+        "3. Track your order after dispatch",
+        "",
+        "✅ Please confirm to proceed"
+    ])
+    
+    message = "\n".join(message_lines)
     encoded_message = quote(message)
+    wa_number = current_app.config['WHATSAPP_NUMBER']
     
     return f'https://wa.me/{wa_number}?text={encoded_message}'
 
@@ -569,8 +632,8 @@ def checkout():
             # Clear the cart (database or session)
             clear_cart()
             
-            # Redirect to WhatsApp with first order number
-            wa_url = get_whatsapp_redirect_url(first_order)
+            # Redirect to WhatsApp with ALL orders and complete customer data
+            wa_url = get_whatsapp_redirect_url(orders_created, customer_data)
             
             # Store order numbers for confirmation page
             session['checkout_orders'] = [order.order_number for order in orders_created]
@@ -778,7 +841,8 @@ def order_form(product_id):
                 db.session.commit()
             
             # Redirect to WhatsApp
-            wa_url = get_whatsapp_redirect_url(order)
+                # Redirect to WhatsApp with comprehensive order details
+                wa_url = get_whatsapp_redirect_url(order, customer_data)
             return redirect(wa_url)
         
         except Exception as e:
