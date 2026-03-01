@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 from datetime import datetime
 import secrets
 from urllib.parse import quote
-from app.models import db, Product, Order, OrderItem, User, AffiliateProfile, PolicyPage, CartItem
+from app.models import db, Product, Order, OrderItem, User, AffiliateProfile, PolicyPage, CartItem, Payment, InventoryLog
 from app.business_logic import OrderManager, AffiliateManager
 from app.utils import send_order_confirmation_email
 

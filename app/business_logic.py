@@ -13,7 +13,7 @@ This module prevents business logic bloat in routes and models.
 """
 
 from datetime import datetime
-from app.models import db, User, Product, Order, AffiliateProfile, OrderStatus, ShippingStatus, CommissionStatus
+from app.models import db, User, Product, Order, AffiliateProfile, OrderStatus, ShippingStatus, CommissionStatus, Payment, InventoryLog, PaymentStatus, InventoryChangeType
 
 
 class StockManager:
