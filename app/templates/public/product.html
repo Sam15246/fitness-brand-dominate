@@ -104,8 +104,10 @@
                         <span class="discount-badge">{{ product.get_discount_percentage() }}% OFF</span>
                     {% endif %}
                 </div>
-                {% if product.stock_quantity > 0 %}
-                    <span class="stock-badge in-stock">✓ In Stock ({{ product.stock_quantity }} available)</span>
+                {% if product.stock_quantity > 5 %}
+                    <span class="stock-badge in-stock">✓ In Stock</span>
+                {% elif product.stock_quantity > 0 and product.stock_quantity <= 5 %}
+                    <span class="stock-badge low-stock" style="color: #dc3545;">⚠️ Only {{ product.stock_quantity }} left</span>
                 {% else %}
                     <span class="stock-badge out-of-stock">Out of Stock</span>
                 {% endif %}

@@ -424,9 +424,9 @@ def add_to_cart(product_id):
             'cart_count': get_cart_count()
         })
 
-    # Return to cart if "buy_now" is clicked
+    # Return to checkout if "buy_now" is clicked (quick checkout)
     if request.form.get('buy_now'):
-        return redirect(url_for('main.cart'))
+        return redirect(url_for('main.checkout'))
     
     # Fallback for non-JS form submissions
     return redirect(request.referrer or url_for('main.product_detail', slug=product.slug))
