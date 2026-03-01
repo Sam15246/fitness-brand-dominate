@@ -69,6 +69,22 @@ class CommissionStatus(str, Enum):
     REJECTED = 'rejected'  # Cancelled order or ineligible
 
 
+class PaymentStatus(str, Enum):
+    """Payment transaction status."""
+    PENDING = 'pending'  # Awaiting payment
+    COMPLETED = 'completed'  # Payment successful
+    FAILED = 'failed'  # Payment failed
+    CANCELLED = 'cancelled'  # Payment cancelled
+
+
+class InventoryChangeType(str, Enum):
+    """Types of inventory changes."""
+    SALE = 'sale'  # Stock reduced for confirmed order
+    RETURN = 'return'  # Stock restored from customer return
+    MANUAL_ADJUSTMENT = 'manual_adjustment'  # Admin manual change
+    RECEIVED = 'received'  # New inventory received
+
+
 class User(UserMixin, db.Model):
     """User model with role-based access.
     
@@ -473,6 +489,10 @@ class Product(db.Model):
     slug = db.Column(db.String(150), unique=True, nullable=False, index=True)
     description = db.Column(db.Text, nullable=False)
     
+    # SKU - Stock Keeping Unit (nullable for backward compatibility)
+    # Used for: inventory tracking, courier integration, accounting
+    sku = db.Column(db.String(50), unique=True, nullable=True, index=True)
+    
     # Category (nullable for backward compatibility)
     category_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'), nullable=True, index=True)
     
@@ -845,6 +865,15 @@ class Order(db.Model):
     courier_name = db.Column(db.String(50), nullable=True)  # Delhivery, BlueDart, etc
     shipping_cost = db.Column(db.Integer, nullable=True)  # In paise (optional for now)
     
+    # Financial Snapshot Fields (IMMUTABLE - captured at order creation/confirmation)
+    # These fields preserve historical financial data for accurate reporting
+    # and payment gateway reconciliation
+    subtotal_amount = db.Column(db.Integer, nullable=True)  # Sum of all OrderItem.subtotal (in paise)
+    shipping_amount = db.Column(db.Integer, nullable=True, default=0)  # Shipping cost snapshot
+    discount_amount = db.Column(db.Integer, nullable=True, default=0)  # Total discounts applied
+    tax_amount = db.Column(db.Integer, nullable=True, default=0)  # GST or taxes (currently 0)
+    total_amount = db.Column(db.Integer, nullable=True)  # Final total: subtotal + shipping - discount + tax (IMMUTABLE)
+    
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -1020,39 +1049,90 @@ class Order(db.Model):
     
     def confirm_order(self):
         """
-        Confirm order and reduce stock for all items.
+        Confirm order and reduce stock for all items (WITH ATOMIC TRANSACTION).
         
-        BUSINESS LOGIC:
+        BUSINESS LOGIC (TRANSACTION-SAFE):
         - Mark order as CONFIRMED
         - Reduce product stock by quantity for EACH item
+        - Capture financial snapshot (subtotal, shipping, tax, total)
         - Calculate and set commission_amount
+        - Create Payment record (status = completed for WhatsApp)
+        - Create InventoryLog entries for each item
         - Set confirmed_at timestamp
         
+        ATOMICITY:
+        - All changes commit together or rollback completely
+        - No partial stock deduction allowed
+        - No orphaned financial records
+        
         Returns:
-            bool: True if successful, False if any item has insufficient stock
+            bool: True if successful, False if any item has insufficient stock or error
         """
         if self.status == OrderStatus.CONFIRMED.value:
             return False  # Already confirmed
         
-        # Reduce stock for each item
-        for item in self.items:
-            product = item.product
-            if not product or not product.decrease_stock(item.quantity):
-                return False  # Insufficient stock for this item
-        
-        # Calculate commission if affiliate exists
-        if self.has_affiliate() and not self.is_self_referral():
-            from app.models import AffiliateProfile
-            affiliate_profile = AffiliateProfile.query.filter_by(user_id=self.affiliate_id).first()
-            if affiliate_profile and affiliate_profile.is_active:
-                self.commission_amount = self.calculate_commission(affiliate_profile)
-        
-        # Update order status
-        self.status = OrderStatus.CONFIRMED.value
-        self.confirmed_at = datetime.utcnow()
-        
-        db.session.commit()
-        return True
+        try:
+            # ATOMIC TRANSACTION: All or nothing
+            # Check stock availability first (before committing)
+            for item in self.items:
+                product = item.product
+                if not product or product.stock_quantity < item.quantity:
+                    return False  # Insufficient stock - abort without changes
+            
+            # 1. Calculate financial snapshot (never changes after this)
+            self.subtotal_amount = sum(item.get_subtotal() for item in self.items)
+            self.shipping_amount = self.shipping_cost or 0
+            self.discount_amount = 0  # Ready for future coupon system
+            self.tax_amount = 0  # Ready for future GST implementation
+            self.total_amount = self.subtotal_amount + self.shipping_amount - self.discount_amount + self.tax_amount
+            
+            # 2. Reduce stock and create inventory logs for each item
+            for item in self.items:
+                product = item.product
+                if not product.decrease_stock(item.quantity):
+                    return False  # Should not happen (checked above), but safety check
+                
+                # Create InventoryLog entry for audit trail
+                inventory_log = InventoryLog(
+                    product_id=item.product_id,
+                    change_type=InventoryChangeType.SALE.value,
+                    quantity=-item.quantity,  # Negative for stock reduction
+                    reference_order_id=self.id
+                )
+                db.session.add(inventory_log)
+            
+            # 3. Calculate commission if affiliate exists
+            if self.has_affiliate() and not self.is_self_referral():
+                from app.models import AffiliateProfile
+                affiliate_profile = AffiliateProfile.query.filter_by(user_id=self.affiliate_id).first()
+                if affiliate_profile and affiliate_profile.is_active:
+                    self.commission_amount = self.calculate_commission(affiliate_profile)
+            
+            # 4. Update order status
+            self.status = OrderStatus.CONFIRMED.value
+            self.confirmed_at = datetime.utcnow()
+            
+            # 5. Create Payment record for WhatsApp manual payment
+            payment = Payment(
+                order_id=self.id,
+                gateway='whatsapp_manual',
+                amount=self.total_amount,
+                currency='INR',
+                status=PaymentStatus.COMPLETED.value,
+                paid_at=datetime.utcnow()
+            )
+            db.session.add(payment)
+            
+            # COMMIT ALL CHANGES ATOMICALLY
+            db.session.commit()
+            return True
+            
+        except Exception as e:
+            db.session.rollback()
+            # Log error but don't crash
+            from flask import current_app
+            current_app.logger.error(f'Error confirming order {self.order_number}: {str(e)}')
+            return False
     
     def cancel_order(self):
         """
@@ -1061,6 +1141,7 @@ class Order(db.Model):
         BUSINESS LOGIC:
         - Mark order as CANCELLED
         - Restore product stock if order was confirmed for EACH item
+        - Create InventoryLog entries for audit trail
         - Reject commission if applicable
         
         Returns:
@@ -1069,22 +1150,39 @@ class Order(db.Model):
         if self.status == OrderStatus.CANCELLED.value:
             return False  # Already cancelled
         
-        # Restore stock for each item if order was confirmed
-        if self.status == OrderStatus.CONFIRMED.value:
-            for item in self.items:
-                product = item.product
-                if product:
-                    product.increase_stock(item.quantity)
-        
-        # Reject commission
-        if self.has_affiliate():
-            self.reject_commission()
-        
-        # Update status
-        self.status = OrderStatus.CANCELLED.value
-        
-        db.session.commit()
-        return True
+        try:
+            # Restore stock for each item if order was confirmed
+            if self.status == OrderStatus.CONFIRMED.value:
+                for item in self.items:
+                    product = item.product
+                    if product:
+                        product.increase_stock(item.quantity)
+                        
+                        # Create InventoryLog entry for stock restoration
+                        inventory_log = InventoryLog(
+                            product_id=item.product_id,
+                            change_type=InventoryChangeType.RETURN.value,
+                            quantity=item.quantity,  # Positive for stock restore
+                            reference_order_id=self.id,
+                            notes=f'Order {self.order_number} cancelled'
+                        )
+                        db.session.add(inventory_log)
+            
+            # Reject commission
+            if self.has_affiliate():
+                self.reject_commission()
+            
+            # Update status
+            self.status = OrderStatus.CANCELLED.value
+            
+            db.session.commit()
+            return True
+            
+        except Exception as e:
+            db.session.rollback()
+            from flask import current_app
+            current_app.logger.error(f'Error cancelling order {self.order_number}: {str(e)}')
+            return False
     
     def __repr__(self):
         return f'<Order {self.order_number}>'
@@ -1806,9 +1904,176 @@ class CartItem(db.Model):
     def __repr__(self):
         return f'<CartItem user={self.user_id} product={self.product_id} qty={self.quantity}>'
 
-# class Email_Notification(db.Model):
-#     """Queued email notifications."""
-#     __tablename__ = 'email_notifications'
+
+class Payment(db.Model):
+    """
+    Payment transaction records for orders.
+    
+    ARCHITECTURE:
+    =============
+    Separates payment lifecycle from order lifecycle:
+    - Order = what customer bought (business transaction)
+    - Payment = how they paid (financial transaction)
+    
+    CURRENT STATE (MVP):
+    - gateway = "whatsapp_manual" (admin confirms via WhatsApp)
+    - Created when order is confirmed
+    - status = "completed" when admin confirms
+    
+    FUTURE INTEGRATION:
+    - Razorpay: gateway = "razorpay", transaction_id from API
+    - Stripe: gateway = "stripe", transaction_id from API
+    - Multiple attempts: Same order can have multiple payment records
+    - Partial payments: Multiple payments sum to order total
+    - Refunds: Create negative payment record
+    
+    SCALABILITY:
+    - raw_response: Store full API response for debugging
+    - transaction_id: Unique gateway reference for reconciliation
+    - Indexed for fast reporting and reconciliation
+    """
+    
+    __tablename__ = 'payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False, index=True)
+    gateway = db.Column(db.String(50), nullable=True)  # whatsapp_manual, razorpay, stripe, etc
+    transaction_id = db.Column(db.String(100), unique=True, nullable=True, index=True)  # From payment gateway
+    amount = db.Column(db.Integer, nullable=False)  # Amount in paise
+    currency = db.Column(db.String(3), nullable=False, default='INR')  # ISO 4217
+    status = db.Column(db.String(20), nullable=False, default=PaymentStatus.PENDING.value, index=True)
+    raw_response = db.Column(db.Text, nullable=True)  # Full API response (JSON)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    paid_at = db.Column(db.DateTime, nullable=True)  # When payment completed
+    
+    # Relationships
+    order = db.relationship('Order', backref='payments', foreign_keys=[order_id])
+    
+    def get_amount_display(self):
+        """Return formatted amount string."""
+        return f'₹{self.amount / 100:.2f}'
+    
+    def is_successful(self):
+        """Check if payment was successful."""
+        return self.status == PaymentStatus.COMPLETED.value
+    
+    def __repr__(self):
+        return f'<Payment order={self.order_id} gateway={self.gateway} status={self.status}>'
+
+
+class InventoryLog(db.Model):
+    """
+    Audit trail for all inventory changes.
+    
+    BUSINESS REQUIREMENTS:
+    ========================
+    Every stock increase/decrease MUST create a log entry:
+    - SALE: Stock reduced when order confirmed
+    - RETURN: Stock restored from customer return
+    - MANUAL_ADJUSTMENT: Admin correction (damage, loss, found)
+    - RECEIVED: New inventory from supplier
+    
+    BENEFITS:
+    - Complete audit trail (who, what, when, why)
+    - Debug stock discrepancies
+    - Analytics: product velocity, turnover
+    - Reconciliation with accounting
+    - Foundation for warehouse management
+    
+    SCALABILITY:
+    - Links to orders for sales/returns
+    - Links to admins for manual changes
+    - Notes field for human-readable reason
+    - Indexed for fast reporting and queries
+    
+    FUTURE:
+    - Stock valuation (quantity × unit cost)
+    - Warehouse location tracking
+    - Batch/lot tracking
+    - Barcode scanning integration
+    """
+    
+    __tablename__ = 'inventory_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    change_type = db.Column(db.String(20), nullable=False, index=True)  # sale, return, manual_adjustment, received
+    quantity = db.Column(db.Integer, nullable=False)  # Positive or negative
+    reference_order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=True, index=True)  # For sales/returns
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Admin who made the change
+    notes = db.Column(db.Text, nullable=True)  # Human-readable reason
+    
+    # Relationships
+    product = db.relationship('Product', backref='inventory_logs', foreign_keys=[product_id])
+    order = db.relationship('Order', backref='inventory_logs', foreign_keys=[reference_order_id])
+    admin = db.relationship('User', backref='inventory_changes_made', foreign_keys=[created_by])
+    
+    @staticmethod
+    def log_sale(product_id, quantity, order_id):
+        """
+        Create inventory log for order confirmation (stock reduction).
+        
+        Args:
+            product_id: Product ID
+            quantity: Quantity sold (will be stored as negative)
+            order_id: Reference order ID
+        
+        Returns:
+            InventoryLog object
+        """
+        log = InventoryLog(
+            product_id=product_id,
+            change_type=InventoryChangeType.SALE.value,
+            quantity=-abs(quantity),  # Always negative for sales
+            reference_order_id=order_id
+        )
+        db.session.add(log)
+        return log
+    
+    @staticmethod
+    def log_return(product_id, quantity, order_id):
+        """Create inventory log for customer return (stock increase)."""
+        log = InventoryLog(
+            product_id=product_id,
+            change_type=InventoryChangeType.RETURN.value,
+            quantity=abs(quantity),  # Always positive for returns
+            reference_order_id=order_id
+        )
+        db.session.add(log)
+        return log
+    
+    @staticmethod
+    def log_manual_adjustment(product_id, quantity, admin_id, notes=None):
+        """Create inventory log for admin manual adjustment."""
+        log = InventoryLog(
+            product_id=product_id,
+            change_type=InventoryChangeType.MANUAL_ADJUSTMENT.value,
+            quantity=quantity,  # Can be positive or negative
+            created_by=admin_id,
+            notes=notes
+        )
+        db.session.add(log)
+        return log
+    
+    @staticmethod
+    def log_received(product_id, quantity, admin_id, notes=None):
+        """Create inventory log for new inventory received."""
+        log = InventoryLog(
+            product_id=product_id,
+            change_type=InventoryChangeType.RECEIVED.value,
+            quantity=abs(quantity),  # Always positive for received
+            created_by=admin_id,
+            notes=notes
+        )
+        db.session.add(log)
+        return log
+    
+    def __repr__(self):
+        return f'<InventoryLog product={self.product_id} type={self.change_type} qty={self.quantity}>'
+
+
 #     id = db.Column(db.Integer, primary_key=True)
 #     recipient = db.Column(db.String(120), nullable=False)
 #     subject = db.Column(db.String(200), nullable=False)
