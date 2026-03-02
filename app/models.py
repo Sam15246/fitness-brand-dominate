@@ -883,6 +883,8 @@ class Order(db.Model):
     
     # Relationships
     affiliate = db.relationship('User', foreign_keys=[affiliate_id], backref='referral_orders')
+    items = db.relationship('OrderItem', backref='order', cascade='all, delete-orphan')
+    payments = db.relationship('Payment', backref='order', cascade='all, delete-orphan')
     # payment_gateway = db.Column(db.String(50))  # razorpay, stripe, paypal, etc
     # transaction_id = db.Column(db.String(100), unique=True, index=True)
     # payment_status = db.Column(db.String(20), default='pending')  # pending, completed, failed

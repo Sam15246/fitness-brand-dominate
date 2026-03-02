@@ -33,28 +33,37 @@ depends_on = None
 
 
 def upgrade():
-    """Add pricing fields to products table."""
-    # Add original price (nullable, optional for existing products)
-    op.add_column(
-        'products',
-        sa.Column('price_original', sa.Integer, nullable=True)
-    )
+    """Add pricing fields to products table with idempontent handling."""
+    # Try to add each column - silently pass if already exists
+    try:
+        op.add_column('products', sa.Column('price_original', sa.Integer, nullable=True))
+    except Exception:
+        pass
     
-    # Add discounted price (nullable, optional for existing products)
-    op.add_column(
-        'products',
-        sa.Column('price_discounted', sa.Integer, nullable=True)
-    )
+    try:
+        op.add_column('products', sa.Column('price_discounted', sa.Integer, nullable=True))
+    except Exception:
+        pass
     
-    # Add discount active toggle (default False for existing products)
-    op.add_column(
-        'products',
-        sa.Column('is_discount_active', sa.Boolean, nullable=False, server_default='0')
-    )
+    try:
+        op.add_column('products', sa.Column('is_discount_active', sa.Boolean, nullable=False, server_default='0'))
+    except Exception:
+        pass
 
 
 def downgrade():
     """Remove pricing fields from products table."""
-    op.drop_column('products', 'price_original')
-    op.drop_column('products', 'price_discounted')
-    op.drop_column('products', 'is_discount_active')
+    try:
+        op.drop_column('products', 'is_discount_active')
+    except Exception:
+        pass
+    
+    try:
+        op.drop_column('products', 'price_discounted')
+    except Exception:
+        pass
+    
+    try:
+        op.drop_column('products', 'price_original')
+    except Exception:
+        pass
