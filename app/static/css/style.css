@@ -2980,6 +2980,278 @@ button, a, .card, .form-control {
 }
 
 /* =================
+   RESPONSIVE FLEXBOX & GRID UTILITIES (Mobile-First)
+   ================= */
+
+/* Flex direction - stack vertically on mobile, row on desktop */
+.flex-mobile-column {
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .flex-mobile-column {
+        flex-direction: row;
+    }
+}
+
+/* Gap utilities for mobile */
+.gap-mobile-2 {
+    gap: 0.5rem;                    /* Mobile: 8px */
+}
+
+@media (min-width: 768px) {
+    .gap-mobile-2 {
+        gap: 1rem;                  /* Tablet: 16px */
+    }
+}
+
+.gap-mobile-3 {
+    gap: 0.75rem;                   /* Mobile: 12px */
+}
+
+@media (min-width: 768px) {
+    .gap-mobile-3 {
+        gap: 1.5rem;                /* Tablet: 24px */
+    }
+}
+
+/* Ensure flex items don't overflow on mobile */
+.flex-wrap-mobile {
+    flex-wrap: wrap;
+}
+
+/* Stack flex items on mobile */
+.flex-column-mobile {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .flex-column-mobile {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+/* Full width on mobile, auto on desktop */
+.w-mobile-100 {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .w-mobile-100 {
+        width: auto;
+    }
+}
+
+/* Cart & Checkout - better mobile layouts */
+.cart-item-row,
+.checkout-item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+@media (max-width: 767px) {
+    .cart-item-row .product-info {
+        order: 1;
+        flex: 1 1 100%;
+    }
+    
+    .cart-item-row .product-quantity {
+        order: 2;
+        flex: 1 1 calc(50% - 0.5rem);
+    }
+    
+    .cart-item-row .product-price {
+        order: 3;
+        flex: 1 1 calc(50% - 0.5rem);
+        text-align: right;
+    }
+}
+
+/* Form groups - full width on mobile */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;     /* Mobile: single column */
+    gap: 1rem;
+}
+
+@media (min-width: 576px) {
+    .form-row {
+        grid-template-columns: repeat(2, 1fr);  /* Small: 2 columns */
+    }
+}
+
+@media (min-width: 992px) {
+    .form-row {
+        grid-template-columns: repeat(3, 1fr);  /* Desktop: 3 columns */
+    }
+}
+
+/* Buttons - full width on mobile, auto on desktop */
+.btn-responsive {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 576px) {
+    .btn-responsive {
+        width: auto;
+        margin-bottom: 0;
+    }
+}
+
+/* Action buttons container - stack on mobile */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .action-buttons {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+    }
+}
+
+/* Ensure images don't break flex layouts */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Prevent flex items from shrinking too much */
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+/* Grid auto-fit for responsive card layouts */
+.grid-auto-fit {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 767px) {
+    .grid-auto-fit {
+        grid-template-columns: 1fr;  /* Single column on mobile */
+        gap: 1rem;
+    }
+}
+
+/* Product grid optimization */
+.products-grid {
+    display: grid;
+    grid-template-columns: 1fr;     /* Mobile: 1 column */
+    gap: 1.5rem;
+}
+
+@media (min-width: 576px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);  /* 2 columns */
+    }
+}
+
+@media (min-width: 992px) {
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);  /* 3 columns */
+    }
+}
+
+@media (min-width: 1200px) {
+    .products-grid {
+        grid-template-columns: repeat(4, 1fr);  /* 4 columns */
+    }
+}
+
+/* Quantity controls - better mobile UX */
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 150px;              /* Prevent too wide on mobile */
+}
+
+.quantity-control input {
+    text-align: center;
+    width: 60px !important;        /* Compact on mobile */
+    padding: 0.5rem;
+}
+
+.quantity-control button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+
+@media (min-width: 768px) {
+    .quantity-control input {
+        width: 80px !important;    /* More generous on tablet+ */
+    }
+    
+    .quantity-control button {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Checkout summary - better mobile stacking */
+.order-summary {
+    position: sticky;
+    top: 80px;                     /* Stick below navbar on desktop */
+}
+
+@media (max-width: 991px) {
+    .order-summary {
+        position: relative;         /* Don't stick on mobile */
+        top: 0;
+        margin-top: 2rem;
+    }
+}
+
+/* Mobile-optimized table layouts */
+@media (max-width: 767px) {
+    .table-responsive {
+        border: none;
+        margin-bottom: 0;
+    }
+    
+    /* Stack table cells vertically on mobile */
+    .table-mobile-stack thead {
+        display: none;
+    }
+    
+    .table-mobile-stack tr {
+        display: block;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    .table-mobile-stack td {
+        display: block;
+        text-align: right;
+        padding: 0.5rem;
+        border: none;
+    }
+    
+    .table-mobile-stack td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+}
+
+/* =================
    PRINT STYLES
    ================= */
 
