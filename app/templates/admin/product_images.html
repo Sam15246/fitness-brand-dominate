@@ -66,11 +66,13 @@
                                             <div class="card border position-relative image-card">
                                                 <!-- Image -->
                                                 <div class="position-relative overflow-hidden" style="height: 180px; background: #f8f8f8;">
-                                                        <img src="{{ image_thumb_url(image.image_path) }}" 
-                                                         alt="Product image" 
-                                                         class="w-100 h-100 object-fit-cover"
-                                                         loading=\"lazy\"
-                                                         onerror=\"this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/%3E%3C/svg%3E'\">
+                                                    <img src="{{ image_thumb_url(image.image_path) }}"
+                                                     srcset="{{ image_thumb_url(image.image_path) }} 300w, {{ image_url(image.image_path) }} 1200w"
+                                                     sizes="(max-width: 991.98px) 50vw, 33vw"
+                                                     alt="Product image"
+                                                     class="w-100 h-100 object-fit-cover"
+                                                     loading="lazy"
+                                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/%3E%3C/svg%3E'">
                                                 </div>
                                                 
                                                 <!-- Badge -->
