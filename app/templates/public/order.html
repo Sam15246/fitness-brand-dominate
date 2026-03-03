@@ -48,7 +48,7 @@
                 <div class="mb-3">
                     <label for="customer_name" class="form-label">Full Name <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="customer_name" name="customer_name" 
-                           placeholder="Your full name" required>
+                           placeholder="Your full name" autocomplete="name" required>
                     <div class="invalid-feedback">Please enter your name.</div>
                 </div>
 
@@ -60,7 +60,7 @@
                            inputmode="numeric" 
                            pattern="[0-9]{10}" 
                            maxlength="10"
-                           required>
+                           autocomplete="tel" required>
                     <div class="invalid-feedback" id="phone-error">Enter a valid 10-digit phone number.</div>
                     <div class="valid-feedback">✓ Valid phone number</div>
                 </div>
@@ -69,7 +69,7 @@
                 <div class="mb-3">
                     <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
                     <input type="email" class="form-control" id="email" name="email" 
-                           placeholder="your@email.com" required>
+                           placeholder="your@email.com" autocomplete="email" required>
                     <div class="invalid-feedback">Please enter a valid email.</div>
                 </div>
 
@@ -92,7 +92,7 @@
                     <textarea class="form-control" id="address" name="address" 
                               rows="4" 
                               placeholder="Example: Flat 302, Green Residency, Near XYZ Mall, Alambagh"
-                              required></textarea>
+                              autocomplete="street-address" required></textarea>
                     <div class="form-text">Include building/apartment number, street, and nearby landmark</div>
                     <div class="invalid-feedback">Please enter your delivery address.</div>
                     
@@ -125,7 +125,7 @@
                     <label for="city" class="form-label">City <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="city" name="city" 
                            placeholder="e.g., Lucknow, Delhi, Bangalore"
-                           required>
+                           autocomplete="address-level2" required>
                     <div class="invalid-feedback">Please enter your city.</div>
                     
                     <!-- FUTURE ENHANCEMENT: Address Auto-fill
@@ -200,7 +200,7 @@
                            inputmode="numeric"
                            pattern="[0-9]{6}"
                            maxlength="6"
-                           required>
+                           autocomplete="postal-code" required>
                     <div class="invalid-feedback" id="pincode-error">Enter a valid 6-digit pincode.</div>
                     <div class="valid-feedback">✓ Valid pincode</div>
                     

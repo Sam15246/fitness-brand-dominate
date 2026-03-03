@@ -102,7 +102,7 @@
                                    name="email" 
                                    placeholder="your@email.com"
                                    value="{% if current_user.is_authenticated %}{{ current_user.email }}{% endif %}"
-                                   required>
+                                   autocomplete="email" required>
                             <small class="form-text text-muted">Order confirmation will be sent here</small>
                         </div>
 
@@ -117,7 +117,7 @@
                                    pattern="\d{10}"
                                    inputmode="numeric"
                                    value="{% if current_user.is_authenticated %}{{ current_user.phone or '' }}{% endif %}"
-                                   required>
+                                   autocomplete="tel" required>
                             <small class="form-text text-muted">10-digit mobile number starting with 6-9</small>
                         </div>
 
