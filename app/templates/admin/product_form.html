@@ -15,9 +15,6 @@
             </h2>
 
             <form method="POST" class="needs-validation" novalidate>
-                <!-- Hidden price field for backwards compatibility -->
-                <input type="hidden" id="price" name="price" value="{% if product %}{{ product.get_price_formatted() }}{% endif %}">
-                
                 <div class="mb-3">
                     <label for="name" class="form-label">Product Name</label>
                     <input type="text" class="form-control" id="name" name="name" value="{{ product.name if product else '' }}" required>
@@ -52,25 +49,36 @@
                         </h6>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Set the selling prices for this product</p>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="price_original" class="form-label">Original Price (MRP) (₹)</label>
-                                <input type="number" class="form-control" id="price_original" name="price_original" step="0.01" min="0" value="{% if product and product.price_original %}{{ product.price_original / 100 }}{% endif %}">
-                                <div class="form-text">Maximum retail price / List price</div>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="price_discounted" class="form-label">Selling Price (₹)</label>
-                                <input type="number" class="form-control" id="price_discounted" name="price_discounted" step="0.01" min="0" value="{% if product and product.price_discounted %}{{ product.price_discounted / 100 }}{% endif %}">
-                                <div class="form-text">Current selling price (leave same as MRP for no discount)</div>
-                            </div>
+                        <p class="text-muted small mb-3">Set the selling price for this product</p>
+                        
+                        <!-- Single Price Field (when NO discount) -->
+                        <div id="single_price_section" class="mb-3">
+                            <label for="price_single" class="form-label">Price (₹)</label>
+                            <input type="number" class="form-control" id="price_single" name="price_single" step="0.01" min="0" value="{% if product and not product.is_discount_active and product.price_discounted %}{{ product.price_discounted / 100 }}{% endif %}">
+                            <div class="form-text">Selling price for this product</div>
                         </div>
                         
-                        <!-- Real-time Discount Preview -->
-                        <div class="alert alert-info mt-3 mb-0" id="discount_preview" style="display: none;">
-                            <strong>Discount: <span id="discount_percentage">0</span>% OFF</strong>
-                            <br><small>Original: <del id="preview_original">₹0</del> → Selling: <strong id="preview_discounted">₹0</strong></small>
+                        <!-- Dual Price Fields (when discount IS active) -->
+                        <div id="dual_price_section" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="price_original" class="form-label">Original Price (MRP) (₹)</label>
+                                    <input type="number" class="form-control" id="price_original" name="price_original" step="0.01" min="0" value="{% if product and product.is_discount_active and product.price_original %}{{ product.price_original / 100 }}{% endif %}">
+                                    <div class="form-text">Maximum retail price / List price</div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="price_discounted" class="form-label">Selling Price (₹)</label>
+                                    <input type="number" class="form-control" id="price_discounted" name="price_discounted" step="0.01" min="0" value="{% if product and product.is_discount_active and product.price_discounted %}{{ product.price_discounted / 100 }}{% endif %}">
+                                    <div class="form-text">Current selling price (must be less than MRP)</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Real-time Discount Preview -->
+                            <div class="alert alert-info mt-3 mb-0" id="discount_preview" style="display: none;">
+                                <strong>Discount: <span id="discount_percentage">0</span>% OFF</strong>
+                                <br><small>Original: <del id="preview_original">₹0</del> → Selling: <strong id="preview_discounted">₹0</strong></small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -117,11 +125,41 @@
             });
         }, false);
         
-        // Discount preview calculation
+        // Price field toggle
         const discountCheckbox = document.getElementById('is_discount_active');
+        const singlePriceSection = document.getElementById('single_price_section');
+        const dualPriceSection = document.getElementById('dual_price_section');
+        
+        const priceSingle = document.getElementById('price_single');
         const priceOriginal = document.getElementById('price_original');
         const priceDiscounted = document.getElementById('price_discounted');
         const previewDiv = document.getElementById('discount_preview');
+        
+        function togglePriceSections() {
+            if (discountCheckbox.checked) {
+                // Show dual pricing, hide single
+                singlePriceSection.style.display = 'none';
+                dualPriceSection.style.display = 'block';
+                
+                // Set required fields
+                priceSingle.required = false;
+                priceSingle.value = '';
+                priceOriginal.required = true;
+                priceDiscounted.required = true;
+            } else {
+                // Show single pricing, hide dual
+                singlePriceSection.style.display = 'block';
+                dualPriceSection.style.display = 'none';
+                
+                // Set required fields
+                priceSingle.required = true;
+                priceOriginal.required = false;
+                priceDiscounted.required = false;
+                priceOriginal.value = '';
+                priceDiscounted.value = '';
+                previewDiv.style.display = 'none';
+            }
+        }
         
         function updateDiscountPreview() {
             if (!discountCheckbox.checked || !priceOriginal.value || !priceDiscounted.value) {
@@ -143,21 +181,15 @@
             }
         }
         
-        function updateFieldRequirements() {
-            // Make pricing fields required only when discount is active
-            priceOriginal.required = discountCheckbox.checked;
-            priceDiscounted.required = discountCheckbox.checked;
-        }
-        
-        // Event listeners for real-time preview
+        // Event listeners
+        discountCheckbox.addEventListener('change', togglePriceSections);
         discountCheckbox.addEventListener('change', updateDiscountPreview);
-        discountCheckbox.addEventListener('change', updateFieldRequirements);
         priceOriginal.addEventListener('input', updateDiscountPreview);
         priceDiscounted.addEventListener('input', updateDiscountPreview);
         
-        // Initial preview check
+        // Initialize on page load
+        togglePriceSections();
         updateDiscountPreview();
-        updateFieldRequirements();
     })();
 </script>
 {% endblock %}

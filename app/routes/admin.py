@@ -114,7 +114,7 @@ def add_product():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
-        price_str = request.form.get('price', '').strip()
+        price_single_str = request.form.get('price_single', '').strip()
         price_original_str = request.form.get('price_original', '').strip()
         price_discounted_str = request.form.get('price_discounted', '').strip()
         is_discount_active = request.form.get('is_discount_active') == 'on'
@@ -133,24 +133,20 @@ def add_product():
         if not description or len(description) < 10:
             errors.append('Description must be at least 10 characters')
         
-        try:
-            price = int(float(price_str) * 100)  # Convert to paise
-            if price <= 0:
-                errors.append('Price must be greater than 0')
-        except (ValueError, TypeError):
-            errors.append('Invalid price')
-        
         # Pricing validation
+        price = None
         price_original = None
         price_discounted = None
         
         if is_discount_active:
+            # Dual pricing: Original and Discounted
             if not price_original_str or not price_discounted_str:
                 errors.append('Original and discounted prices required when discount is active')
             else:
                 try:
                     price_original = int(float(price_original_str) * 100)
                     price_discounted = int(float(price_discounted_str) * 100)
+                    price = price_discounted  # Use discounted price as main price
                     
                     if price_original <= 0:
                         errors.append('Original price must be greater than 0')
@@ -160,6 +156,17 @@ def add_product():
                         errors.append('Discounted price must be less than original price')
                 except (ValueError, TypeError):
                     errors.append('Invalid pricing values')
+        else:
+            # Single price (no discount)
+            if not price_single_str:
+                errors.append('Price is required')
+            else:
+                try:
+                    price = int(float(price_single_str) * 100)  # Convert to paise
+                    if price <= 0:
+                        errors.append('Price must be greater than 0')
+                except (ValueError, TypeError):
+                    errors.append('Invalid price')
         
         try:
             stock_quantity = int(stock_str)
@@ -246,7 +253,7 @@ def edit_product(product_id):
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
-        price_str = request.form.get('price', '').strip()
+        price_single_str = request.form.get('price_single', '').strip()
         price_original_str = request.form.get('price_original', '').strip()
         price_discounted_str = request.form.get('price_discounted', '').strip()
         is_discount_active = request.form.get('is_discount_active') == 'on'
@@ -265,25 +272,20 @@ def edit_product(product_id):
         if not description or len(description) < 10:
             errors.append('Description must be at least 10 characters')
         
-        try:
-            price = int(float(price_str) * 100)
-            if price <= 0:
-                errors.append('Price must be greater than 0')
-        except (ValueError, TypeError):
-            errors.append('Invalid price')
-        
         # Pricing validation
-        # Preserve existing pricing if discount is being disabled
-        price_original = product.price_original
-        price_discounted = product.price_discounted
+        price = None
+        price_original = None
+        price_discounted = None
         
         if is_discount_active:
+            # Dual pricing: Original and Discounted
             if not price_original_str or not price_discounted_str:
                 errors.append('Original and discounted prices required when discount is active')
             else:
                 try:
                     price_original = int(float(price_original_str) * 100)
                     price_discounted = int(float(price_discounted_str) * 100)
+                    price = price_discounted  # Use discounted price as main price
                     
                     if price_original <= 0:
                         errors.append('Original price must be greater than 0')
@@ -293,6 +295,17 @@ def edit_product(product_id):
                         errors.append('Discounted price must be less than original price')
                 except (ValueError, TypeError):
                     errors.append('Invalid pricing values')
+        else:
+            # Single price (no discount)
+            if not price_single_str:
+                errors.append('Price is required')
+            else:
+                try:
+                    price = int(float(price_single_str) * 100)  # Convert to paise
+                    if price <= 0:
+                        errors.append('Price must be greater than 0')
+                except (ValueError, TypeError):
+                    errors.append('Invalid price')
         
         try:
             stock_quantity = int(stock_str)
