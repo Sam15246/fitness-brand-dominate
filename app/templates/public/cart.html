@@ -22,7 +22,8 @@
                                                 <img src="{{ image_thumb_url(item.product.images[0].image_path) }}" 
                                                      alt="{{ item.product.name }}" 
                                                      class="img-fluid rounded"
-                                                     style="max-height: 120px; object-fit: cover;">
+                                                     style="max-height: 120px; object-fit: cover;"
+                                                     loading="lazy">
                                             {% else %}
                                                 <div class="bg-light rounded text-center py-4">
                                                     <small class="text-muted">No Image</small>

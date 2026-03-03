@@ -18,7 +18,7 @@
             </div>
             <div class="col-lg-6 text-center">
                 <div class="hero-image">
-                    <img src="{{ url_for('static', filename='images/home-page-image.png') }}" alt="Dominate calisthenics equipment collection" class="img-fluid rounded">
+                    <img src="{{ url_for('static', filename='images/home-page-image.png') }}" alt="Dominate calisthenics equipment collection" class="img-fluid rounded" loading="lazy">
                 </div>
             </div>
         </div>
@@ -44,9 +44,9 @@
                                     {% set primary_image = product.get_primary_image() %}
                                     {% if primary_image %}
                                         {% set thumb_url = image_thumb_url(primary_image.image_path) %}
-                                        <img src="{{ thumb_url }}" class="product-card-image" alt="{{ product.name }}" onerror="this.src='{{ image_url(primary_image.image_path) }}'">
+                                        <img src="{{ thumb_url }}" class="product-card-image" alt="{{ product.name }}" loading="lazy" onerror="this.src='{{ image_url(primary_image.image_path) }}'">
                                     {% elif product.image_url %}
-                                        <img src="{{ image_url(product.image_url) }}" class="product-card-image" alt="{{ product.name }}">
+                                        <img src="{{ image_url(product.image_url) }}" class="product-card-image" alt="{{ product.name }}" loading="lazy">
                                     {% else %}
                                         <div class="placeholder-product-image">
                                             <svg width="100%" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">
