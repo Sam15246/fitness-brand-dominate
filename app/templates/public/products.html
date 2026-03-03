@@ -69,7 +69,12 @@
                             <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="product-card-link" style="text-decoration: none; color: inherit;">
                                 {% set primary_image = product.get_primary_image() %}
                                 {% if primary_image %}
-                                    <img src="{{ image_thumb_url(primary_image.image_path) }}" class="card-img-top" alt="{{ product.name }}" loading="lazy">
+                                    <img src="{{ image_thumb_url(primary_image.image_path) }}"
+                                         srcset="{{ image_thumb_url(primary_image.image_path) }} 300w, {{ image_url(primary_image.image_path) }} 1200w"
+                                         sizes="(max-width: 767.98px) 100vw, (max-width: 991.98px) 50vw, 33vw"
+                                         class="card-img-top"
+                                         alt="{{ product.name }}"
+                                         loading="lazy">
                                 {% elif product.image_url %}
                                     <img src="{{ image_url(product.image_url) }}" class="card-img-top" alt="{{ product.name }}" loading="lazy">
                                 {% else %}

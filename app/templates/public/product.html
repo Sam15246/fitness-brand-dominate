@@ -23,7 +23,9 @@
                             <div class="swiper-wrapper">
                                 {% for image in product_images %}
                                 <div class="swiper-slide">
-                                     <img src="{{ image_url(image.image_path) }}" 
+                                     <img src="{{ image_url(image.image_path) }}"
+                                         srcset="{{ image_thumb_url(image.image_path) }} 300w, {{ image_url(image.image_path) }} 1200w"
+                                         sizes="(max-width: 991.98px) 100vw, 50vw"
                                          alt="{{ product.name }}" 
                                          class="img-fluid rounded"
                                          loading="lazy">
@@ -42,7 +44,9 @@
                             <div class="swiper-wrapper">
                                 {% for image in product_images %}
                                 <div class="swiper-slide">
-                                     <img src="{{ image_thumb_url(image.image_path) }}" 
+                                     <img src="{{ image_thumb_url(image.image_path) }}"
+                                         srcset="{{ image_thumb_url(image.image_path) }} 300w, {{ image_url(image.image_path) }} 1200w"
+                                         sizes="(max-width: 991.98px) 20vw, 10vw"
                                          alt="{{ product.name }}" 
                                          class="img-thumbnail"
                                          loading="lazy">
@@ -55,7 +59,9 @@
                     <!-- Single Image (No Slider Needed) -->
                     <div class="single-product-image">
                         {% set primary_image = product.get_primary_image() %}
-                            <img src="{{ image_url(primary_image.image_path) }}" 
+                            <img src="{{ image_url(primary_image.image_path) }}"
+                             srcset="{{ image_thumb_url(primary_image.image_path) }} 300w, {{ image_url(primary_image.image_path) }} 1200w"
+                             sizes="(max-width: 991.98px) 100vw, 50vw"
                              alt="{{ product.name }}" 
                              class="img-fluid rounded" 
                              loading="lazy"
@@ -301,9 +307,14 @@
                                 <div class="product-card-image-wrapper">
                                     {% set other_primary_image = other_product.get_primary_image() %}
                                     {% if other_primary_image %}
-                                        <img src="{{ image_thumb_url(other_primary_image.image_path) }}" class="product-card-image" alt="{{ other_product.name }}">
+                                        <img src="{{ image_thumb_url(other_primary_image.image_path) }}"
+                                             srcset="{{ image_thumb_url(other_primary_image.image_path) }} 300w, {{ image_url(other_primary_image.image_path) }} 1200w"
+                                             sizes="(max-width: 767.98px) 100vw, (max-width: 991.98px) 50vw, 33vw"
+                                             class="product-card-image"
+                                             alt="{{ other_product.name }}"
+                                             loading="lazy">
                                     {% elif other_product.image_url %}
-                                        <img src="{{ image_url(other_product.image_url) }}" class="product-card-image" alt="{{ other_product.name }}">
+                                        <img src="{{ image_url(other_product.image_url) }}" class="product-card-image" alt="{{ other_product.name }}" loading="lazy">
                                     {% else %}
                                         <div class="placeholder-product-image">
                                             <svg width="100%" height="250" viewBox="0 0 300 250" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -19,7 +19,9 @@
                                     <div class="col-3 col-md-2">
                                         <a href="{{ url_for('main.product_detail', slug=item.product.slug) }}">
                                             {% if item.product.images|length > 0 %}
-                                                <img src="{{ image_thumb_url(item.product.images[0].image_path) }}" 
+                                                <img src="{{ image_thumb_url(item.product.images[0].image_path) }}"
+                                                     srcset="{{ image_thumb_url(item.product.images[0].image_path) }} 300w, {{ image_url(item.product.images[0].image_path) }} 1200w"
+                                                     sizes="(max-width: 767.98px) 25vw, (max-width: 991.98px) 20vw, 16vw"
                                                      alt="{{ item.product.name }}" 
                                                      class="img-fluid rounded"
                                                      style="max-height: 120px; object-fit: cover;"

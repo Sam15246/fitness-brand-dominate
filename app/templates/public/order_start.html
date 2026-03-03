@@ -21,7 +21,13 @@
                 <div class="card-body text-center">
                     {% set summary_image = product.get_primary_image() %}
                     {% if summary_image %}
-                        <img src="{{ image_thumb_url(summary_image.image_path) }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;" loading="lazy">
+                        <img src="{{ image_thumb_url(summary_image.image_path) }}"
+                             srcset="{{ image_thumb_url(summary_image.image_path) }} 300w, {{ image_url(summary_image.image_path) }} 1200w"
+                             sizes="(max-width: 991.98px) 90vw, 540px"
+                             alt="{{ product.name }}"
+                             class="img-fluid mb-3"
+                             style="max-height: 150px;"
+                             loading="lazy">
                     {% elif product.image_url %}
                         <img src="{{ image_url(product.image_url) }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;" loading="lazy">
                     {% endif %}
