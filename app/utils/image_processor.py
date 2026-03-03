@@ -7,19 +7,27 @@ Separate from storage to keep concerns isolated.
 FLOW:
 1. Validate file (type, size)
 2. Open as PIL Image
-3. Resize to max width
-4. Convert to WebP (best compression + support)
-5. Generate thumbnail version
-6. Return both PIL Image objects
+3. Apply EXIF orientation (portrait/landscape fix)
+4. Resize to max width
+5. Convert to WebP (best compression + support)
+6. Generate thumbnail version
+7. Return both PIL Image objects
 
 BOTH local and R2 storage use this processor.
 No storage logic here - just image manipulation.
+
+EXIF ORIENTATION FIX:
+- Mobile phones store image rotation in EXIF metadata
+- Portrait photos often need 90° rotation
+- PIL doesn't auto-apply EXIF - we do it manually
+- Fixes landscape→portrait conversion issue
 """
 
 import os
 import uuid
 from pathlib import Path
 from PIL import Image
+from PIL.ExifTags import TAGS
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from flask import current_app
@@ -125,6 +133,72 @@ def _load_image(file_obj: FileStorage) -> Image.Image:
     _register_heif_support()
     file_obj.seek(0)
     return Image.open(file_obj)
+
+
+def _apply_exif_orientation(image: Image.Image) -> Image.Image:
+    """
+    Apply EXIF orientation to image.
+    
+    Mobile phones store rotation in EXIF metadata.
+    This function reads that metadata and rotates the image.
+    
+    Args:
+        image (PIL.Image): Original image (may be rotated)
+        
+    Returns:
+        PIL.Image: Image with correct orientation
+        
+    EXIF ORIENTATION CODES:
+    - 1: Normal
+    - 2: Flipped horizontally
+    - 3: Rotated 180°
+    - 4: Flipped vertically
+    - 5: Rotated 90° CCW + flipped
+    - 6: Rotated 90° CW (common for portrait mobile)
+    - 7: Rotated 90° CW + flipped
+    - 8: Rotated 90° CCW (common for portrait mobile)
+    
+    NOTES:
+    - If no EXIF data, returns image unchanged
+    - Fixes portrait photos appearing as landscape
+    - Silent failure if EXIF parsing fails
+    """
+    try:
+        # Try to read EXIF orientation tag
+        exif_data = image._getexif()
+        
+        if exif_data is None:
+            return image
+        
+        # Find orientation tag (tag 274)
+        for tag_id, tag_value in exif_data.items():
+            if tag_id == 274:  # Orientation tag
+                orientation = tag_value
+                
+                # Apply rotation
+                if orientation == 2:
+                    image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+                elif orientation == 3:
+                    image = image.rotate(180, expand=True)
+                elif orientation == 4:
+                    image = image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+                elif orientation == 5:
+                    image = image.rotate(90, expand=True, fillcolor='white')
+                    image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+                elif orientation == 6:
+                    image = image.rotate(270, expand=True, fillcolor='white')
+                elif orientation == 7:
+                    image = image.rotate(270, expand=True, fillcolor='white')
+                    image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+                elif orientation == 8:
+                    image = image.rotate(90, expand=True, fillcolor='white')
+                
+                break
+    except (AttributeError, KeyError, TypeError):
+        # No EXIF data or error reading it - return original
+        pass
+    
+    return image
 
 
 def resize_image(image: Image.Image, max_width: int) -> Image.Image:
@@ -241,6 +315,9 @@ def process_image(file_obj: FileStorage, filename: str = None) -> dict:
         # Load image
         file_obj.seek(0)
         image = _load_image(file_obj)
+
+        # Apply EXIF orientation (fixes portrait/landscape issue)
+        image = _apply_exif_orientation(image)
 
         # Convert to RGB (compatibility with WebP/JPEG)
         image = convert_to_rgb(image)
