@@ -6,6 +6,9 @@
     <a href="{{ url_for('admin.products_list') }}" class="admin-tab {% if request.endpoint in ['admin.products_list', 'admin.add_product', 'admin.edit_product', 'admin.manage_product_images'] %}active{% endif %}">
         Products
     </a>
+    <a href="{{ url_for('admin.image_guidelines') }}" class="admin-tab {% if request.endpoint == 'admin.image_guidelines' %}active{% endif %}">
+        📸 Image Guidelines
+    </a>
     <a href="{{ url_for('admin.reviews_list') }}" class="admin-tab {% if request.endpoint in ['admin.reviews_list', 'admin.add_review', 'admin.edit_review'] %}active{% endif %}">
         Reviews
     </a>

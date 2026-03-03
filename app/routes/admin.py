@@ -52,6 +52,13 @@ def dashboard():
     return render_template('admin/dashboard.html', stats=stats, recent_orders=recent_orders)
 
 
+@admin_bp.route('/image-guidelines')
+@admin_required
+def image_guidelines():
+    """Display image upload guidelines for admins."""
+    return render_template('admin/image_guidelines.html')
+
+
 # ============= PRODUCT ROUTES =============
 
 @admin_bp.route('/products')
