@@ -106,7 +106,7 @@
                                                     
                                                     <!-- Promote/Demote Buttons -->
                                                     {% if user.role != 'superadmin' and user.role == 'user' %}
-                                                        <form method="POST" action="{{ url_for('admin.promote_user', user_id=user.id) }}" style="display:inline;">
+                                                        <form method="POST" action="{{ url_for('admin.promote_user', user_id=user.id) }}" class="d-inline">
                                                             <button type="submit" class="btn btn-outline-primary" title="Promote to admin">
                                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                                     <path d="M12 19V5"></path>
@@ -115,7 +115,7 @@
                                                             </button>
                                                         </form>
                                                     {% elif user.role == 'admin' %}
-                                                        <form method="POST" action="{{ url_for('admin.demote_user', user_id=user.id) }}" style="display:inline;">
+                                                        <form method="POST" action="{{ url_for('admin.demote_user', user_id=user.id) }}" class="d-inline">
                                                             <button type="submit" class="btn btn-outline-warning" title="Demote to user">
                                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                                     <path d="M12 5v14"></path>
@@ -126,7 +126,7 @@
                                                     {% endif %}
 
                                                     {% if user.is_active %}
-                                                        <form method="POST" action="{{ url_for('admin.deactivate_user', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Deactivate this user?');">
+                                                        <form method="POST" action="{{ url_for('admin.deactivate_user', user_id=user.id) }}" class="d-inline" onsubmit="return confirm('Deactivate this user?');">
                                                             <button type="submit" class="btn btn-outline-danger" title="Deactivate user">
                                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                                     <circle cx="12" cy="12" r="10"></circle>
@@ -138,7 +138,7 @@
                                                     {% endif %}
                                                     
                                                     <!-- Delete User Button -->
-                                                    <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('⚠️ PERMANENTLY DELETE this user?\n\nThis action CANNOT be undone!\n\nUser: {{ user.name }} ({{ user.email }})\n\nType DELETE in the next prompt to confirm.');">
+                                                    <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" class="d-inline" onsubmit="return confirm('⚠️ PERMANENTLY DELETE this user?\n\nThis action CANNOT be undone!\n\nUser: {{ user.name }} ({{ user.email }})\n\nType DELETE in the next prompt to confirm.');">
                                                         <button type="submit" class="btn btn-danger" title="Delete user permanently">
                                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                                 <polyline points="3 6 5 6 21 6"></polyline>

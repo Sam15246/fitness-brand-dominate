@@ -62,7 +62,7 @@
                                     <!-- Subtotal & Remove -->
                                     <div class="col-6 col-md-3 mt-2 mt-md-0 text-end">
                                         <p class="mb-1 fw-bold">₹{{ "%.2f"|format(item.subtotal / 100) }}</p>
-                                        <form method="POST" action="{{ url_for('main.remove_from_cart', product_id=item.product.id) }}" style="display:inline;">
+                                        <form method="POST" action="{{ url_for('main.remove_from_cart', product_id=item.product.id) }}" class="d-inline">
                                             <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Remove from cart">
                                                 Remove
                                             </button>

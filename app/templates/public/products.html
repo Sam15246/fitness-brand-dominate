@@ -136,7 +136,7 @@
                                                 <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-outline-secondary btn-sm w-100">View Details</a>
                                             </div>
                                             <div class="col-6">
-                                                <form method="POST" action="{{ url_for('main.add_to_cart', product_id=product.id) }}" style="display: inline-block; width: 100%;">
+                                                <form method="POST" action="{{ url_for('main.add_to_cart', product_id=product.id) }}" class="w-100">
                                                     <input type="hidden" name="quantity" value="1">
                                                     <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-sm w-100">
                                                         Buy Now
