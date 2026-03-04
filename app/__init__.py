@@ -40,10 +40,12 @@ def create_app(config=None):
     from app.routes.main import main_bp
     from app.routes.auth import auth_bp
     from app.routes.admin import admin_bp
+    from app.routes.admin_coupons import admin_coupons_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(admin_coupons_bp)
 
     @app.context_processor
     def inject_brand_links():

@@ -82,6 +82,20 @@
                         <h5 class="mb-0 fw-bold">Delivery Information</h5>
                     </div>
                     <div class="card-body">
+                        {% if discount_message %}
+                            <div class="alert alert-success mb-3" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>{{ discount_message }}
+                            </div>
+                        {% elif referral_detected and coupon_code %}
+                            <div class="alert alert-info mb-3" role="alert">
+                                <i class="fas fa-link me-2"></i>Referral detected: <strong>{{ coupon_code }}</strong>
+                            </div>
+                        {% elif coupon_code %}
+                            <div class="alert alert-info mb-3" role="alert">
+                                <i class="fas fa-tag me-2"></i>Coupon code: <strong>{{ coupon_code }}</strong>
+                            </div>
+                        {% endif %}
+
                         <!-- Name -->
                         <div class="mb-3">
                             <label for="customer_name" class="form-label">Name <span class="text-danger">*</span></label>
@@ -209,21 +223,28 @@
                             </label>
                         </div>
 
-                        <!-- Affiliate Code (Hidden by default, optional) -->
-                        {% if affiliate_code %}
-                            <input type="hidden" name="affiliate_code" value="{{ affiliate_code }}">
-                        {% else %}
-                            <div class="mb-3 d-none">
-                                <label for="affiliate_code" class="form-label">Affiliate Code (Optional)</label>
+                        <!-- Coupon/Affiliate Code Field -->
+                        <div class="mb-3">
+                            <label for="coupon_code" class="form-label">
+                                <i class="fas fa-tag me-2"></i>Have a coupon or promo code?
+                            </label>
+                            <div class="input-group">
                                 <input type="text" 
                                        class="form-control" 
-                                       id="affiliate_code"
-                                       name="affiliate_code" 
-                                       placeholder="Enter affiliate code if you have one"
-                                       value=""
-                                       maxlength="50">
+                                       id="coupon_code"
+                                       name="coupon_code" 
+                                       placeholder="Enter coupon code (e.g., SAVE10)"
+                                       value="{{ coupon_code or '' }}"
+                                       maxlength="50"
+                                       style="text-transform: uppercase;">
+                                <button class="btn btn-outline-secondary" type="submit" id="apply-coupon-btn" style="display: none;">
+                                    Apply
+                                </button>
                             </div>
-                        {% endif %}
+                            <small class="text-muted d-block mt-2">
+                                Enter an affiliate referral code or promotional code to get a discount.
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -250,16 +271,35 @@
                             <span class="fw-bold">₹{{ "%.2f"|format(cart.total / 100) }}</span>
                         </div>
 
-                        <!-- Shipping Notice -->
-                        <div class="alert alert-info small mb-3">
-                            <small><strong>Shipping & taxes</strong> will be calculated based on your location.</small>
-                        </div>
+                        {% if applied_discount > 0 %}
+                            <!-- Discount Applied -->
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span class="fw-bold">✓ Discount</span>
+                                <span class="fw-bold">-₹{{ "%.2f"|format(applied_discount / 100) }}</span>
+                            </div>
 
-                        <!-- Total -->
-                        <div class="d-flex justify-content-between mb-3 fs-6">
-                            <span class="fw-bold">Total (Est.)</span>
-                            <span class="fw-bold text-primary">₹{{ "%.2f"|format(cart.total / 100) }}</span>
-                        </div>
+                            <!-- Total After Discount -->
+                            <div class="d-flex justify-content-between mb-3 fs-6 border-top pt-2">
+                                <span class="fw-bold">Total (Est.)</span>
+                                <span class="fw-bold text-success">₹{{ "%.2f"|format((cart.total - applied_discount) / 100) }}</span>
+                            </div>
+
+                            <!-- You Save Badge -->
+                            <div class="alert alert-success small mb-3 text-center">
+                                <strong>You save ₹{{ "%.2f"|format(applied_discount / 100) }}!</strong>
+                            </div>
+                        {% else %}
+                            <!-- Shipping Notice -->
+                            <div class="alert alert-info small mb-3">
+                                <small><strong>Shipping & taxes</strong> will be calculated based on your location.</small>
+                            </div>
+
+                            <!-- Total -->
+                            <div class="d-flex justify-content-between mb-3 fs-6">
+                                <span class="fw-bold">Total (Est.)</span>
+                                <span class="fw-bold text-primary">₹{{ "%.2f"|format(cart.total / 100) }}</span>
+                            </div>
+                        {% endif %}
 
                         <!-- Submit Button -->
                         <button type="submit" class="btn btn-primary btn-lg w-100 mb-2">

@@ -60,6 +60,7 @@
                 <a href="{{ url_for('admin.add_product') }}" class="btn btn-primary">+ Add Product</a>
                 <a href="{{ url_for('admin.products_list') }}" class="btn btn-outline-secondary">View All Products</a>
                 <a href="{{ url_for('admin.orders_list') }}" class="btn btn-outline-secondary">View All Orders</a>
+                <a href="{{ url_for('admin_coupons.list_coupons') }}" class="btn btn-outline-secondary">Manage Coupons</a>
                 {% if current_user.is_admin() %}
                     <a href="{{ url_for('admin.policies_list') }}" class="btn btn-outline-secondary">Manage Policies</a>
                 {% endif %}

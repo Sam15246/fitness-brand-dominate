@@ -21,6 +21,9 @@
     <a href="{{ url_for('admin.affiliates_list') }}" class="admin-tab {% if request.endpoint in ['admin.affiliates_list'] %}active{% endif %}">
         Affiliates
     </a>
+    <a href="{{ url_for('admin_coupons.list_coupons') }}" class="admin-tab {% if request.endpoint in ['admin_coupons.list_coupons', 'admin_coupons.create_coupon', 'admin_coupons.edit_coupon', 'admin_coupons.coupon_stats'] %}active{% endif %}">
+        <i class="fas fa-tag me-1"></i>Coupons
+    </a>
     {% if current_user.is_admin() %}
         <a href="{{ url_for('admin.policies_list') }}" class="admin-tab {% if request.endpoint in ['admin.policies_list', 'admin.edit_policy'] %}active{% endif %}">
             Policies

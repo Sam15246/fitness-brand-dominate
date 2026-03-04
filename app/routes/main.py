@@ -3,11 +3,24 @@ from flask_login import current_user, login_required
 from datetime import datetime
 import secrets
 from urllib.parse import quote
-from app.models import db, Product, Order, OrderItem, User, AffiliateProfile, PolicyPage, CartItem, Payment, InventoryLog
+from app.models import db, Product, Order, OrderItem, User, AffiliateProfile, CouponCode, PolicyPage, CartItem, Payment, InventoryLog
 from app.business_logic import OrderManager, AffiliateManager
 from app.utils import send_order_confirmation_email
 
 main_bp = Blueprint('main', __name__)
+
+
+@main_bp.before_request
+def capture_affiliate_referral():
+    """Capture affiliate referral code from URL and persist in session."""
+    ref_code = request.args.get('ref', '').strip().upper()
+    if not ref_code:
+        return
+
+    affiliate_profile, _ = AffiliateManager.validate_affiliate_code(ref_code)
+    if affiliate_profile:
+        session['affiliate_code'] = ref_code
+        session.modified = True
 
 
 def generate_order_number():
@@ -502,9 +515,19 @@ def checkout():
     - Single order form for delivery details
     - Processes all cart items in transaction
     - Returns WhatsApp link (if successful) or shows errors
+    - Supports coupon codes (affiliate + promotional)
+    - Calculates customer discount + affiliate commission
+    
+    COUPON LOGIC (NEW):
+    ==================
+    - Accepts coupon code from URL (?code=) or form field
+    - Validates coupon: active, not expired, usage limits OK
+    - Calculates discount: percent-based or fixed amount
+    - Shows customer what they save
+    - Applies to final total (affects commission base calculation)
+    - Commission calculated on ACTUAL revenue (after discount) - Option A
     
     FUTURE IMPROVEMENTS:
-    - Coupon/discount codes at checkout
     - Shipping cost calculation
     - Payment gateway integration
     """
@@ -517,15 +540,42 @@ def checkout():
         flash('Your cart is empty. Add some products first!', 'info')
         return redirect(url_for('main.cart'))
     
-    # Get affiliate code from URL (optional referral)
-    affiliate_code = request.args.get('ref', '').strip().upper()
-    affiliate_profile = None
+    # Get coupon code from URL, form, or session
+    # Supports legacy referral links (?ref=CODE) captured in session['affiliate_code']
+    coupon_code = (request.args.get('code', '').strip().upper() or 
+                   request.form.get('coupon_code', '').strip().upper() or 
+                   session.get('coupon_code', '').strip().upper() or
+                   session.get('affiliate_code', '').strip().upper())
     
-    if affiliate_code:
-        affiliate_profile, msg = AffiliateManager.validate_affiliate_code(affiliate_code)
-        if not affiliate_profile:
-            flash(f'Invalid affiliate code: {msg}', 'warning')
-            affiliate_code = None
+    coupon = None
+    applied_discount = 0
+    discount_message = None
+    referral_detected = bool(session.get('affiliate_code', '').strip())
+    
+    if coupon_code:
+        # Look up coupon code in CouponCode table
+        from app.models import CouponCode
+        coupon = CouponCode.query.filter_by(code=coupon_code).first()
+        
+        if coupon:
+            # Validate coupon
+            is_valid, reason = coupon.can_apply_to_order(cart_data['total'])
+            if is_valid:
+                # Calculate discount
+                applied_discount = coupon.calculate_discount(cart_data['total'])
+                discount_message = f"✓ {coupon.get_discount_display()} (Coupon: {coupon_code})"
+                session['coupon_code'] = coupon_code
+                session.modified = True
+            else:
+                flash(f'Coupon code unavailable: {reason}', 'warning')
+                coupon = None
+                applied_discount = 0
+                session.pop('coupon_code', None)
+        else:
+            flash(f'Invalid coupon code: {coupon_code}', 'warning')
+            session.pop('coupon_code', None)
+            coupon = None
+            applied_discount = 0
     
     if request.method == 'POST':
         # Extract form data
@@ -537,7 +587,12 @@ def checkout():
         pincode = request.form.get('pincode', '').strip()
         address = request.form.get('address', '').strip()
         email_opt_in = request.form.get('email_opt_in', False) == 'on'
-        affiliate_code_form = request.form.get('affiliate_code', '').strip().upper() or affiliate_code
+        coupon_code_form = (
+            request.form.get('coupon_code', '').strip().upper() or
+            coupon_code or
+            session.get('coupon_code', '').strip().upper() or
+            session.get('affiliate_code', '').strip().upper()
+        )
         
         # Validation
         errors = []
@@ -566,7 +621,9 @@ def checkout():
         if errors:
             for error in errors:
                 flash(error, 'danger')
-            return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+            return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code, 
+                                 applied_discount=applied_discount, discount_message=discount_message,
+                                 referral_detected=referral_detected)
         
         # Process checkout - create ONE order with multiple OrderItems
         try:
@@ -586,7 +643,9 @@ def checkout():
                 quantity = item['quantity']
                 if quantity > product.stock_quantity:
                     flash(f'{product.name}: Only {product.stock_quantity} available in stock', 'danger')
-                    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+                    return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code,
+                                         applied_discount=applied_discount, discount_message=discount_message,
+                                         referral_detected=referral_detected)
             
             # Create single order
             order = Order(
@@ -601,11 +660,22 @@ def checkout():
                 address=address
             )
             
-            # Add affiliate if provided (only for first/main order)
-            if affiliate_code_form:
-                affiliate_profile_val, msg = AffiliateManager.validate_affiliate_code(affiliate_code_form)
-                if affiliate_profile_val:
-                    order.affiliate_id = affiliate_profile_val.user_id
+            # Add coupon if provided
+            if coupon:
+                order.coupon_id = coupon.id
+                order.applied_discount = applied_discount
+                order.discount_type = coupon.coupon_type
+            
+            # Add affiliate if provided (only if coupon is affiliate type OR legacy affiliate code)
+            if coupon_code_form:
+                # First, try to find via coupon
+                if coupon and coupon.coupon_type == 'affiliate':
+                    order.affiliate_id = coupon.affiliate_id
+                else:
+                    # Fallback to legacy affiliate code validation
+                    affiliate_profile_val, msg = AffiliateManager.validate_affiliate_code(coupon_code_form)
+                    if affiliate_profile_val:
+                        order.affiliate_id = affiliate_profile_val.user_id
             
             db.session.add(order)
             db.session.flush()  # Generate order ID before creating items
@@ -647,6 +717,7 @@ def checkout():
             
             # Store order number for confirmation page
             session['checkout_order'] = order.order_number
+            session.pop('coupon_code', None)
             session.modified = True
             
             return redirect(wa_url)
@@ -655,10 +726,14 @@ def checkout():
             db.session.rollback()
             flash('An error occurred while processing your order. Please try again.', 'danger')
             current_app.logger.error(f'Checkout error: {str(e)}')
-            return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+            return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code,
+                                 applied_discount=applied_discount, discount_message=discount_message,
+                                 referral_detected=referral_detected)
     
     # GET request - show checkout form with cart items
-    return render_template('public/checkout.html', cart=cart_data, affiliate_code=affiliate_code)
+    return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code,
+                         applied_discount=applied_discount, discount_message=discount_message,
+                         referral_detected=referral_detected)
 
 # ============= END CHECKOUT =============
 
@@ -1013,6 +1088,13 @@ def affiliate_dashboard():
     recent_orders = Order.query.filter_by(affiliate_id=current_user.id).order_by(
         Order.created_at.desc()
     ).limit(10).all()
+
+    # Get active affiliate coupon codes that this affiliate can share
+    affiliate_coupons = CouponCode.query.filter_by(
+        affiliate_id=current_user.id,
+        coupon_type='affiliate',
+        is_active=True
+    ).order_by(CouponCode.created_at.desc()).all()
     
     # Generate referral link
     referral_link = url_for('main.index', ref=affiliate.affiliate_code, _external=True)
@@ -1024,7 +1106,8 @@ def affiliate_dashboard():
         confirmed_referrals=confirmed_referrals,
         pending_commission=pending_commission,
         recent_orders=recent_orders,
-        referral_link=referral_link
+        referral_link=referral_link,
+        affiliate_coupons=affiliate_coupons
     )
 
 

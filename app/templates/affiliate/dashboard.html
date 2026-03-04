@@ -57,6 +57,18 @@
                 <div class="card-body">
                     <p><strong>Code:</strong> <span class="badge bg-primary fs-5">{{ affiliate.affiliate_code }}</span></p>
                     <p><strong>Commission Rate:</strong> {{ affiliate.commission_percent }}%</p>
+                    {% if affiliate_coupons %}
+                        <hr>
+                        <p class="mb-2"><strong>Customer Offer Codes:</strong></p>
+                        {% for coupon in affiliate_coupons %}
+                            <div class="mb-2">
+                                <span class="badge bg-success fs-6">{{ coupon.code }}</span>
+                                <small class="text-muted ms-2">Gives customers {{ coupon.get_discount_display() }}</small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-1"><small>No active affiliate coupon found yet.</small></p>
+                    {% endif %}
                     <p class="text-muted mb-0">Share your code with friends and earn {{ affiliate.commission_percent }}% commission on every purchase!</p>
                 </div>
             </div>

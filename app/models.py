@@ -767,6 +767,177 @@ class OrderItem(db.Model):
         return f'<OrderItem order_id={self.order_id} product_id={self.product_id} qty={self.quantity}>'
 
 
+class CouponCode(db.Model):
+    """
+    Coupon/Promotion Code model for flexible discount management.
+    
+    SUPPORTS MULTIPLE COUPON TYPES:
+    ===============================
+    - affiliate: Affiliate referral codes (linked to AffiliateProfile)
+    - promotional: Marketing campaigns (no affiliate link)
+    - seasonal: Time-limited promotions (e.g., SUMMER20, DIWALI25)
+    - loyalty: Member rewards (e.g., VIP discounts)
+    
+    DESIGN PHILOSOPHY:
+    ==================
+    - Single table handles all coupon types (scalable)
+    - Separates concerns: Affiliate system vs Coupon management
+    - Audit trail: tracks creation, usage, expiry
+    - Flexible: Can be percent-based or fixed amount
+    - Analytics: Usage stats built in (current_uses tracking)
+    
+    AFFILIATE INTEGRATION:
+    ======================
+    - When affiliate_profile is created, corresponding CouponCode is created
+    - affiliate_id field (optional) links to affiliate's user_id
+    - coupon_type='affiliate' identifies affiliate coupons
+    - Non-affiliate coupons have affiliate_id = NULL
+    
+    BUSINESS RULES:
+    ===============
+    - Code must be unique (database constraint)
+    - Discount: either percent OR fixed amount (not both)
+    - Max uses can be unlimited (NULL) or capped (e.g., 500)
+    - Expiry is optional (NULL = never expires)
+    - Min order value can filter by order size
+    - Max discount can cap discount amount (e.g., max ₹500)
+    """
+    
+    __tablename__ = 'coupon_codes'
+    __table_args__ = (
+        CheckConstraint('(discount_percent IS NOT NULL OR discount_amount_fixed IS NOT NULL)', 
+                       name='ck_coupon_has_discount'),
+        CheckConstraint('discount_percent IS NULL OR (discount_percent >= 0 AND discount_percent <= 100)', 
+                       name='ck_coupon_percent_valid'),
+        CheckConstraint('discount_amount_fixed IS NULL OR discount_amount_fixed >= 0', 
+                       name='ck_coupon_fixed_non_negative'),
+        CheckConstraint('max_uses IS NULL OR max_uses > 0', 
+                       name='ck_coupon_max_uses_positive'),
+        CheckConstraint('current_uses >= 0', 
+                       name='ck_coupon_current_uses_non_negative'),
+        CheckConstraint('min_order_value >= 0', 
+                       name='ck_coupon_min_order_non_negative'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Coupon Code (unique identifier)
+    code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    
+    # Discount: Either percent-based OR fixed amount (not both)
+    discount_percent = db.Column(db.Integer, nullable=True)  # e.g., 10 for 10%
+    discount_amount_fixed = db.Column(db.Integer, nullable=True)  # e.g., 10000 for ₹100 (in paise)
+    
+    # Coupon Type (for categorization and business logic)
+    coupon_type = db.Column(
+        db.String(20),
+        nullable=False,
+        default='promotional',
+        index=True
+    )  # affiliate, promotional, seasonal, loyalty
+    
+    # Affiliate Link (optional - only for affiliate coupons)
+    affiliate_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    
+    # Usage Limits
+    max_uses = db.Column(db.Integer, nullable=True)  # NULL = unlimited
+    current_uses = db.Column(db.Integer, nullable=False, default=0)
+    
+    # Minimum order value to apply coupon (in paise)
+    min_order_value = db.Column(db.Integer, nullable=False, default=0)
+    
+    # Maximum discount cap (e.g., can't exceed ₹500 even if 50% of ₹2000 order)
+    max_discount = db.Column(db.Integer, nullable=True)  # NULL = no cap
+    
+    # Status
+    is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    
+    # Expiry (optional)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    
+    # Audit Trail
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    affiliate = db.relationship('User', foreign_keys=[affiliate_id], backref='affiliate_coupons')
+    creator = db.relationship('User', foreign_keys=[created_by_user_id], backref='created_coupons')
+    
+    def is_valid(self):
+        """
+        Check if coupon is currently valid for use.
+        
+        Returns:
+            tuple: (bool, str) - (is_valid, reason_if_invalid)
+        """
+        if not self.is_active:
+            return False, 'Coupon is inactive'
+        
+        if self.expires_at and self.expires_at < datetime.utcnow():
+            return False, 'Coupon has expired'
+        
+        if self.max_uses and self.current_uses >= self.max_uses:
+            return False, 'Coupon usage limit reached'
+        
+        return True, 'Valid'
+    
+    def can_apply_to_order(self, order_subtotal):
+        """
+        Check if coupon can apply to specific order.
+        
+        Args:
+            order_subtotal: Order subtotal in paise
+            
+        Returns:
+            tuple: (bool, str) - (can_apply, reason_if_not)
+        """
+        valid, reason = self.is_valid()
+        if not valid:
+            return False, reason
+        
+        if order_subtotal < self.min_order_value:
+            return False, f'Order must be at least ₹{self.min_order_value / 100:.2f}'
+        
+        return True, 'Valid'
+    
+    def calculate_discount(self, order_subtotal):
+        """
+        Calculate discount amount for an order.
+        
+        Args:
+            order_subtotal: Order subtotal in paise
+            
+        Returns:
+            int: Discount amount in paise
+        """
+        if self.discount_percent:
+            discount = int(order_subtotal * (self.discount_percent / 100))
+        else:
+            discount = self.discount_amount_fixed
+        
+        # Apply max discount cap if set
+        if self.max_discount:
+            discount = min(discount, self.max_discount)
+        
+        return discount
+    
+    def increment_usage(self):
+        """Increment coupon usage count."""
+        self.current_uses += 1
+        db.session.commit()
+    
+    def get_discount_display(self):
+        """Return formatted discount description."""
+        if self.discount_percent:
+            return f'{self.discount_percent}% off'
+        else:
+            return f'₹{self.discount_amount_fixed / 100:.2f} off'
+    
+    def __repr__(self):
+        return f'<CouponCode code={self.code} type={self.coupon_type} uses={self.current_uses}/{self.max_uses}>'
+
+
 class Order(db.Model):
     """
     Order model for customer purchases.
@@ -828,6 +999,9 @@ class Order(db.Model):
     # Affiliate tracking (nullable - only filled if referred)
     affiliate_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     
+    # Coupon tracking (nullable - only filled if coupon applied)
+    coupon_id = db.Column(db.Integer, db.ForeignKey('coupon_codes.id'), nullable=True, index=True)
+    
     # Order details snapshot (always captured, regardless of guest/logged-in)
     guest_name = db.Column(db.String(120), nullable=False)
     guest_phone = db.Column(db.String(20), nullable=False)
@@ -869,6 +1043,8 @@ class Order(db.Model):
     # These fields preserve historical financial data for accurate reporting
     # and payment gateway reconciliation
     subtotal_amount = db.Column(db.Integer, nullable=True)  # Sum of all OrderItem.subtotal (in paise)
+    applied_discount = db.Column(db.Integer, nullable=False, default=0)  # Actual discount applied (in paise) - NEW!
+    discount_type = db.Column(db.String(20), nullable=True)  # affiliate, promotional, seasonal, loyalty - NEW!
     shipping_amount = db.Column(db.Integer, nullable=True, default=0)  # Shipping cost snapshot
     discount_amount = db.Column(db.Integer, nullable=True, default=0)  # Total discounts applied
     tax_amount = db.Column(db.Integer, nullable=True, default=0)  # GST or taxes (currently 0)
@@ -883,6 +1059,7 @@ class Order(db.Model):
     
     # Relationships
     affiliate = db.relationship('User', foreign_keys=[affiliate_id], backref='referral_orders')
+    coupon = db.relationship('CouponCode', backref='orders')
     # payment_gateway = db.Column(db.String(50))  # razorpay, stripe, paypal, etc
     # transaction_id = db.Column(db.String(100), unique=True, index=True)
     # payment_status = db.Column(db.String(20), default='pending')  # pending, completed, failed
@@ -1082,7 +1259,15 @@ class Order(db.Model):
             # 1. Calculate financial snapshot (never changes after this)
             self.subtotal_amount = sum(item.get_subtotal() for item in self.items)
             self.shipping_amount = self.shipping_cost or 0
-            self.discount_amount = 0  # Ready for future coupon system
+            
+            # Apply discount from coupon if present
+            if self.coupon_id and self.applied_discount > 0:
+                self.discount_amount = self.applied_discount
+                self.discount_type = self.coupon.coupon_type if self.coupon else None
+            else:
+                self.discount_amount = 0
+                self.discount_type = None
+            
             self.tax_amount = 0  # Ready for future GST implementation
             self.total_amount = self.subtotal_amount + self.shipping_amount - self.discount_amount + self.tax_amount
             
@@ -1102,15 +1287,23 @@ class Order(db.Model):
                 db.session.add(inventory_log)
             
             # 3. Calculate commission if affiliate exists
+            # IMPORTANT: Commission calculated on ACTUAL REVENUE (after discount) - Option A
             if self.has_affiliate() and not self.is_self_referral():
                 from app.models import AffiliateProfile
                 affiliate_profile = AffiliateProfile.query.filter_by(user_id=self.affiliate_id).first()
                 if affiliate_profile and affiliate_profile.is_active:
-                    self.commission_amount = self.calculate_commission(affiliate_profile)
+                    # Commission base = subtotal - discount (actual money received)
+                    commission_base = self.subtotal_amount - self.discount_amount
+                    commission = int(commission_base * (affiliate_profile.commission_percent / 100.0))
+                    self.commission_amount = commission
             
             # 4. Update order status
             self.status = OrderStatus.CONFIRMED.value
             self.confirmed_at = datetime.utcnow()
+
+            # 4.1 Track coupon usage on successful order confirmation
+            if self.coupon_id and self.applied_discount > 0 and self.coupon:
+                self.coupon.current_uses = (self.coupon.current_uses or 0) + 1
             
             # 5. Create Payment record for WhatsApp manual payment
             payment = Payment(

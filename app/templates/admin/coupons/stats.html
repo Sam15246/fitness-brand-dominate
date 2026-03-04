@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Coupon Stats - {{ coupon.code }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Admin Navigation Tabs -->
+    {% include 'admin/_nav_tabs.html' %}
+
+    <div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 fw-bold">
+                <i class="fas fa-chart-bar me-2"></i>Coupon Statistics: <strong class="text-primary">{{ coupon.code }}</strong>
+            </h1>
+            <p class="text-muted">Usage analytics and sales impact</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('admin_coupons.edit_coupon', coupon_id=coupon.id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-edit me-2"></i>Edit Coupon
+            </a>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h3 class="text-primary fw-bold">{{ total_used }}</h3>
+                    <p class="text-muted mb-0">Times Used</p>
+                    {% if coupon.max_uses %}
+                        <small class="text-muted">of {{ coupon.max_uses }} max uses</small>
+                        <div class="mt-2">
+                            <small class="text-muted">Utilization: {{ ((total_used / coupon.max_uses) * 100) | round(0, 'ceil') }}%</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h3 class="text-success fw-bold">₹{{ (total_discount_given / 100) | round(2, 'ceil') }}</h3>
+                    <p class="text-muted mb-0">Total Discount Given</p>
+                    <small class="text-muted">to customers</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h3 class="text-info fw-bold">₹{{ (total_order_value / 100) | round(2, 'ceil') }}</h3>
+                    <p class="text-muted mb-0">Total Order Value</p>
+                    <small class="text-muted">orders with coupon</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    {% if total_used > 0 %}
+                        <h3 class="text-warning fw-bold">{{ ((total_discount_given / total_order_value * 100) if total_order_value > 0 else 0) | round(1, 'ceil') }}%</h3>
+                    {% else %}
+                        <h3 class="fw-bold text-muted">—</h3>
+                    {% endif %}
+                    <p class="text-muted mb-0">Avg Discount %</p>
+                    <small class="text-muted">of order value</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coupon Info -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 fw-bold">Coupon Details</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Code</dt>
+                        <dd class="col-sm-8"><strong class="font-monospace">{{ coupon.code }}</strong></dd>
+
+                        <dt class="col-sm-4 text-muted">Type</dt>
+                        <dd class="col-sm-8">
+                            {% if coupon.coupon_type == 'affiliate' %}
+                                <span class="badge bg-info">Affiliate</span>
+                            {% elif coupon.coupon_type == 'promotional' %}
+                                <span class="badge bg-primary">Promo</span>
+                            {% elif coupon.coupon_type == 'seasonal' %}
+                                <span class="badge bg-warning">Seasonal</span>
+                            {% else %}
+                                <span class="badge bg-success">Loyalty</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Discount</dt>
+                        <dd class="col-sm-8">
+                            {% if coupon.discount_percent %}
+                                <strong>{{ coupon.discount_percent }}%</strong>
+                            {% else %}
+                                <strong>₹{{ (coupon.discount_amount_fixed / 100) | round(2, 'ceil') }}</strong>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Min Order</dt>
+                        <dd class="col-sm-8">₹{{ (coupon.min_order_value / 100) | round(2, 'ceil') }}</dd>
+
+                        <dt class="col-sm-4 text-muted">Created</dt>
+                        <dd class="col-sm-8">{{ coupon.created_at.strftime('%d %b %Y') }}</dd>
+
+                        {% if coupon.expires_at %}
+                            <dt class="col-sm-4 text-muted">Expires</dt>
+                            <dd class="col-sm-8">{{ coupon.expires_at.strftime('%d %b %Y') }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 fw-bold">Performance</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">Usage</dt>
+                        <dd class="col-sm-8">
+                            <strong>{{ total_used }}</strong>
+                            {% if coupon.max_uses %}
+                                / {{ coupon.max_uses }}
+                            {% else %}
+                                / ∞
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Conversion</dt>
+                        <dd class="col-sm-8">
+                            {% if total_used > 0 %}
+                                <strong>{{ total_used }}</strong> transactions
+                            {% else %}
+                                <strong>0</strong> transactions
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Avg Order Value</dt>
+                        <dd class="col-sm-8">
+                            {% if total_used > 0 %}
+                                <strong>₹{{ ((total_order_value / total_used) / 100) | round(2, 'ceil') }}</strong>
+                            {% else %}
+                                <strong>—</strong>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Total Savings</dt>
+                        <dd class="col-sm-8">
+                            <strong class="text-success">₹{{ (total_discount_given / 100) | round(2, 'ceil') }}</strong>
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Status</dt>
+                        <dd class="col-sm-8">
+                            {% if coupon.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Using This Coupon -->
+    <div class="card">
+        <div class="card-header bg-light border-bottom">
+            <h6 class="mb-0 fw-bold">Orders Using This Coupon</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 12%;">Order ID</th>
+                        <th style="width: 15%;">Customer</th>
+                        <th style="width: 15%;">Order Date</th>
+                        <th style="width: 12%;">Subtotal</th>
+                        <th style="width: 12%;">Discount</th>
+                        <th style="width: 12%;">Final Amount</th>
+                        <th style="width: 12%;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders %}
+                        {% for order in orders %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="text-primary fw-bold">
+                                        #{{ order.id }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if order.customer_name %}
+                                        <strong>{{ order.customer_name }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">Guest</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">{{ order.customer_phone }}</small>
+                                </td>
+                                <td>
+                                    {{ order.created_at.strftime('%d %b %Y') }}
+                                    <br>
+                                    <small class="text-muted">{{ order.created_at.strftime('%I:%M %p') }}</small>
+                                </td>
+                                <td>
+                                    ₹{{ (order.subtotal_amount / 100) | round(2, 'ceil') }}
+                                </td>
+                                <td>
+                                    <strong class="text-success">-₹{{ (order.applied_discount / 100) | round(2, 'ceil') }}</strong>
+                                </td>
+                                <td>
+                                    ₹{{ (order.total_amount / 100) | round(2, 'ceil') }}
+                                </td>
+                                <td>
+                                    {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif order.status == 'confirmed' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                    {% elif order.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif order.status == 'completed' %}
+                                        <span class="badge bg-primary">Completed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                No orders using this coupon yet
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
