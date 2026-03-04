@@ -79,3 +79,9 @@ _archive/
 *.tmp
 *.temp
 PRODUCTION_READINESS.md
+
+# Local planning/testing docs & scripts
+YOUR_DECISION_CHECKLIST.md
+UI_TESTING_GUIDE.md
+seed_test_coupons.py
+test_coupons.py
