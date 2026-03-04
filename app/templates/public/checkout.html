@@ -3,7 +3,7 @@
 {% block title %}Checkout - DOMINATE{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-md-5 checkout-page">
     <div class="page-hero mb-4">
         <h1 class="mb-3 fw-bold">Checkout</h1>
         <p class="text-muted">Review your order and enter delivery details</p>
@@ -30,8 +30,7 @@
                                                      srcset="{{ image_thumb_url(item.product.images[0].image_path) }} 300w, {{ image_url(item.product.images[0].image_path) }} 1200w"
                                                      sizes="(max-width: 767.98px) 25vw, (max-width: 991.98px) 20vw, 16vw"
                                                      alt="{{ item.product.name }}" 
-                                                     class="img-fluid rounded"
-                                                     style="max-height: 120px; object-fit: cover;"
+                                                     class="img-fluid rounded checkout-product-image"
                                                      loading="lazy">
                                             {% else %}
                                                 <div class="bg-light rounded text-center py-4">
@@ -52,9 +51,7 @@
                                             {{ item.product.get_price_display() }} each
                                         </p>
                                         {% if item.product.is_discount_active and item.product.price_discounted %}
-                                            <small class="text-success fw-bold">
-                                                ✓ On Sale
-                                            </small>
+                                            <small class="text-success fw-bold">&#10003; On Sale</small>
                                         {% endif %}
                                     </div>
 
@@ -68,7 +65,7 @@
 
                                     <!-- Subtotal -->
                                     <div class="col-6 col-md-3 mt-2 mt-md-0 text-end">
-                                        <p class="mb-0 fw-bold fs-6">₹{{ "%.2f"|format(item.subtotal / 100) }}</p>
+                                        <p class="mb-0 fw-bold fs-6">&#8377;{{ "%.2f"|format(item.subtotal / 100) }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -230,13 +227,12 @@
                             </label>
                             <div class="input-group">
                                 <input type="text" 
-                                       class="form-control" 
+                                       class="form-control coupon-code-input" 
                                        id="coupon_code"
                                        name="coupon_code" 
                                        placeholder="Enter coupon code (e.g., SAVE10)"
                                        value="{{ coupon_code or '' }}"
-                                       maxlength="50"
-                                       style="text-transform: uppercase;">
+                                       maxlength="50">
                                 <button class="btn btn-outline-secondary" type="submit" id="apply-coupon-btn" style="display: none;">
                                     Apply
                                 </button>
@@ -251,7 +247,7 @@
 
             <!-- Order Summary Sidebar -->
             <div class="col-lg-4">
-                <div class="card order-summary-card position-sticky" style="top: 20px;">
+                <div class="card order-summary-card position-sticky checkout-summary-sticky">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3">Order Total</h6>
                         
@@ -260,7 +256,7 @@
                             {% for item in cart['items'] %}
                                 <div class="d-flex justify-content-between mb-2">
                                     <small>{{ item.product.name }} x{{ item.quantity }}</small>
-                                    <small class="fw-bold">₹{{ "%.2f"|format(item.subtotal / 100) }}</small>
+                                    <small class="fw-bold">&#8377;{{ "%.2f"|format(item.subtotal / 100) }}</small>
                                 </div>
                             {% endfor %}
                         </div>
@@ -268,25 +264,25 @@
                         <!-- Subtotal -->
                         <div class="d-flex justify-content-between mb-2 border-top pt-2">
                             <span class="fw-bold">Subtotal</span>
-                            <span class="fw-bold">₹{{ "%.2f"|format(cart.total / 100) }}</span>
+                            <span class="fw-bold">&#8377;{{ "%.2f"|format(cart.total / 100) }}</span>
                         </div>
 
                         {% if applied_discount > 0 %}
                             <!-- Discount Applied -->
                             <div class="d-flex justify-content-between mb-2 text-success">
-                                <span class="fw-bold">✓ Discount</span>
-                                <span class="fw-bold">-₹{{ "%.2f"|format(applied_discount / 100) }}</span>
+                                <span class="fw-bold">&#10003; Discount</span>
+                                <span class="fw-bold">-&#8377;{{ "%.2f"|format(applied_discount / 100) }}</span>
                             </div>
 
                             <!-- Total After Discount -->
                             <div class="d-flex justify-content-between mb-3 fs-6 border-top pt-2">
                                 <span class="fw-bold">Total (Est.)</span>
-                                <span class="fw-bold text-success">₹{{ "%.2f"|format((cart.total - applied_discount) / 100) }}</span>
+                                <span class="fw-bold text-success">&#8377;{{ "%.2f"|format((cart.total - applied_discount) / 100) }}</span>
                             </div>
 
                             <!-- You Save Badge -->
                             <div class="alert alert-success small mb-3 text-center">
-                                <strong>You save ₹{{ "%.2f"|format(applied_discount / 100) }}!</strong>
+                                <strong>You save &#8377;{{ "%.2f"|format(applied_discount / 100) }}!</strong>
                             </div>
                         {% else %}
                             <!-- Shipping Notice -->
@@ -297,7 +293,7 @@
                             <!-- Total -->
                             <div class="d-flex justify-content-between mb-3 fs-6">
                                 <span class="fw-bold">Total (Est.)</span>
-                                <span class="fw-bold text-primary">₹{{ "%.2f"|format(cart.total / 100) }}</span>
+                                <span class="fw-bold text-primary">&#8377;{{ "%.2f"|format(cart.total / 100) }}</span>
                             </div>
                         {% endif %}
 
@@ -321,9 +317,9 @@
                         <!-- Trust Badges -->
                         <div class="mt-3 pt-3 border-top">
                             <small class="text-muted d-block mb-2">
-                                ✓ Secure Checkout<br>
-                                ✓ WhatsApp Confirmation<br>
-                                ✓ Handmade with Care
+                                &#10003; Secure Checkout<br>
+                                &#10003; WhatsApp Confirmation<br>
+                                &#10003; Handmade with Care
                             </small>
                         </div>
                     </div>
@@ -338,15 +334,49 @@
         background-color: #f8f9fa;
     }
 
+    .checkout-product-image {
+        max-height: 120px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .coupon-code-input {
+        text-transform: uppercase;
+    }
+
+    .checkout-summary-sticky {
+        top: 20px;
+    }
+
     .order-summary-card {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         border-radius: 12px;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767.98px) {
+        .checkout-item {
+            padding: 0.9rem !important;
+        }
+
+        .checkout-item .row {
+            row-gap: 0.4rem;
+        }
+
+        .checkout-item .col-6.text-end {
+            text-align: left !important;
+        }
+
+        .checkout-product-image {
+            max-height: 92px;
+        }
+
+        .checkout-form .form-text {
+            line-height: 1.35;
+        }
+
         .order-summary-card {
             position: static !important;
-            margin-top: 2rem;
+            margin-top: 1.25rem;
         }
     }
 </style>

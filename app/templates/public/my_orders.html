@@ -2,7 +2,7 @@
 
 {% block title %}My Orders - DOMINATE{% endblock %}
 
-{% block body_class %}public-page{% endblock %}
+{% block body_class %}public-page my-orders-page{% endblock %}
 
 {% block content %}
 <div class="container py-4 py-md-5">
@@ -68,7 +68,7 @@
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="d-flex gap-2 mt-3">
+                            <div class="d-flex gap-2 mt-3 order-actions">
                                 <a href="#" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#order-details-{{ order.id }}">
                                     View Details
                                 </a>
@@ -171,6 +171,14 @@
     .order-card {
         border-left: none;
         border-top: 4px solid #6b4423;
+    }
+
+    .order-actions {
+        flex-wrap: wrap;
+    }
+
+    .order-actions .btn {
+        width: 100%;
     }
 }
 </style>

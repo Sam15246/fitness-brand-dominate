@@ -174,10 +174,10 @@
                     
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
-                        <div class="d-flex align-items-center gap-2">
-                            <input type="number" class="form-control" id="quantity" name="quantity" 
+                        <div class="d-flex align-items-center gap-2 order-qty-row">
+                            <input type="number" class="form-control order-qty-input" id="quantity" name="quantity" 
                                    value="{{ qty_default or 1 }}" min="1" max="{{ product.stock_quantity }}" 
-                                   style="max-width: 100px;" required>
+                                   required>
                             <span class="text-muted small">Stock available: {{ product.stock_quantity }} units</span>
                         </div>
                     </div>
@@ -216,9 +216,9 @@
 
                 <!-- Trust Indicators -->
                 <div class="trust-badges mt-4">
-                    <span>✓ Secure checkout</span>
-                    <span>✓ No charges yet</span>
-                    <span>✓ Quick WhatsApp confirmation</span>
+                    <span>&#10003; Secure checkout</span>
+                    <span>&#10003; No charges yet</span>
+                    <span>&#10003; Quick WhatsApp confirmation</span>
                 </div>
             </form>
 
@@ -234,7 +234,7 @@ document.getElementById('quantity').addEventListener('change', function() {
     const totalPaise = unitPrice * quantity;
     const totalRupees = totalPaise / 100;
     
-    document.getElementById('total-price').textContent = '₹' + totalRupees.toFixed(2);
+    document.getElementById('total-price').textContent = '\u20B9' + totalRupees.toFixed(2);
 });
 </script>
 

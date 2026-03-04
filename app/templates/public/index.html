@@ -128,17 +128,13 @@
                                                     Add to Cart
                                                 </button>
                                             </form>
-                                            <div class="row g-2">
-                                                <div class="col">
-                                                    <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-secondary btn-sm w-100">View Details</a>
-                                                </div>
-                                                <div class="col">
-                                                    <form method="POST" action="{{ url_for('main.add_to_cart', product_id=product.id) }}" class="buy-now-form w-100">
-                                                        <input type="hidden" name="quantity" value="1">
-                                                        <input type="hidden" name="buy_now" value="true">
-                                                        <button type="submit" class="btn btn-primary btn-sm w-100">Buy Now</button>
-                                                    </form>
-                                                </div>
+                                            <div class="product-card-split-actions">
+                                                <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-secondary btn-sm w-100 product-card-action-btn">View Details</a>
+                                                <form method="POST" action="{{ url_for('main.add_to_cart', product_id=product.id) }}" class="buy-now-form w-100">
+                                                    <input type="hidden" name="quantity" value="1">
+                                                    <input type="hidden" name="buy_now" value="true">
+                                                    <button type="submit" class="btn btn-primary btn-sm w-100 product-card-action-btn">Buy Now</button>
+                                                </form>
                                             </div>
                                         </div>
                                     {% else %}
@@ -177,28 +173,28 @@
         <div class="row g-4">
             <div class="col-md-3 text-center">
                 <div class="p-4">
-                    <div class="mb-3" style="font-size: 2.5rem;">🔨</div>
+                    <div class="mb-3 home-feature-icon">&#128296;</div>
                     <h5 class="fw-bold mb-2">Handcrafted Quality</h5>
                     <p class="text-muted small">Each piece is individually crafted with meticulous attention to detail. No mass production.</p>
                 </div>
             </div>
             <div class="col-md-3 text-center">
                 <div class="p-4">
-                    <div class="mb-3" style="font-size: 2.5rem;">🌲</div>
+                    <div class="mb-3 home-feature-icon">&#127794;</div>
                     <h5 class="fw-bold mb-2">Premium Materials</h5>
                     <p class="text-muted small">We source only the finest hardwoods and materials. Quality you can feel.</p>
                 </div>
             </div>
             <div class="col-md-3 text-center">
                 <div class="p-4">
-                    <div class="mb-3" style="font-size: 2.5rem;">💪</div>
+                    <div class="mb-3 home-feature-icon">&#128170;</div>
                     <h5 class="fw-bold mb-2">Athlete Tested</h5>
                     <p class="text-muted small">Designed and tested by real calisthenics athletes for maximum performance.</p>
                 </div>
             </div>
             <div class="col-md-3 text-center">
                 <div class="p-4">
-                    <div class="mb-3" style="font-size: 2.5rem;">🇮🇳</div>
+                    <div class="mb-3 home-feature-icon">&#127470;&#127475;</div>
                     <h5 class="fw-bold mb-2">Made in India</h5>
                     <p class="text-muted small">Proudly crafted in India. Supporting local artisans and sustainable practices.</p>
                 </div>
@@ -351,7 +347,7 @@
             <h2 class="cta-headline fw-bold mb-3">Ready to Dominate?</h2>
             <p class="cta-subtext text-muted mb-4">Start your journey with handcrafted equipment built for champions. Browse our collection and elevate your training today.</p>
             <div class="cta-buttons">
-                <a href="#products" class="btn btn-primary btn-lg me-2">Shop Equipment</a>
+                <a href="#products" class="btn btn-primary btn-lg">Shop Equipment</a>
                 <a href="{{ url_for('main.about') }}" class="btn btn-outline-secondary btn-lg">Our Story</a>
             </div>
         </div>

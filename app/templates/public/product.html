@@ -90,18 +90,6 @@
             <!-- Product Title -->
             <h1 class="product-title fw-bold mb-3">{{ product.name }}</h1>
             
-            <!-- Star Rating -->
-            <div class="product-rating mb-3">
-                <div class="stars-display">
-                    <span class="star filled">★</span>
-                    <span class="star filled">★</span>
-                    <span class="star filled">★</span>
-                    <span class="star filled">★</span>
-                    <span class="star filled">★</span>
-                </div>
-                <span class="rating-text text-muted ms-2">(5.0) | 47 reviews</span>
-            </div>
-            
             <!-- Price Section -->
             <div class="product-price-section mb-4">
                 <div class="d-flex align-items-center gap-3 mb-2">
@@ -112,9 +100,9 @@
                     {% endif %}
                 </div>
                 {% if product.stock_quantity > 5 %}
-                    <span class="stock-badge in-stock">✓ In Stock</span>
+                    <span class="stock-badge in-stock">&#10003; In Stock</span>
                 {% elif product.stock_quantity > 0 and product.stock_quantity <= 5 %}
-                    <span class="stock-badge low-stock" style="color: #dc3545;">⚠️ Only {{ product.stock_quantity }} left</span>
+                    <span class="stock-badge low-stock" style="color: #dc3545;">&#9888;&#65039; Only {{ product.stock_quantity }} left</span>
                 {% else %}
                     <span class="stock-badge out-of-stock">Out of Stock</span>
                 {% endif %}
@@ -125,10 +113,10 @@
                 <div class="stars-display">
                     {% set avg_rating = product.get_average_rating() %}
                     {% for i in range(avg_rating|int) %}
-                        <span class="star filled">★</span>
+                        <span class="star filled">&#9733;</span>
                     {% endfor %}
                     {% for i in range(5 - (avg_rating|int)) %}
-                        <span class="star">★</span>
+                        <span class="star">&#9733;</span>
                     {% endfor %}
                 </div>
                 <span class="rating-text text-muted ms-2">({{ "%.1f"|format(avg_rating) }}) | {{ product.get_review_count() }} reviews</span>
@@ -143,10 +131,10 @@
             <div class="product-features mb-4">
                 <h6 class="fw-bold mb-3">Key Features:</h6>
                 <ul class="features-list">
-                    <li>✓ Handcrafted from premium hardwood</li>
-                    <li>✓ Smooth, splinter-free finish</li>
-                    <li>✓ Tested by professional athletes</li>
-                    <li>✓ Pan-India delivery available</li>
+                    <li>&#10003; Handcrafted from premium hardwood</li>
+                    <li>&#10003; Smooth, splinter-free finish</li>
+                    <li>&#10003; Tested by professional athletes</li>
+                    <li>&#10003; Pan-India delivery available</li>
                 </ul>
             </div>
             
@@ -204,15 +192,15 @@
             <!-- Trust Badges -->
             <div class="trust-badges-section">
                 <div class="trust-badge-item">
-                    <span class="badge-icon">🔨</span>
+                    <span class="badge-icon">&#128296;</span>
                     <span class="badge-text">Handcrafted Quality</span>
                 </div>
                 <div class="trust-badge-item">
-                    <span class="badge-icon">🚚</span>
+                    <span class="badge-icon">&#128666;</span>
                     <span class="badge-text">Pan-India Delivery</span>
                 </div>
                 <div class="trust-badge-item">
-                    <span class="badge-icon">💬</span>
+                    <span class="badge-icon">&#128172;</span>
                     <span class="badge-text">WhatsApp Support</span>
                 </div>
             </div>
@@ -241,7 +229,7 @@
                     </div>
                     <div class="text-center">
                         <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-                            <span class="text-warning" style="font-size: 1.25rem;">★</span>
+                            <span class="text-warning" style="font-size: 1.25rem;">&#9733;</span>
                             <span class="fw-bold" style="font-size: 1.5rem;">{{ "%.1f"|format(product.get_average_rating()) }}</span>
                         </div>
                         <small class="text-muted">out of 5</small>
@@ -255,10 +243,10 @@
                                 <!-- Star Rating -->
                                 <div class="review-rating mb-2">
                                     {% for i in range(review.rating) %}
-                                        <span class="star filled">★</span>
+                                        <span class="star filled">&#9733;</span>
                                     {% endfor %}
                                     {% for i in range(5 - review.rating) %}
-                                        <span class="star">★</span>
+                                        <span class="star">&#9733;</span>
                                     {% endfor %}
                                 </div>
                                 
@@ -336,11 +324,11 @@
                                 </h6>
                                 <!-- Rating -->
                                 <div class="product-card-rating mb-2">
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
-                                    <span class="star-small filled">★</span>
+                                    <span class="star-small filled">&#9733;</span>
+                                    <span class="star-small filled">&#9733;</span>
+                                    <span class="star-small filled">&#9733;</span>
+                                    <span class="star-small filled">&#9733;</span>
+                                    <span class="star-small filled">&#9733;</span>
                                     <span class="rating-count ms-1">(5.0)</span>
                                 </div>
                                 <div class="product-card-price-section mb-3">

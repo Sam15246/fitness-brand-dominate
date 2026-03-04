@@ -66,7 +66,7 @@
                     {% for product in products.items %}
                     <div class="col">
                         <div class="product-card h-100">
-                            <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="product-card-link" style="text-decoration: none; color: inherit;">
+                            <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="product-card-link">
                                 {% set primary_image = product.get_primary_image() %}
                                 {% if primary_image %}
                                     <img src="{{ image_thumb_url(primary_image.image_path) }}"
@@ -86,8 +86,8 @@
                                     </div>
                                 {% endif %}
                             </a>
-                            <div class="card-body d-flex flex-column">
-                                <a href="{{ url_for('main.product_detail', slug=product.slug) }}" style="text-decoration: none; color: inherit;">
+                            <div class="card-body d-flex flex-column product-card-body">
+                                <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="product-card-name-link">
                                     <h5 class="card-title fw-bold">{{ product.name }}</h5>
                                 </a>
                                 <p class="text-muted small mb-2">
@@ -114,11 +114,11 @@
                                     </div>
                                 </div>
                                 {% if product.stock_quantity > 0 %}
-                                    <div class="mb-3">
+                                    <div class="mb-3 product-card-stock">
                                         {% if product.stock_quantity > 5 %}
-                                            <span style="color: #2C5F2D; font-weight: 500;">In stock</span>
+                                            <span class="in-stock">In stock</span>
                                         {% else %}
-                                            <span style="color: #dc3545; font-weight: bold;">⚠️ Only {{ product.stock_quantity }} left</span>
+                                            <span class="stock-low">&#9888;&#65039; Only {{ product.stock_quantity }} left</span>
                                         {% endif %}
                                     </div>
                                     <div class="mt-auto">
@@ -131,26 +131,22 @@
                                                 Add to Cart
                                             </button>
                                         </form>
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-outline-secondary btn-sm w-100">View Details</a>
-                                            </div>
-                                            <div class="col-6">
-                                                <form method="POST" action="{{ url_for('main.add_to_cart', product_id=product.id) }}" class="w-100">
-                                                    <input type="hidden" name="quantity" value="1">
-                                                    <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-sm w-100">
-                                                        Buy Now
-                                                    </button>
-                                                </form>
-                                            </div>
+                                        <div class="product-card-split-actions">
+                                            <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-secondary btn-sm w-100 product-card-action-btn">View Details</a>
+                                            <form method="POST" action="{{ url_for('main.add_to_cart', product_id=product.id) }}" class="buy-now-form w-100">
+                                                <input type="hidden" name="quantity" value="1">
+                                                <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-sm w-100 product-card-action-btn">
+                                                    Buy Now
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 {% else %}
-                                    <div class="mb-3">
-                                        <span style="color: #999; font-weight: 500;">Out of Stock</span>
+                                    <div class="mb-3 product-card-stock">
+                                        <span class="out-of-stock">Out of stock</span>
                                     </div>
                                     <div class="mt-auto">
-                                        <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-outline-secondary btn-sm w-100">View Details</a>
+                                        <a href="{{ url_for('main.product_detail', slug=product.slug) }}" class="btn btn-secondary btn-sm w-100 product-card-action-btn">View Details</a>
                                     </div>
                                 {% endif %}
                             </div>

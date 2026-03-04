@@ -12,7 +12,7 @@
     </div>
 </section>
 
-<div class="container py-5">
+<div class="container py-4 py-md-5">
     <div class="row justify-content-center">
         <div class="col-lg-6">
             
@@ -25,11 +25,10 @@
                              srcset="{{ image_thumb_url(summary_image.image_path) }} 300w, {{ image_url(summary_image.image_path) }} 1200w"
                              sizes="(max-width: 991.98px) 90vw, 540px"
                              alt="{{ product.name }}"
-                             class="img-fluid mb-3"
-                             style="max-height: 150px;"
+                             class="img-fluid mb-3 order-start-summary-image"
                              loading="lazy">
                     {% elif product.image_url %}
-                        <img src="{{ image_url(product.image_url) }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;" loading="lazy">
+                        <img src="{{ image_url(product.image_url) }}" alt="{{ product.name }}" class="img-fluid mb-3 order-start-summary-image" loading="lazy">
                     {% endif %}
                     <h4 class="fw-bold mb-2">{{ product.name }}</h4>
                     <div class="d-flex justify-content-center align-items-center flex-wrap gap-2">
@@ -70,13 +69,24 @@
 
             <!-- Trust Indicators - Simple -->
             <div class="mt-4 pt-3 border-top text-center">
-                <p class="text-muted small mb-0">
-                    ✓ Fast checkout &nbsp;|&nbsp; WhatsApp confirmation &nbsp;|&nbsp; Secure
-                </p>
+                <p class="text-muted small mb-0">&#10003; Fast checkout &nbsp;|&nbsp; WhatsApp confirmation &nbsp;|&nbsp; Secure</p>
             </div>
 
         </div>
     </div>
 </div>
+
+<style>
+.order-start-summary-image {
+    max-height: 150px;
+    width: auto;
+}
+
+@media (max-width: 767.98px) {
+    .order-start-summary-image {
+        max-height: 120px;
+    }
+}
+</style>
 
 {% endblock %}

@@ -3,7 +3,7 @@
 {% block title %}Shopping Cart - DOMINATE{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-md-5">
     <div class="row">
         <div class="col-lg-8 mx-auto">
             <h1 class="mb-4 fw-bold">Shopping Cart</h1>
@@ -23,8 +23,7 @@
                                                      srcset="{{ image_thumb_url(item.product.images[0].image_path) }} 300w, {{ image_url(item.product.images[0].image_path) }} 1200w"
                                                      sizes="(max-width: 767.98px) 25vw, (max-width: 991.98px) 20vw, 16vw"
                                                      alt="{{ item.product.name }}" 
-                                                     class="img-fluid rounded"
-                                                     style="max-height: 120px; object-fit: cover;"
+                                                     class="img-fluid rounded cart-product-image"
                                                      loading="lazy">
                                             {% else %}
                                                 <div class="bg-light rounded text-center py-4">
@@ -48,14 +47,13 @@
 
                                     <!-- Quantity -->
                                     <div class="col-6 col-md-3 mt-2 mt-md-0">
-                                        <form method="POST" action="{{ url_for('main.update_cart', product_id=item.product.id) }}" class="d-flex align-items-center quantity-update-form" style="max-width: 130px;">
+                                        <form method="POST" action="{{ url_for('main.update_cart', product_id=item.product.id) }}" class="d-flex align-items-center quantity-update-form">
                                             <input type="number" 
                                                    name="quantity" 
                                                    value="{{ item.quantity }}" 
                                                    min="1" 
                                                    max="{{ item.product.stock_quantity }}" 
-                                                   class="form-control form-control-sm text-center quantity-input"
-                                                   style="width: 70px;">
+                                                   class="form-control form-control-sm text-center quantity-input">
                                         </form>
                                     </div>
 
@@ -75,7 +73,7 @@
                 </div>
 
                 <!-- Cart Summary -->
-                <div class="row">
+                <div class="row cart-summary-actions">
                     <div class="col-md-6 mb-3">
                         <form method="POST" action="{{ url_for('main.clear_cart_route') }}" onsubmit="return confirm('Clear all items from cart?');">
                             <button type="submit" class="btn btn-outline-danger">
@@ -132,6 +130,51 @@
 .quantity-update-form input::-webkit-inner-spin-button,
 .quantity-update-form input::-webkit-outer-spin-button {
     opacity: 1;
+}
+
+.cart-product-image {
+    max-height: 120px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.quantity-update-form {
+    max-width: 130px;
+}
+
+.quantity-input {
+    width: 70px;
+}
+
+@media (max-width: 767.98px) {
+    .cart-item {
+        padding: 0.9rem !important;
+    }
+
+    .cart-item .row {
+        row-gap: 0.4rem;
+    }
+
+    .cart-item .col-6.text-end {
+        text-align: left !important;
+    }
+
+    .cart-product-image {
+        max-height: 92px;
+    }
+
+    .quantity-update-form {
+        max-width: 100%;
+    }
+
+    .quantity-input {
+        width: 100%;
+        max-width: 90px;
+    }
+
+    .cart-summary-actions .btn {
+        width: 100%;
+    }
 }
 
 .quantity-input:change {
