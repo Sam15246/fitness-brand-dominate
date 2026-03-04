@@ -32,6 +32,10 @@ depends_on = None
 
 def upgrade():
     """Increase order_number column from VARCHAR(20) to VARCHAR(30)."""
+    bind = op.get_bind()
+    if bind.dialect.name == 'sqlite':
+        return
+
     # PostgreSQL syntax (works on production)
     op.alter_column(
         'orders',
@@ -45,6 +49,10 @@ def upgrade():
 
 def downgrade():
     """Revert order_number column back to VARCHAR(20)."""
+    bind = op.get_bind()
+    if bind.dialect.name == 'sqlite':
+        return
+
     # Note: This could fail if any order_numbers are > 20 chars
     op.alter_column(
         'orders',

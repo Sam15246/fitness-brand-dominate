@@ -46,42 +46,46 @@ depends_on = None
 def upgrade():
     conn = op.get_bind()
     inspector = inspect(conn)
+    dialect = conn.dialect.name
     
     # Create coupon_codes table
-    op.create_table(
-        'coupon_codes',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('code', sa.String(50), nullable=False, unique=True, index=True),
-        sa.Column('discount_percent', sa.Integer(), nullable=True),
-        sa.Column('discount_amount_fixed', sa.Integer(), nullable=True),
-        sa.Column('coupon_type', sa.String(20), nullable=False, default='promotional', index=True),
-        sa.Column('affiliate_id', sa.Integer(), nullable=True, index=True),
-        sa.Column('max_uses', sa.Integer(), nullable=True),
-        sa.Column('current_uses', sa.Integer(), nullable=False, default=0),
-        sa.Column('min_order_value', sa.Integer(), nullable=False, default=0),
-        sa.Column('max_discount', sa.Integer(), nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=False, default=True, index=True),
-        sa.Column('expires_at', sa.DateTime(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('created_by_user_id', sa.Integer(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['affiliate_id'], ['users.id'], ),
-        sa.ForeignKeyConstraint(['created_by_user_id'], ['users.id'], ),
-        sa.PrimaryKeyConstraint('id'),
-        sa.CheckConstraint('(discount_percent IS NOT NULL OR discount_amount_fixed IS NOT NULL)', name='ck_coupon_has_discount'),
-        sa.CheckConstraint('discount_percent IS NULL OR (discount_percent >= 0 AND discount_percent <= 100)', name='ck_coupon_percent_valid'),
-        sa.CheckConstraint('discount_amount_fixed IS NULL OR discount_amount_fixed >= 0', name='ck_coupon_fixed_non_negative'),
-        sa.CheckConstraint('max_uses IS NULL OR max_uses > 0', name='ck_coupon_max_uses_positive'),
-        sa.CheckConstraint('current_uses >= 0', name='ck_coupon_current_uses_non_negative'),
-        sa.CheckConstraint('min_order_value >= 0', name='ck_coupon_min_order_non_negative'),
-    )
+    existing_tables = set(inspector.get_table_names())
+    if 'coupon_codes' not in existing_tables:
+        op.create_table(
+            'coupon_codes',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('code', sa.String(50), nullable=False, unique=True, index=True),
+            sa.Column('discount_percent', sa.Integer(), nullable=True),
+            sa.Column('discount_amount_fixed', sa.Integer(), nullable=True),
+            sa.Column('coupon_type', sa.String(20), nullable=False, default='promotional', index=True),
+            sa.Column('affiliate_id', sa.Integer(), nullable=True, index=True),
+            sa.Column('max_uses', sa.Integer(), nullable=True),
+            sa.Column('current_uses', sa.Integer(), nullable=False, default=0),
+            sa.Column('min_order_value', sa.Integer(), nullable=False, default=0),
+            sa.Column('max_discount', sa.Integer(), nullable=True),
+            sa.Column('is_active', sa.Boolean(), nullable=False, default=True, index=True),
+            sa.Column('expires_at', sa.DateTime(), nullable=True),
+            sa.Column('created_at', sa.DateTime(), nullable=False),
+            sa.Column('created_by_user_id', sa.Integer(), nullable=True),
+            sa.Column('updated_at', sa.DateTime(), nullable=False),
+            sa.ForeignKeyConstraint(['affiliate_id'], ['users.id'], ),
+            sa.ForeignKeyConstraint(['created_by_user_id'], ['users.id'], ),
+            sa.PrimaryKeyConstraint('id'),
+            sa.CheckConstraint('(discount_percent IS NOT NULL OR discount_amount_fixed IS NOT NULL)', name='ck_coupon_has_discount'),
+            sa.CheckConstraint('discount_percent IS NULL OR (discount_percent >= 0 AND discount_percent <= 100)', name='ck_coupon_percent_valid'),
+            sa.CheckConstraint('discount_amount_fixed IS NULL OR discount_amount_fixed >= 0', name='ck_coupon_fixed_non_negative'),
+            sa.CheckConstraint('max_uses IS NULL OR max_uses > 0', name='ck_coupon_max_uses_positive'),
+            sa.CheckConstraint('current_uses >= 0', name='ck_coupon_current_uses_non_negative'),
+            sa.CheckConstraint('min_order_value >= 0', name='ck_coupon_min_order_non_negative'),
+        )
     
     # Add columns to orders table
     orders_columns = {col['name'] for col in inspector.get_columns('orders')}
     
     if 'coupon_id' not in orders_columns:
-        op.add_column('orders', sa.Column('coupon_id', sa.Integer(), nullable=True, index=True))
-        op.create_foreign_key('fk_orders_coupon_id', 'orders', 'coupon_codes', ['coupon_id'], ['id'])
+        op.add_column('orders', sa.Column('coupon_id', sa.Integer(), nullable=True))
+        if dialect != 'sqlite':
+            op.create_foreign_key('fk_orders_coupon_id', 'orders', 'coupon_codes', ['coupon_id'], ['id'])
     
     if 'applied_discount' not in orders_columns:
         op.add_column('orders', sa.Column('applied_discount', sa.Integer(), nullable=False, server_default='0'))
@@ -93,12 +97,14 @@ def upgrade():
 def downgrade():
     conn = op.get_bind()
     inspector = inspect(conn)
+    dialect = conn.dialect.name
     
     # Check if columns exist before dropping them
     orders_columns = {col['name'] for col in inspector.get_columns('orders')}
     
     if 'coupon_id' in orders_columns:
-        op.drop_constraint('fk_orders_coupon_id', 'orders', type_='foreignkey')
+        if dialect != 'sqlite':
+            op.drop_constraint('fk_orders_coupon_id', 'orders', type_='foreignkey')
         op.drop_column('orders', 'coupon_id')
     
     if 'applied_discount' in orders_columns:
@@ -107,4 +113,5 @@ def downgrade():
     if 'discount_type' in orders_columns:
         op.drop_column('orders', 'discount_type')
     
-    op.drop_table('coupon_codes')
+    if 'coupon_codes' in set(inspector.get_table_names()):
+        op.drop_table('coupon_codes')

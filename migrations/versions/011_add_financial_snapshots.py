@@ -39,24 +39,36 @@ depends_on = None
 
 
 def upgrade():
-    # Add financial snapshot columns to orders table
-    with op.batch_alter_table('orders', schema=None) as batch_op:
-        # Snapshot fields - all in paise (smallest unit)
-        batch_op.add_column(sa.Column('subtotal_amount', sa.Integer(), nullable=True, comment='Sum of all OrderItem.subtotal (immutable)'))
-        batch_op.add_column(sa.Column('shipping_amount', sa.Integer(), nullable=True, default=0, comment='Shipping cost in paise'))
-        batch_op.add_column(sa.Column('discount_amount', sa.Integer(), nullable=True, default=0, comment='Total discounts applied'))
-        batch_op.add_column(sa.Column('tax_amount', sa.Integer(), nullable=True, default=0, comment='GST or taxes (currently 0)'))
-        batch_op.add_column(sa.Column('total_amount', sa.Integer(), nullable=True, comment='Final amount paid (immutable snapshot)'))
-        
-        # Add index on total_amount for reporting
-        batch_op.create_index('ix_orders_total_amount', ['total_amount'])
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {col['name'] for col in inspector.get_columns('orders')}
+
+    # Add financial snapshot columns to orders table (idempotent)
+    if 'subtotal_amount' not in columns:
+        op.add_column('orders', sa.Column('subtotal_amount', sa.Integer(), nullable=True, comment='Sum of all OrderItem.subtotal (immutable)'))
+    if 'shipping_amount' not in columns:
+        op.add_column('orders', sa.Column('shipping_amount', sa.Integer(), nullable=True, default=0, comment='Shipping cost in paise'))
+    if 'discount_amount' not in columns:
+        op.add_column('orders', sa.Column('discount_amount', sa.Integer(), nullable=True, default=0, comment='Total discounts applied'))
+    if 'tax_amount' not in columns:
+        op.add_column('orders', sa.Column('tax_amount', sa.Integer(), nullable=True, default=0, comment='GST or taxes (currently 0)'))
+    if 'total_amount' not in columns:
+        op.add_column('orders', sa.Column('total_amount', sa.Integer(), nullable=True, comment='Final amount paid (immutable snapshot)'))
+
+    indexes = {idx['name'] for idx in inspector.get_indexes('orders')}
+    if 'ix_orders_total_amount' not in indexes:
+        op.create_index('ix_orders_total_amount', 'orders', ['total_amount'])
 
 
 def downgrade():
-    with op.batch_alter_table('orders', schema=None) as batch_op:
-        batch_op.drop_index('ix_orders_total_amount')
-        batch_op.drop_column('tax_amount')
-        batch_op.drop_column('discount_amount')
-        batch_op.drop_column('shipping_amount')
-        batch_op.drop_column('subtotal_amount')
-        batch_op.drop_column('total_amount')
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {col['name'] for col in inspector.get_columns('orders')}
+    indexes = {idx['name'] for idx in inspector.get_indexes('orders')}
+
+    if 'ix_orders_total_amount' in indexes:
+        op.drop_index('ix_orders_total_amount', table_name='orders')
+
+    for col in ['tax_amount', 'discount_amount', 'shipping_amount', 'subtotal_amount', 'total_amount']:
+        if col in columns:
+            op.drop_column('orders', col)

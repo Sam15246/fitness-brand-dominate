@@ -35,14 +35,43 @@ depends_on = None
 
 
 def upgrade():
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {col['name'] for col in inspector.get_columns('products')}
+    indexes = {idx['name'] for idx in inspector.get_indexes('products')}
+
+    if 'sku' not in columns:
+        op.add_column('products', sa.Column('sku', sa.String(50), nullable=True, comment='Stock Keeping Unit (unique identifier)'))
+
+    # SQLite doesn't support adding UNIQUE constraints on existing tables directly.
+    # Use unique index for equivalent behavior.
+    if bind.dialect.name == 'sqlite':
+        if 'uq_products_sku' not in indexes:
+            op.create_index('uq_products_sku', 'products', ['sku'], unique=True)
+        if 'ix_products_sku' not in indexes:
+            op.create_index('ix_products_sku', 'products', ['sku'])
+        return
+
     with op.batch_alter_table('products', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('sku', sa.String(50), nullable=True, comment='Stock Keeping Unit (unique identifier)'))
         batch_op.create_unique_constraint('uq_products_sku', ['sku'])
         batch_op.create_index('ix_products_sku', ['sku'])
 
 
 def downgrade():
-    with op.batch_alter_table('products', schema=None) as batch_op:
-        batch_op.drop_index('ix_products_sku')
-        batch_op.drop_constraint('uq_products_sku', type_='unique')
-        batch_op.drop_column('sku')
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {col['name'] for col in inspector.get_columns('products')}
+    indexes = {idx['name'] for idx in inspector.get_indexes('products')}
+
+    if 'ix_products_sku' in indexes:
+        op.drop_index('ix_products_sku', table_name='products')
+
+    if bind.dialect.name == 'sqlite':
+        if 'uq_products_sku' in indexes:
+            op.drop_index('uq_products_sku', table_name='products')
+    else:
+        with op.batch_alter_table('products', schema=None) as batch_op:
+            batch_op.drop_constraint('uq_products_sku', type_='unique')
+
+    if 'sku' in columns:
+        op.drop_column('products', 'sku')

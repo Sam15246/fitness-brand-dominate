@@ -59,7 +59,8 @@ def list_coupons():
                          total_coupons=total_coupons,
                          active_coupons=active_coupons,
                          affiliate_coupons=affiliate_coupons,
-                         promo_coupons=promo_coupons)
+                         promo_coupons=promo_coupons,
+                         now=datetime.utcnow())
 
 
 @admin_coupons_bp.route('/create', methods=['GET', 'POST'])

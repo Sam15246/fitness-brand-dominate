@@ -161,23 +161,23 @@
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="{{ url_for('admin_coupons.edit_coupon', coupon_id=coupon.id) }}" 
                                            class="btn btn-sm btn-outline-primary" title="Edit">
-                                            <i class="fas fa-edit"></i>
+                                            Edit
                                         </a>
                                         <form method="post" action="{{ url_for('admin_coupons.toggle_coupon', coupon_id=coupon.id) }}" 
                                               style="display: inline;">
                                             <button type="submit" class="btn btn-sm btn-outline-warning" title="Toggle">
-                                                <i class="fas fa-power-off"></i>
+                                                {% if coupon.is_active %}Off{% else %}On{% endif %}
                                             </button>
                                         </form>
                                         <a href="{{ url_for('admin_coupons.coupon_stats', coupon_id=coupon.id) }}" 
                                            class="btn btn-sm btn-outline-info" title="Stats">
-                                            <i class="fas fa-chart-bar"></i>
+                                            Stats
                                         </a>
                                         <form method="post" action="{{ url_for('admin_coupons.delete_coupon', coupon_id=coupon.id) }}" 
                                               style="display: inline;" 
                                               onsubmit="return confirm('Delete coupon {{ coupon.code }}?');">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <i class="fas fa-trash"></i>
+                                                Delete
                                             </button>
                                         </form>
                                     </div>
