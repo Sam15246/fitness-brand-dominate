@@ -5,6 +5,10 @@ Add sample products to the database with images.
 from datetime import datetime
 from pathlib import Path
 import sys
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

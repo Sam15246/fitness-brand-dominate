@@ -9,6 +9,18 @@ Run this once after creating the database to populate default policies.
 Usage:
     python -c "from app.scripts.init_policies import init_policies; init_policies()"
 """
+import os
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
+# Ensure app module can be imported
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 from app import create_app
 from app.models import db, PolicyPage, User, UserRole

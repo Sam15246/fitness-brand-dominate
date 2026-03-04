@@ -6,6 +6,10 @@ Run with: python -m app.scripts.create_superadmin
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 # Ensure app module can be imported
 project_root = Path(__file__).parent.parent.parent
