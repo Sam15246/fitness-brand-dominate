@@ -50,9 +50,12 @@ def create_app(config=None):
     @app.context_processor
     def inject_brand_links():
         from app.utils.image_urls import resolve_image_url, resolve_image_thumbnail_url
+        whatsapp_number = app.config.get('WHATSAPP_NUMBER')
+        whatsapp_url = f"https://wa.me/{whatsapp_number}" if whatsapp_number else None
 
         return {
             'instagram_url': app.config.get('INSTAGRAM_URL'),
+            'whatsapp_url': whatsapp_url,
             'image_url': resolve_image_url,
             'image_thumb_url': resolve_image_thumbnail_url,
         }

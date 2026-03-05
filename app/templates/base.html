@@ -17,7 +17,7 @@
     <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3.4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3.5">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -124,8 +124,17 @@
                     
                     <!-- Social Links with Icons -->
                     <div class="footer-social mt-3">
+                        {% if instagram_url or whatsapp_url %}
+                            {% if instagram_url and whatsapp_url %}
+                                <span class="footer-social-label">Connect</span>
+                            {% elif instagram_url %}
+                                <span class="footer-social-label">Instagram</span>
+                            {% else %}
+                                <span class="footer-social-label">WhatsApp</span>
+                            {% endif %}
+                        {% endif %}
+
                         {% if instagram_url %}
-                            <span class="footer-social-label">Instagram</span>
                             <a class="footer-social-link" href="{{ instagram_url }}" target="_blank" rel="noopener" title="Follow us on Instagram" aria-label="Instagram">
                                 <!-- Instagram SVG Icon -->
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -133,6 +142,12 @@
                                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                                     <circle cx="17.5" cy="6.5" r="1.5"></circle>
                                 </svg>
+                            </a>
+                        {% endif %}
+
+                        {% if whatsapp_url %}
+                            <a class="footer-social-link" href="{{ whatsapp_url }}" target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="WhatsApp">
+                                <i class="bi bi-whatsapp" aria-hidden="true"></i>
                             </a>
                         {% endif %}
                     </div>
