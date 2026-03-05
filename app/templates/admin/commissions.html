@@ -38,28 +38,28 @@
     </ul>
     
     <!-- Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title text-muted">Pending Commissions</h5>
-                    <p class="display-6 fw-bold text-warning">{{ pending_count }}</p>
+                    <p class="h2 fw-bold text-warning mb-0">{{ pending_count }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title text-muted">Approved Commissions</h5>
-                    <p class="display-6 fw-bold text-success">{{ approved_count }}</p>
+                    <p class="h2 fw-bold text-success mb-0">{{ approved_count }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card text-center">
                 <div class="card-body">
                     <h5 class="card-title text-muted">Total with Affiliates</h5>
-                    <p class="display-6 fw-bold text-primary">{{ pending_count + approved_count }}</p>
+                    <p class="h2 fw-bold text-primary mb-0">{{ pending_count + approved_count }}</p>
                 </div>
             </div>
         </div>

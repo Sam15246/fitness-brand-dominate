@@ -1007,6 +1007,13 @@ def my_orders():
     return render_template('public/my_orders.html', orders=orders)
 
 
+@main_bp.route('/profile')
+@login_required
+def profile():
+    """User profile page (editable details can be expanded in next phase)."""
+    return render_template('public/profile.html')
+
+
 @main_bp.route('/about')
 def about():
     """About page."""

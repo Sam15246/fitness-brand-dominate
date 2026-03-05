@@ -17,7 +17,7 @@
     <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3.5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=4.0">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -51,34 +51,86 @@
                             <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
                             </svg>
+                            <span class="nav-mobile-label">Cart</span>
                             <span id="cart-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style="font-size: 0.65rem; {% if not cart_count or cart_count == 0 %}display: none;{% endif %}">
                                 {{ cart_count if cart_count else '' }}
                             </span>
                         </a>
                     </li>
                     {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.my_orders') }}">My Orders</a>
-                        </li>
-                        {% if current_user.affiliate_profile %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('main.affiliate_dashboard') }}"><i class="bi bi-people-fill me-1" aria-hidden="true"></i>Affiliate</a>
-                            </li>
-                        {% endif %}
-                        {% if current_user.is_admin() %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
-                                    {% if current_user.role == 'superadmin' %}
-                                        <span class="badge bg-danger me-1">SA</span>
-                                    {% else %}
-                                        <span class="badge bg-warning me-1">A</span>
+                        <li class="nav-item dropdown user-menu-dropdown">
+                            <a class="nav-link dropdown-toggle user-menu-toggle" href="#" id="userMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open account menu">
+                                <span class="user-menu-icon" aria-hidden="true">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <span class="nav-mobile-label">Account</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end user-menu-panel" aria-labelledby="userMenuDropdown">
+                                <li class="dropdown-header user-menu-header">
+                                    <span class="user-menu-name">{{ current_user.name }}</span>
+                                    <small class="user-menu-email">{{ current_user.email }}</small>
+                                    {% if current_user.is_admin() %}
+                                        <span class="user-role-chip {{ 'super' if current_user.is_superadmin() else 'admin' }}">
+                                            {{ 'Superadmin' if current_user.is_superadmin() else 'Admin' }}
+                                        </span>
                                     {% endif %}
-                                    Admin
-                                </a>
-                            </li>
-                        {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('main.my_orders') }}">
+                                        <i class="bi bi-bag-check me-2" aria-hidden="true"></i>My Orders
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('main.profile') }}">
+                                        <i class="bi bi-person-lines-fill me-2" aria-hidden="true"></i>My Profile
+                                    </a>
+                                </li>
+                                {% if current_user.affiliate_profile %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('main.affiliate_dashboard') }}">
+                                            <i class="bi bi-people-fill me-2" aria-hidden="true"></i>Affiliate Dashboard
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if current_user.is_admin() %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="dropdown-header user-menu-subheader">Admin</li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">
+                                            <i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Admin Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('admin.products_list') }}">
+                                            <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Manage Products
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('admin.orders_list') }}">
+                                            <i class="bi bi-receipt me-2" aria-hidden="true"></i>Manage Orders
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('admin_coupons.list_coupons') }}">
+                                            <i class="bi bi-ticket-perforated me-2" aria-hidden="true"></i>Coupons
+                                        </a>
+                                    </li>
+                                    {% if current_user.is_superadmin() %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('admin.users_list') }}">
+                                                <i class="bi bi-people me-2" aria-hidden="true"></i>Users
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                        <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Logout
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">

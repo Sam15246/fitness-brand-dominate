@@ -263,6 +263,7 @@ button, .btn {
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
 }
 
 .public-page .hero-image img {
@@ -270,6 +271,83 @@ button, .btn {
     border: 2px solid var(--primary-color);
     background-color: #FFFFFF;
     display: block;
+}
+
+.public-page .hero-carousel {
+    width: min(100%, 640px);
+}
+
+.public-page .hero-carousel .carousel-inner {
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.public-page .hero-carousel-link {
+    display: block;
+    position: relative;
+    text-decoration: none;
+    color: inherit;
+}
+
+.public-page .hero-carousel-link:focus-visible {
+    outline: 3px solid rgba(139, 111, 71, 0.55);
+    outline-offset: 2px;
+}
+
+.public-page .hero-carousel-link img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+}
+
+.public-page .hero-carousel-caption {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    max-width: calc(100% - 2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    background: rgba(23, 17, 10, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+}
+
+.public-page .hero-carousel-indicators {
+    margin-bottom: 0.55rem;
+}
+
+.public-page .hero-carousel-indicators [data-bs-target] {
+    width: 7px;
+    height: 7px;
+    border: 0;
+    border-radius: 999px;
+    opacity: 0.7;
+    background-color: rgba(255, 255, 255, 0.82);
+}
+
+.public-page .hero-carousel-indicators .active {
+    opacity: 1;
+    background-color: var(--primary-color);
+}
+
+.public-page .hero-carousel .carousel-control-prev,
+.public-page .hero-carousel .carousel-control-next {
+    width: 10%;
+    opacity: 0.95;
+}
+
+.public-page .hero-carousel .carousel-control-prev-icon,
+.public-page .hero-carousel .carousel-control-next-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 50%;
+    background-size: 58% 58%;
+    background-color: rgba(23, 17, 10, 0.68);
 }
 
 .public-page .page-hero {
@@ -616,6 +694,167 @@ nav.navbar {
 .navbar-nav .nav-link:focus {
     color: var(--primary-color) !important;
     background-color: rgba(139, 111, 71, 0.08);
+}
+
+.nav-mobile-label {
+    display: none;
+}
+
+.user-menu-dropdown .dropdown-toggle::after {
+    display: none;
+}
+
+.user-menu-toggle {
+    margin-left: 0.35rem !important;
+    margin-right: 0.35rem !important;
+    padding: 0.35rem !important;
+    background: transparent !important;
+}
+
+.user-menu-icon {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #FFFFFF;
+    color: #56616A;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.user-menu-toggle:hover .user-menu-icon,
+.user-menu-toggle:focus .user-menu-icon,
+.user-menu-toggle[aria-expanded="true"] .user-menu-icon {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: 0 4px 14px rgba(88, 60, 32, 0.16);
+}
+
+.user-menu-panel {
+    min-width: 250px;
+    border: 1px solid rgba(212, 190, 160, 0.85);
+    border-radius: 12px;
+    padding: 0.45rem 0;
+    box-shadow: 0 16px 30px rgba(88, 60, 32, 0.14);
+}
+
+.user-menu-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    padding: 0.5rem 1rem 0.3rem;
+}
+
+.user-menu-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #302518;
+}
+
+.user-menu-email {
+    font-size: 0.78rem;
+    color: #7A7A7A;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-role-chip {
+    align-self: flex-start;
+    margin-top: 0.25rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.15rem 0.5rem;
+}
+
+.user-role-chip.admin {
+    color: #8A5A00;
+    background: #FCE8BE;
+    border: 1px solid #E4C887;
+}
+
+.user-role-chip.super {
+    color: #8A1B1B;
+    background: #FFD6D6;
+    border: 1px solid #E8A2A2;
+}
+
+.user-menu-subheader {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #8B6F47;
+    text-transform: uppercase;
+    padding: 0.25rem 1rem 0.2rem;
+}
+
+.user-menu-panel .dropdown-item {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2E2E2E;
+    padding: 0.5rem 1rem;
+}
+
+.user-menu-panel .dropdown-item:hover,
+.user-menu-panel .dropdown-item:focus {
+    color: var(--primary-color);
+    background: rgba(139, 111, 71, 0.08);
+}
+
+.profile-card {
+    max-width: 760px;
+}
+
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        padding-top: 0.35rem;
+    }
+
+    .navbar-collapse .navbar-nav .nav-item {
+        width: 100%;
+    }
+
+    .navbar-collapse .navbar-nav .nav-link {
+        margin-left: 0;
+        margin-right: 0;
+        padding: 0.55rem 0.25rem;
+        justify-content: flex-start;
+    }
+
+    .navbar-collapse #cart-count-badge {
+        position: static !important;
+        transform: none !important;
+        margin-left: 0.4rem;
+    }
+
+    .navbar-collapse .nav-mobile-label {
+        display: inline;
+        margin-left: 0.5rem;
+        font-weight: 600;
+    }
+
+    .navbar-collapse .user-menu-toggle {
+        padding: 0.55rem 0.25rem !important;
+    }
+
+    .navbar-collapse .user-menu-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 1rem;
+    }
+
+    .navbar-collapse .user-menu-panel {
+        position: static;
+        width: 100%;
+        margin-top: 0.25rem;
+        box-shadow: none;
+    }
 }
 
 /* =================
@@ -1103,14 +1342,50 @@ textarea:focus {
 .stat-card {
     background-color: #FFFFFF;
     border: 1px solid var(--border-color);
-    border-left: 4px solid var(--primary-color);
-    border-radius: 6px;
-    padding: 1.5rem;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
 }
 
 .stat-card h2 {
     color: var(--primary-color);
-    margin: 0.5rem 0;
+    margin: 0.3rem 0;
+    font-size: 2.1rem;
+    line-height: 1.1;
+}
+
+.admin-dashboard .admin-title {
+    font-size: clamp(2rem, 3.6vw, 3rem);
+    line-height: 1.1;
+}
+
+.admin-role-badge {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    border: 1px solid rgba(212, 190, 160, 0.9);
+    border-radius: 12px;
+    padding: 0.55rem 0.9rem;
+    background: #FFFFFF;
+    min-width: 155px;
+}
+
+.admin-role-badge strong {
+    font-size: 0.98rem;
+    color: #2c2c2c;
+}
+
+.admin-role-badge small {
+    font-size: 0.78rem;
+    color: #808080;
+}
+
+.admin-role-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8B6F47;
+    font-weight: 700;
 }
 
 .table {
@@ -1157,29 +1432,40 @@ textarea:focus {
 
 .admin-tabs {
     display: flex;
-    gap: 1.5rem;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
+    gap: 0.55rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 
 .admin-tab {
-    padding-bottom: 0.75rem;
-    border-bottom: 3px solid transparent;
+    flex: 0 0 auto;
+    padding: 0.46rem 0.82rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
     cursor: pointer;
     color: var(--bs-body-color);
     text-decoration: none;
-    font-weight: 500;
+    font-size: 0.92rem;
+    font-weight: 600;
     transition: all 0.2s ease;
 }
 
 .admin-tab:hover {
     color: var(--primary-color);
+    background: rgba(139, 111, 71, 0.08);
+    text-decoration: none;
 }
 
 .admin-tab.active {
+    background: #FFFFFF;
+    border-color: rgba(139, 111, 71, 0.35);
     color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+    box-shadow: 0 3px 10px rgba(88, 60, 32, 0.08);
 }
 
 /* =================
@@ -1261,37 +1547,6 @@ a:hover {
     color: var(--primary-color);
     border-color: var(--border-color);
     border-radius: 4px;
-}
-
-/* =================
-   ADMIN TAB STYLING
-   ================= */
-
-.admin-tabs {
-    display: flex;
-    gap: 1.5rem;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
-}
-
-.admin-tab {
-    padding-bottom: 0.75rem;
-    border-bottom: 3px solid transparent;
-    cursor: pointer;
-    color: var(--bs-body-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.admin-tab:hover {
-    color: var(--primary-color);
-}
-
-.admin-tab.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
 }
 
 /* =================
@@ -3283,9 +3538,86 @@ img {
    USER MOBILE POLISH
    ================= */
 @media (max-width: 767.98px) {
+    .admin-tabs {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        white-space: normal;
+        row-gap: 0.5rem;
+        gap: 0.45rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.4rem;
+        scrollbar-width: none;
+    }
+
+    .admin-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .admin-tab {
+        font-size: 0.86rem;
+        padding: 0.4rem 0.68rem;
+    }
+
+    .admin-dashboard .admin-dashboard-header {
+        margin-bottom: 1rem !important;
+    }
+
+    .admin-dashboard .admin-role-badge {
+        width: 100%;
+        max-width: none;
+    }
+
+    .admin-dashboard .stat-card {
+        padding: 0.85rem 0.95rem;
+    }
+
+    .admin-dashboard .stat-card h2 {
+        font-size: 1.8rem;
+    }
+
+    .admin-dashboard .card-header h5,
+    .admin-dashboard .card-header .card-title {
+        font-size: 1.1rem;
+    }
+
+    .reviews-header-actions {
+        width: 100%;
+    }
+
+    .review-product-select,
+    .reviews-add-btn {
+        width: 100%;
+    }
+
+    .user-menu-panel {
+        min-width: 220px;
+    }
+
+    .user-menu-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.3rem;
+    }
+
     .public-page .container.py-5 {
         padding-top: 1.75rem !important;
         padding-bottom: 1.75rem !important;
+    }
+
+    .public-page .hero-carousel-link img {
+        aspect-ratio: 4 / 3;
+    }
+
+    .public-page .hero-carousel-caption {
+        left: 0.75rem;
+        bottom: 0.75rem;
+        font-size: 0.78rem;
+        padding: 0.32rem 0.62rem;
+    }
+
+    .public-page .hero-carousel .carousel-control-prev,
+    .public-page .hero-carousel .carousel-control-next {
+        display: none;
     }
 
     .public-page .products-hero .container.py-4.py-md-5 {

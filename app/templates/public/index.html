@@ -18,7 +18,67 @@
             </div>
             <div class="col-lg-6 text-center">
                 <div class="hero-image">
-                    <img src="{{ url_for('static', filename='images/home-page-image.png') }}" alt="Dominate calisthenics equipment collection" class="img-fluid rounded" loading="lazy">
+                    {% if featured_products %}
+                        <div id="homeHeroCarousel"
+                             class="carousel slide hero-carousel"
+                             data-bs-ride="carousel"
+                             data-bs-interval="5000"
+                             data-bs-touch="true">
+                            {% if featured_products|length > 1 %}
+                                <div class="carousel-indicators hero-carousel-indicators">
+                                    {% for hero_product in featured_products %}
+                                        <button type="button"
+                                                data-bs-target="#homeHeroCarousel"
+                                                data-bs-slide-to="{{ loop.index0 }}"
+                                                class="{% if loop.first %}active{% endif %}"
+                                                {% if loop.first %}aria-current="true"{% endif %}
+                                                aria-label="Slide {{ loop.index }}">
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="carousel-inner rounded">
+                                {% for hero_product in featured_products %}
+                                    {% set hero_image = hero_product.get_primary_image() %}
+                                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                        <a href="{{ url_for('main.product_detail', slug=hero_product.slug) }}"
+                                           class="hero-carousel-link"
+                                           aria-label="View {{ hero_product.name }}">
+                                            {% if hero_image %}
+                                                <img src="{{ image_url(hero_image.image_path) }}"
+                                                     class="img-fluid rounded"
+                                                     alt="{{ hero_product.name }}"
+                                                     {% if loop.first %}loading="eager"{% else %}loading="lazy"{% endif %}>
+                                            {% elif hero_product.image_url %}
+                                                <img src="{{ image_url(hero_product.image_url) }}"
+                                                     class="img-fluid rounded"
+                                                     alt="{{ hero_product.name }}"
+                                                     {% if loop.first %}loading="eager"{% else %}loading="lazy"{% endif %}>
+                                            {% else %}
+                                                <img src="{{ url_for('static', filename='images/home-page-image.png') }}"
+                                                     class="img-fluid rounded"
+                                                     alt="{{ hero_product.name }}"
+                                                     {% if loop.first %}loading="eager"{% else %}loading="lazy"{% endif %}>
+                                            {% endif %}
+                                            <span class="hero-carousel-caption">{{ hero_product.name }}</span>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if featured_products|length > 1 %}
+                                <button class="carousel-control-prev" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="prev" aria-label="Previous slide">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="next" aria-label="Next slide">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/home-page-image.png') }}" alt="Dominate calisthenics equipment collection" class="img-fluid rounded" loading="lazy">
+                    {% endif %}
                 </div>
             </div>
         </div>
