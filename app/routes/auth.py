@@ -149,8 +149,11 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('auth.login'))
+        # Auto-login after successful registration
+        login_user(user)
+        
+        flash(f'Welcome to DOMINATE, {user.name}! Your account has been created successfully.', 'success')
+        return redirect(url_for('main.index'))
     
     return render_template('auth/register.html')
 
