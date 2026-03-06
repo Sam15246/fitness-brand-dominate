@@ -138,8 +138,8 @@
         function togglePriceSections() {
             if (discountCheckbox.checked) {
                 // Show dual pricing, hide single
-                singlePriceSection.style.display = 'none';
-                dualPriceSection.style.display = 'block';
+                singlePriceSection.classList.add('d-none');
+                dualPriceSection.classList.remove('d-none');
                 
                 // Set required fields
                 priceSingle.required = false;
@@ -148,8 +148,8 @@
                 priceDiscounted.required = true;
             } else {
                 // Show single pricing, hide dual
-                singlePriceSection.style.display = 'block';
-                dualPriceSection.style.display = 'none';
+                singlePriceSection.classList.remove('d-none');
+                dualPriceSection.classList.add('d-none');
                 
                 // Set required fields
                 priceSingle.required = true;
@@ -157,13 +157,13 @@
                 priceDiscounted.required = false;
                 priceOriginal.value = '';
                 priceDiscounted.value = '';
-                previewDiv.style.display = 'none';
+                previewDiv.classList.add('d-none');
             }
         }
         
         function updateDiscountPreview() {
             if (!discountCheckbox.checked || !priceOriginal.value || !priceDiscounted.value) {
-                previewDiv.style.display = 'none';
+                previewDiv.classList.add('d-none');
                 return;
             }
             
@@ -175,9 +175,9 @@
                 document.getElementById('discount_percentage').textContent = percentage;
                 document.getElementById('preview_original').textContent = '₹' + original.toFixed(2);
                 document.getElementById('preview_discounted').textContent = '₹' + discounted.toFixed(2);
-                previewDiv.style.display = 'block';
+                previewDiv.classList.remove('d-none');
             } else {
-                previewDiv.style.display = 'none';
+                previewDiv.classList.add('d-none');
             }
         }
         
