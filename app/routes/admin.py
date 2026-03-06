@@ -397,25 +397,138 @@ def delete_product(product_id):
     """
     product = Product.query.get_or_404(product_id)
     product_name = product.name
+
+    try:
+        # Safer default: archive instead of hard delete.
+        # This preserves historical references in orders, cart rows, and inventory logs.
+        if not product.is_active:
+            flash(f'Product "{product_name}" is already archived.', 'info')
+            return redirect(url_for('admin.products_list'))
+
+        product.is_active = False
+        db.session.commit()
+
+        # Log archive action for audit trail.
+        AdminActionLog.create_log(
+            admin_id=current_user.id,
+            action_type='ARCHIVE_PRODUCT',
+            target_id=product_id,
+            ip_address=get_client_ip(),
+            description=f'Archived product: {product_name}'
+        )
+
+        flash(f'Product "{product_name}" archived successfully. It is now hidden from customers.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error archiving product. Please try again.', 'danger')
+        current_app.logger.error(f'Product archive error: {str(e)}')
+    
+    return redirect(url_for('admin.products_list'))
+
+
+@admin_bp.route('/product/<int:product_id>/hard-delete', methods=['POST'])
+@superadmin_required
+def hard_delete_product(product_id):
+    """
+    SUPERADMIN ONLY: Permanently delete product from database.
+    
+    SAFETY CHECKS (blocks deletion if):
+    ====================================
+    - Product has order items (historical sales records)
+    - Product has inventory logs (stock movement audit trail)
+    - Product has cart items (active customer interest)
+    - Product has reviews (customer feedback history)
+    
+    GOVERNANCE:
+    - Only superadmins can access this endpoint
+    - Requires explicit confirmation with product name
+    - Logs hard delete action for audit trail
+    - Irreversible - data is permanently lost
+    
+    WHEN TO USE:
+    - Test products created by mistake
+    - Duplicate entries
+    - Never-published draft products
+    - NEVER for products with sales history
+    
+    USE ARCHIVE INSTEAD:
+    Regular admins should use archive (soft delete) to hide products
+    while preserving historical data and referential integrity.
+    """
+    product = Product.query.get_or_404(product_id)
+    product_name = product.name
     
     try:
+        # SAFETY CHECK 1: Check for order items (sales history)
+        from app.models import OrderItem
+        order_count = OrderItem.query.filter_by(product_id=product_id).count()
+        if order_count > 0:
+            flash(
+                f'Cannot delete "{product_name}": Product has {order_count} order(s). '
+                f'Use Archive instead to preserve sales history.',
+                'danger'
+            )
+            return redirect(url_for('admin.products_list'))
+        
+        # SAFETY CHECK 2: Check for inventory logs (stock audit trail)
+        inventory_log_count = InventoryLog.query.filter_by(product_id=product_id).count()
+        if inventory_log_count > 0:
+            flash(
+                f'Cannot delete "{product_name}": Product has {inventory_log_count} inventory log(s). '
+                f'Use Archive instead to preserve audit trail.',
+                'danger'
+            )
+            return redirect(url_for('admin.products_list'))
+        
+        # SAFETY CHECK 3: Check for active cart items
+        from app.models import CartItem
+        cart_count = CartItem.query.filter_by(product_id=product_id).count()
+        if cart_count > 0:
+            flash(
+                f'Cannot delete "{product_name}": Product is in {cart_count} customer cart(s). '
+                f'Remove from carts first or use Archive instead.',
+                'warning'
+            )
+            return redirect(url_for('admin.products_list'))
+        
+        # SAFETY CHECK 4: Check for reviews
+        review_count = Review.query.filter_by(product_id=product_id).count()
+        if review_count > 0:
+            flash(
+                f'Cannot delete "{product_name}": Product has {review_count} review(s). '
+                f'Use Archive instead to preserve customer feedback.',
+                'warning'
+            )
+            return redirect(url_for('admin.products_list'))
+        
+        # All checks passed - safe to hard delete
+        # Delete associated images first (cascade may not handle storage cleanup)
+        product_images = ProductImage.query.filter_by(product_id=product_id).all()
+        for img in product_images:
+            db.session.delete(img)
+        
+        # Delete the product
         db.session.delete(product)
         db.session.commit()
         
-        # Log the deletion action
+        # Log the hard deletion (CRITICAL for audit trail)
         AdminActionLog.create_log(
             admin_id=current_user.id,
-            action_type='DELETE_PRODUCT',
+            action_type='HARD_DELETE_PRODUCT',
             target_id=product_id,
             ip_address=get_client_ip(),
-            description=f'Deleted product: {product_name}'
+            description=f'PERMANENTLY DELETED product: {product_name} (no dependencies found)'
         )
         
-        flash(f'Product "{product_name}" deleted successfully!', 'success')
+        flash(
+            f'Product "{product_name}" permanently deleted from database. This action cannot be undone.',
+            'success'
+        )
+        
     except Exception as e:
         db.session.rollback()
         flash('Error deleting product. Please try again.', 'danger')
-        current_app.logger.error(f'Product delete error: {str(e)}')
+        current_app.logger.error(f'Product hard delete error: {str(e)}')
     
     return redirect(url_for('admin.products_list'))
 
