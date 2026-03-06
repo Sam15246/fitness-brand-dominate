@@ -1,17 +1,304 @@
 """
-Email utilities for order confirmations and marketing communications.
+Email utilities for order confirmations, password resets, and marketing communications.
+
+ARCHITECTURE:
+=============
+- Uses Flask-Mail extension for SMTP sending
+- Backend-agnostic: Mailgun, SendGrid, or Gmail via config
+- Template-based: HTML emails with fallback to plain text
+- Logging: All email attempts logged for debugging
 
 FUTURE SCALABILITY PATHS:
-1. SMTP Setup: Configure Flask-Mail with app.config['MAIL_SERVER'], MAIL_PORT, MAIL_USE_TLS
-2. SendGrid Integration: Use sendgrid.SendGridAPIClient with dynamic templates
-3. Mailgun Integration: Use mailgun-python SDK
-4. Email Queuing: Use Celery + Redis for async email sending
-5. Template System: Move to Jinja2 templates stored in database
-6. Unsubscribe Management: Add email_lists table, track unsubscribes via MGN webhooks
+==========================
+1. Email Queuing: Use Celery + Redis for async email sending (high volume)
+2. Template System: Move to Jinja2 templates stored in database (easier editing)
+3. Unsubscribe Management: Add email_lists table, track unsubscribes
+4. Analytics: Track open rates, click rates (via tracking pixels/links)
+5. Retry Logic: Exponential backoff for failed sends
+6. Bounce Handling: Process bounce webhooks from Mailgun/SendGrid
 """
 
-from flask import current_app
+from flask import current_app, url_for
+from flask_mail import Message
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def send_password_reset_email(user_email: str, reset_token: str) -> dict:
+    """
+    Send password reset email with secure token link.
+    
+    SECURITY DESIGN:
+    ================
+    - Token generated with itsdangerous (cryptographically signed)
+    - Token expires in 24 hours (configurable)
+    - Link is single-use (token deleted after reset)
+    - No user enumeration (same response for valid/invalid emails)
+    
+    Args:
+        user_email: Recipient email address
+        reset_token: Secure token for password reset
+        
+    Returns:
+        dict: {'success': bool, 'message': str}
+        
+    Example:
+        >>> send_password_reset_email('user@example.com', 'abc123token')
+        {'success': True, 'message': 'Password reset email sent'}
+    """
+    try:
+        # Import here to avoid circular imports
+        from app import mail
+        
+        # Generate reset URL (full URL with protocol and domain)
+        reset_url = url_for('auth.reset_password_form', token=reset_token, _external=True)
+        
+        # Generate logo URL (full URL for email)
+        logo_url = url_for('static', filename='images/logo.png', _external=True)
+        
+        # Email subject
+        subject = "Reset Your Password - DOMINATE"
+        
+        # HTML email template (DOMINATE brand theme: brown/cream/beige)
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{
+                    font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #2C2C2C;
+                    background-color: #F9F6F0;
+                    margin: 0;
+                    padding: 0;
+                }}
+                .email-wrapper {{
+                    background-color: #F9F6F0;
+                    padding: 40px 20px;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background: #FFFFFF;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(139, 111, 71, 0.15);
+                    overflow: hidden;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #8B6F47 0%, #A68968 100%);
+                    padding: 30px 20px;
+                    text-align: center;
+                }}
+                .logo {{
+                    max-width: 160px;
+                    height: auto;
+                    margin-bottom: 15px;
+                }}
+                .header h1 {{
+                    color: #FFFFFF;
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: 600;
+                    letter-spacing: 0.5px;
+                }}
+                .content {{
+                    padding: 40px 30px;
+                }}
+                .content p {{
+                    color: #2C2C2C;
+                    margin-bottom: 16px;
+                    font-size: 15px;
+                }}
+                .button-container {{
+                    text-align: center;
+                    margin: 30px 0;
+                }}
+                .button {{
+                    display: inline-block;
+                    background: #8B6F47;
+                    color: #FFFFFF;
+                    padding: 16px 36px;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    font-size: 16px;
+                    box-shadow: 0 4px 10px rgba(139, 111, 71, 0.25);
+                    transition: all 0.3s ease;
+                }}
+                .button:hover {{
+                    background: #6F5839;
+                    box-shadow: 0 6px 14px rgba(139, 111, 71, 0.35);
+                }}
+                .link-box {{
+                    background: #F9F6F0;
+                    border: 2px solid #E8DCC8;
+                    padding: 16px;
+                    border-radius: 8px;
+                    word-break: break-all;
+                    margin: 20px 0;
+                    font-size: 13px;
+                    color: #6F5839;
+                }}
+                .warning {{
+                    background: #FFF4E6;
+                    border-left: 4px solid #D4A574;
+                    padding: 18px;
+                    margin: 25px 0;
+                    border-radius: 0 8px 8px 0;
+                }}
+                .warning strong {{
+                    color: #8B6F47;
+                    font-size: 15px;
+                }}
+                .divider {{
+                    height: 2px;
+                    background: linear-gradient(to right, transparent, #D4BEA0, transparent);
+                    margin: 30px 0;
+                }}
+                .footer {{
+                    background: #E8DCC8;
+                    padding: 25px 30px;
+                    text-align: center;
+                }}
+                .footer p {{
+                    margin: 8px 0;
+                    font-size: 13px;
+                    color: #6F5839;
+                }}
+                .footer-brand {{
+                    font-weight: 600;
+                    color: #8B6F47;
+                    letter-spacing: 1px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="email-wrapper">
+                <div class="container">
+                    <div class="header">
+                        <img src="{logo_url}" alt="DOMINATE Logo" class="logo">
+                        <h1>Password Reset Request</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <p><strong>Hello,</strong></p>
+                        
+                        <p>You requested to reset your password for your <strong>DOMINATE</strong> account.</p>
+                        
+                        <p>Click the button below to reset your password:</p>
+                        
+                        <div class="button-container">
+                            <a href="{reset_url}" class="button">Reset Password</a>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #6F5839;">Or copy and paste this link into your browser:</p>
+                        
+                        <div class="link-box">
+                            {reset_url}
+                        </div>
+                        
+                        <div class="warning">
+                            <strong>⏱ This link expires in 24 hours.</strong><br>
+                            <span style="font-size: 14px; color: #6F5839;">For security, this password reset link can only be used once.</span>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <p style="font-size: 14px; color: #6F5839;">If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.</p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Need help? Contact us via WhatsApp or Instagram.</p>
+                        <p class="footer-brand">DOMINATE</p>
+                        <p>&copy; 2026 DOMINATE. All rights reserved.</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Plain text fallback (for email clients that don't support HTML)
+        text_body = f"""
+Password Reset Request
+
+You requested to reset your password for your DOMINATE account.
+
+Click the link below to reset your password:
+{reset_url}
+
+This link expires in 24 hours.
+
+If you didn't request a password reset, you can safely ignore this email.
+
+---
+Need help? Contact us via WhatsApp or Instagram.
+© 2026 DOMINATE. All rights reserved.
+        """
+        
+        # Create message
+        msg = Message(
+            subject=subject,
+            recipients=[user_email],
+            body=text_body,
+            html=html_body
+        )
+        
+        # Send email
+        mail.send(msg)
+        
+        logger.info(f"Password reset email sent to {user_email}")
+        return {'success': True, 'message': 'Password reset email sent'}
+        
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {user_email}: {str(e)}")
+        return {'success': False, 'message': f'Email error: {str(e)}'}
+
+
+def send_welcome_email(user_email: str, user_name: str) -> dict:
+    """
+    Send welcome email to new user (FUTURE).
+    
+    Args:
+        user_email: Recipient email address
+        user_name: User's display name
+        
+    Returns:
+        dict: {'success': bool, 'message': str}
+    """
+    try:
+        from app import mail
+        
+        subject = f"Welcome to Fitness Brand, {user_name}!"
+        
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>Welcome, {user_name}!</h2>
+            <p>Your account has been created successfully.</p>
+            <p>Start exploring our handcrafted calisthenics equipment:</p>
+            <a href="{url_for('main.index', _external=True)}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                Browse Products
+            </a>
+        </body>
+        </html>
+        """
+        
+        msg = Message(subject=subject, recipients=[user_email], html=html_body)
+        mail.send(msg)
+        
+        logger.info(f"Welcome email sent to {user_email}")
+        return {'success': True, 'message': 'Welcome email sent'}
+        
+    except Exception as e:
+        logger.error(f"Failed to send welcome email to {user_email}: {str(e)}")
+        return {'success': False, 'message': f'Email error: {str(e)}'}
 
 
 def send_order_confirmation_email(order):

@@ -1,8 +1,12 @@
 from flask import Flask
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_mail import Mail
 from config import get_config
 from app.models import db, User
+
+# Initialize Flask-Mail (configured in create_app)
+mail = Mail()
 
 
 def create_app(config=None):
@@ -19,9 +23,37 @@ def create_app(config=None):
     
     app.config.from_object(config)
     
+    # ============= EMAIL CONFIGURATION =============
+    # Load email config from environment variables
+    try:
+        from app.config import get_email_config, validate_email_config
+        
+        # Validate email configuration
+        is_valid, error_msg = validate_email_config()
+        if not is_valid:
+            app.logger.warning(f"Email configuration incomplete: {error_msg}")
+            app.logger.warning("Password reset emails will fail until configured.")
+        
+        # Load email config
+        email_config = get_email_config()
+        app.config['MAIL_SERVER'] = email_config['mail_server']
+        app.config['MAIL_PORT'] = email_config['mail_port']
+        app.config['MAIL_USE_TLS'] = email_config['mail_use_tls']
+        app.config['MAIL_USE_SSL'] = email_config['mail_use_ssl']
+        app.config['MAIL_USERNAME'] = email_config['mail_username']
+        app.config['MAIL_PASSWORD'] = email_config['mail_password']
+        app.config['MAIL_DEFAULT_SENDER'] = email_config['mail_default_sender']
+        
+        app.logger.info(f"Email backend configured: {email_config['mail_server']}")
+        
+    except Exception as e:
+        app.logger.error(f"Email configuration failed: {str(e)}")
+        app.logger.warning("App will start but email features will be disabled.")
+    
     # Initialize extensions
     db.init_app(app)
     Migrate(app, db)
+    mail.init_app(app)  # Initialize Flask-Mail
     
     # Initialize Flask-Login
     login_manager = LoginManager()

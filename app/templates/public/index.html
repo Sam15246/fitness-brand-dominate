@@ -10,10 +10,10 @@
             <div class="col-lg-6 mb-4 mb-lg-0">
                 <h1 class="display-4 fw-bold mb-3">Handmade Calisthenics Gear</h1>
                 <p class="tagline mb-3">Train anywhere, <strong>Dominate</strong> everywhere.</p>
-                <p class="lead text-muted mb-4">Premium equipment crafted by athletes, for athletes. Every piece is handmade with precision using premium materials to help you dominate your training.</p>
-                <div class="d-grid gap-3 d-md-flex">
+                <p class="lead text-muted mb-4">Premium equipment handmade by athletes, using carefully selected materials to elevate your daily training.</p>
+                <div class="hero-cta-group d-grid gap-3 d-md-flex">
                     <a href="#products" class="btn btn-primary btn-lg">View Products</a>
-                    <a href="{{ url_for('main.about') }}" class="btn btn-outline-secondary btn-lg">Learn More</a>
+                    <a href="{{ url_for('main.about') }}" class="btn btn-outline-secondary btn-lg hero-secondary-cta">Learn More</a>
                 </div>
             </div>
             <div class="col-lg-6 text-center">
@@ -49,17 +49,20 @@
                                                 <img src="{{ image_url(hero_image.image_path) }}"
                                                      class="img-fluid rounded"
                                                      alt="{{ hero_product.name }}"
-                                                     {% if loop.first %}loading="eager"{% else %}loading="lazy"{% endif %}>
+                                                     {% if loop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy" fetchpriority="auto"{% endif %}
+                                                     decoding="async">
                                             {% elif hero_product.image_url %}
                                                 <img src="{{ image_url(hero_product.image_url) }}"
                                                      class="img-fluid rounded"
                                                      alt="{{ hero_product.name }}"
-                                                     {% if loop.first %}loading="eager"{% else %}loading="lazy"{% endif %}>
+                                                     {% if loop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy" fetchpriority="auto"{% endif %}
+                                                     decoding="async">
                                             {% else %}
                                                 <img src="{{ url_for('static', filename='images/home-page-image.png') }}"
                                                      class="img-fluid rounded"
                                                      alt="{{ hero_product.name }}"
-                                                     {% if loop.first %}loading="eager"{% else %}loading="lazy"{% endif %}>
+                                                     {% if loop.first %}loading="eager" fetchpriority="high"{% else %}loading="lazy" fetchpriority="auto"{% endif %}
+                                                     decoding="async">
                                             {% endif %}
                                             <span class="hero-carousel-caption">{{ hero_product.name }}</span>
                                         </a>
@@ -77,7 +80,7 @@
                             {% endif %}
                         </div>
                     {% else %}
-                        <img src="{{ url_for('static', filename='images/home-page-image.png') }}" alt="Dominate calisthenics equipment collection" class="img-fluid rounded" loading="lazy">
+                        <img src="{{ url_for('static', filename='images/home-page-image.png') }}" alt="Dominate calisthenics equipment collection" class="img-fluid rounded" loading="eager" fetchpriority="high" decoding="async">
                     {% endif %}
                 </div>
             </div>
@@ -232,28 +235,28 @@
         </div>
         <div class="row g-4">
             <div class="col-md-3 text-center">
-                <div class="p-4">
+                <div class="home-info-card p-4">
                     <div class="mb-3 home-feature-icon">&#128296;</div>
                     <h5 class="fw-bold mb-2">Handcrafted Quality</h5>
                     <p class="text-muted small">Each piece is individually crafted with meticulous attention to detail. No mass production.</p>
                 </div>
             </div>
             <div class="col-md-3 text-center">
-                <div class="p-4">
+                <div class="home-info-card p-4">
                     <div class="mb-3 home-feature-icon">&#127794;</div>
                     <h5 class="fw-bold mb-2">Premium Materials</h5>
                     <p class="text-muted small">We source only the finest hardwoods and materials. Quality you can feel.</p>
                 </div>
             </div>
             <div class="col-md-3 text-center">
-                <div class="p-4">
+                <div class="home-info-card p-4">
                     <div class="mb-3 home-feature-icon">&#128170;</div>
                     <h5 class="fw-bold mb-2">Athlete Tested</h5>
                     <p class="text-muted small">Designed and tested by real calisthenics athletes for maximum performance.</p>
                 </div>
             </div>
             <div class="col-md-3 text-center">
-                <div class="p-4">
+                <div class="home-info-card p-4">
                     <div class="mb-3 home-feature-icon">&#127470;&#127475;</div>
                     <h5 class="fw-bold mb-2">Made in India</h5>
                     <p class="text-muted small">Proudly crafted in India. Supporting local artisans and sustainable practices.</p>
@@ -339,66 +342,6 @@
     </div>
 </section>
 
-<!-- Testimonials Section -->
-<section class="testimonials-section py-5">
-    <div class="container">
-        <div class="text-center mb-5">
-            <p class="section-kicker mb-2">What our athletes say</p>
-            <h2 class="fw-bold mb-3">Trusted by Athletes</h2>
-            <p class="text-muted">Real reviews from real athletes who dominate their training</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-rating mb-3">
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                    </div>
-                    <p class="testimonial-text text-muted mb-4">"The parallettes are incredibly well-made. The finish is smooth, sturdy, and perfect for my daily training. Worth every rupee!"</p>
-                    <div class="testimonial-author">
-                        <p class="author-name fw-bold mb-0">Rahul Sharma</p>
-                        <p class="author-role text-muted small">Calisthenics Athlete</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-rating mb-3">
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                    </div>
-                    <p class="testimonial-text text-muted mb-4">"Quality equipment at honest prices. The attention to detail in craftsmanship is evident. My go-to brand for training gear."</p>
-                    <div class="testimonial-author">
-                        <p class="author-name fw-bold mb-0">Priya Mehta</p>
-                        <p class="author-role text-muted small">Fitness Coach</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-rating mb-3">
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                        <span class="star filled">★</span>
-                    </div>
-                    <p class="testimonial-text text-muted mb-4">"Handmade quality you can feel. These aren't just tools - they're precision equipment built by someone who understands training."</p>
-                    <div class="testimonial-author">
-                        <p class="author-name fw-bold mb-0">Arjun Menon</p>
-                        <p class="author-role text-muted small">Powerlifter</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- Ready to Dominate CTA Section -->
 <section class="final-cta-section py-5">

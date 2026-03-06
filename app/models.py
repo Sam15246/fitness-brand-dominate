@@ -110,6 +110,13 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Password Reset (SECURITY: Short-lived tokens)
+    # reset_token: Cryptographically signed token (itsdangerous)
+    # reset_expires: Expiration timestamp (24 hours from generation)
+    # Both fields NULL when no reset pending
+    reset_token = db.Column(db.String(500), nullable=True, unique=True, index=True)
+    reset_expires = db.Column(db.DateTime, nullable=True, index=True)
+    
     # Relationships
     products_created = db.relationship('Product', backref='created_by_user', foreign_keys='Product.created_by')
     orders = db.relationship('Order', backref='user', foreign_keys='Order.user_id')
@@ -271,6 +278,131 @@ class User(UserMixin, db.Model):
         """
         if self.is_superadmin() and User.count_superadmins() <= 1:
             return False
+        return True
+    
+    # ============= PASSWORD RESET METHODS =============
+    
+    def generate_reset_token(self, expiration_hours=24):
+        """
+        Generate secure password reset token.
+        
+        SECURITY DESIGN:
+        ================
+        - Uses itsdangerous for cryptographic signing
+        - Token contains user email (signed, tamper-proof)
+        - Expires in 24 hours (configurable)
+        - Token stored in DB for verification (single-use)
+        - Token is URL-safe (can be passed in query string)
+        
+        WORKFLOW:
+        1. User requests reset
+        2. Token generated and stored in user.reset_token
+        3. Token sent via email
+        4. User clicks link with token
+        5. verify_reset_token() validates token
+        6. User sets new password
+        7. clear_reset_token() removes token
+        
+        Args:
+            expiration_hours: Hours until token expires (default: 24)
+            
+        Returns:
+            str: URL-safe token string
+            
+        Example:
+            >>> user.generate_reset_token()
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        """
+        from itsdangerous import URLSafeTimedSerializer
+        from flask import current_app
+        from datetime import timedelta
+        
+        # Create serializer with app secret key
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        
+        # Generate token (contains email, signed with secret)
+        token = s.dumps({'user_id': self.id, 'email': self.email}, salt='password-reset')
+        
+        # Store token and expiration in database
+        self.reset_token = token
+        self.reset_expires = datetime.utcnow() + timedelta(hours=expiration_hours)
+        db.session.commit()
+        
+        return token
+    
+    @staticmethod
+    def verify_reset_token(token, max_age=86400):
+        """
+        Verify password reset token is valid and not expired.
+        
+        SECURITY CHECKS:
+        ================
+        1. Signature validation (tamper detection)
+        2. Expiration check (max_age in seconds, default 24h)
+        3. Database lookup (token must exist in DB)
+        4. Expiry timestamp check (double validation)
+        5. User must be active
+        
+        Args:
+            token: Token string to verify
+            max_age: Maximum age in seconds (default: 86400 = 24 hours)
+            
+        Returns:
+            User object if valid, None if invalid/expired
+            
+        Example:
+            >>> user = User.verify_reset_token('abc123...')
+            >>> if user:
+            >>>     user.set_password('new_password')
+            >>>     user.clear_reset_token()
+        """
+        from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+        from flask import current_app
+        
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        
+        try:
+            # Verify signature and extract data
+            data = s.loads(token, salt='password-reset', max_age=max_age)
+            user_id = data.get('user_id')
+            
+        except SignatureExpired:
+            # Token expired
+            return None
+        except BadSignature:
+            # Token tampered or invalid
+            return None
+        except Exception:
+            # Any other error (malformed token, etc)
+            return None
+        
+        # Look up user in database
+        user = User.query.filter_by(id=user_id, reset_token=token, is_active=True).first()
+        
+        if not user:
+            return None
+        
+        # Double-check expiration from database (belt and suspenders)
+        if user.reset_expires and user.reset_expires < datetime.utcnow():
+            return None
+        
+        return user
+    
+    def clear_reset_token(self):
+        """
+        Clear password reset token after successful reset.
+        
+        Called after:
+        - Password successfully reset
+        - User uses the token
+        - Token should be single-use
+        
+        Returns:
+            bool: True if successful
+        """
+        self.reset_token = None
+        self.reset_expires = None
+        db.session.commit()
         return True
     
     def __repr__(self):

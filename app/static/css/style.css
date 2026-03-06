@@ -204,6 +204,37 @@ button, .btn {
     line-height: 1.5;
 }
 
+/* Forgot password submit button: clear spacing and touch target */
+.forgot-reset-btn {
+    min-height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border-radius: 12px;
+    transition: transform 0.12s ease, box-shadow 0.2s ease;
+}
+
+.forgot-reset-btn i {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.forgot-reset-btn:hover {
+    box-shadow: 0 8px 18px rgba(63, 46, 24, 0.22);
+}
+
+.forgot-reset-btn:active {
+    transform: translateY(1px);
+}
+
+.forgot-reset-btn:focus-visible {
+    outline: 3px solid rgba(139, 111, 71, 0.35);
+    outline-offset: 2px;
+}
+
 @media (min-width: 768px) {
     button, .btn {
         font-size: 1rem;            /* Tablet: consistent */
