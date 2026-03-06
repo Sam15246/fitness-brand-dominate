@@ -58,30 +58,40 @@
     </div>
 
     <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label for="type" class="form-label">Coupon Type</label>
-                    <select name="type" id="type" class="form-select" onchange="this.form.submit()">
-                        <option value="all" {% if coupon_type == 'all' %}selected{% endif %}>All Types</option>
-                        {% for ct in coupon_types %}
-                            <option value="{{ ct }}" {% if coupon_type == ct %}selected{% endif %}>
-                                {{ ct.capitalize() }}
-                            </option>
-                        {% endfor %}
-                    </select>
+    {% set coupons_filters_active = coupon_type != 'all' or sort_by != 'created' %}
+    <details class="admin-filters-disclosure" {% if coupons_filters_active %}open{% endif %}>
+        <summary class="admin-filters-toggle d-md-none">Filter & Sort</summary>
+        <div class="admin-filters-content">
+            <div class="card mb-4 admin-filters-card">
+                <div class="card-body">
+                    <form method="get" class="row g-3 admin-filters">
+                        <div class="col-6 col-md-3">
+                            <label for="type" class="form-label">Coupon Type</label>
+                            <select name="type" id="type" class="form-select">
+                                <option value="all" {% if coupon_type == 'all' %}selected{% endif %}>All Types</option>
+                                {% for ct in coupon_types %}
+                                    <option value="{{ ct }}" {% if coupon_type == ct %}selected{% endif %}>
+                                        {{ ct.capitalize() }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label for="sort" class="form-label">Sort By</label>
+                            <select name="sort" id="sort" class="form-select">
+                                <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Newest First</option>
+                                <option value="usage" {% if sort_by == 'usage' %}selected{% endif %}>Most Used</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4 admin-filters-actions">
+                            <button type="submit" class="btn btn-outline-secondary">Apply</button>
+                            <a href="{{ url_for('admin_coupons.list_coupons') }}" class="btn btn-outline-secondary">Reset</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-md-3">
-                    <label for="sort" class="form-label">Sort By</label>
-                    <select name="sort" id="sort" class="form-select" onchange="this.form.submit()">
-                        <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Newest First</option>
-                        <option value="usage" {% if sort_by == 'usage' %}selected{% endif %}>Most Used</option>
-                    </select>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+    </details>
 
     <!-- Coupons Table -->
     <div class="card">

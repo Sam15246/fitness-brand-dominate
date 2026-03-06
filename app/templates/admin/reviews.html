@@ -25,48 +25,54 @@
     </div>
 
     <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ url_for('admin.reviews_list') }}" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" name="status">
-                        <option value="all" {% if status == 'all' %}selected{% endif %}>All Reviews</option>
-                        <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
-                        <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending Approval</option>
-                    </select>
+    {% set reviews_filters_active = status != 'all' or product_id or rating or search %}
+    <details class="admin-filters-disclosure" {% if reviews_filters_active %}open{% endif %}>
+        <summary class="admin-filters-toggle d-md-none">Filter & Sort</summary>
+        <div class="admin-filters-content">
+            <div class="card mb-4 admin-filters-card">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('admin.reviews_list') }}" class="row g-3 admin-filters">
+                        <div class="col-6 col-md-2">
+                            <label class="form-label" for="reviews-status">Status</label>
+                            <select class="form-select" id="reviews-status" name="status">
+                                <option value="all" {% if status == 'all' %}selected{% endif %}>All Reviews</option>
+                                <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
+                                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending Approval</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="reviews-product">Product</label>
+                            <select class="form-select" id="reviews-product" name="product_id">
+                                <option value="">All Products</option>
+                                {% for product in products %}
+                                    <option value="{{ product.id }}" {% if product_id == product.id %}selected{% endif %}>{{ product.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label" for="reviews-rating">Rating</label>
+                            <select class="form-select" id="reviews-rating" name="rating">
+                                <option value="">All Ratings</option>
+                                <option value="5" {% if rating == 5 %}selected{% endif %}>5 Stars</option>
+                                <option value="4" {% if rating == 4 %}selected{% endif %}>4 Stars</option>
+                                <option value="3" {% if rating == 3 %}selected{% endif %}>3 Stars</option>
+                                <option value="2" {% if rating == 2 %}selected{% endif %}>2 Stars</option>
+                                <option value="1" {% if rating == 1 %}selected{% endif %}>1 Star</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="reviews-search">Search</label>
+                            <input type="search" class="form-control" id="reviews-search" name="search" placeholder="Reviewer, title, comment" value="{{ search }}">
+                        </div>
+                        <div class="col-12 col-md-2 admin-filters-actions">
+                            <button type="submit" class="btn btn-outline-secondary">Apply</button>
+                            <a href="{{ url_for('admin.reviews_list') }}" class="btn btn-outline-secondary">Reset</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Product</label>
-                    <select class="form-select" name="product_id">
-                        <option value="">All Products</option>
-                        {% for product in products %}
-                            <option value="{{ product.id }}" {% if product_id == product.id %}selected{% endif %}>{{ product.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Rating</label>
-                    <select class="form-select" name="rating">
-                        <option value="">All Ratings</option>
-                        <option value="5" {% if rating == 5 %}selected{% endif %}>5 Stars</option>
-                        <option value="4" {% if rating == 4 %}selected{% endif %}>4 Stars</option>
-                        <option value="3" {% if rating == 3 %}selected{% endif %}>3 Stars</option>
-                        <option value="2" {% if rating == 2 %}selected{% endif %}>2 Stars</option>
-                        <option value="1" {% if rating == 1 %}selected{% endif %}>1 Star</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Search</label>
-                    <input type="search" class="form-control" name="search" placeholder="Reviewer, title, comment" value="{{ search }}">
-                </div>
-                <div class="col-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-outline-secondary">Apply Filters</button>
-                    <a href="{{ url_for('admin.reviews_list') }}" class="btn btn-outline-secondary">Reset</a>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+    </details>
 
     <!-- Reviews Table -->
     {% if reviews.items %}

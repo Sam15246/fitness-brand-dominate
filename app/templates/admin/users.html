@@ -15,36 +15,39 @@
     </div>
 
     <!-- Filters and Search -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <form method="GET" action="{{ url_for('admin.users_list') }}" class="row g-3">
-                        <div class="col-md-5">
-                            <input type="text" class="form-control" name="search" placeholder="Search by name or email..." value="{{ search }}">
-                        </div>
+    {% set users_filters_active = search or role_filter != 'all' %}
+    <details class="admin-filters-disclosure" {% if users_filters_active %}open{% endif %}>
+        <summary class="admin-filters-toggle d-md-none">Filter & Sort</summary>
+        <div class="admin-filters-content row mb-4">
+            <div class="col-12">
+                <div class="card admin-filters-card">
+                    <div class="card-body">
+                        <form method="GET" action="{{ url_for('admin.users_list') }}" class="row g-3 admin-filters">
+                            <div class="col-12 col-md-5">
+                                <label for="users-search" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="users-search" name="search" placeholder="Search by name or email..." value="{{ search }}">
+                            </div>
 
-                        <div class="col-md-4">
-                            <select class="form-select" name="role">
-                                <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All Roles</option>
-                                <option value="superadmin" {% if role_filter == 'superadmin' %}selected{% endif %}>Superadmin</option>
-                                <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
-                                <option value="user" {% if role_filter == 'user' %}selected{% endif %}>User</option>
-                            </select>
-                        </div>
+                            <div class="col-6 col-md-3">
+                                <label for="users-role" class="form-label">Role</label>
+                                <select class="form-select" id="users-role" name="role">
+                                    <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All Roles</option>
+                                    <option value="superadmin" {% if role_filter == 'superadmin' %}selected{% endif %}>Superadmin</option>
+                                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                                    <option value="user" {% if role_filter == 'user' %}selected{% endif %}>User</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-outline-secondary w-100">Filter</button>
-                        </div>
-
-                        <div class="col-md-1">
-                            <a href="{{ url_for('admin.users_list') }}" class="btn btn-outline-secondary w-100">Reset</a>
-                        </div>
-                    </form>
+                            <div class="col-6 col-md-4 admin-filters-actions">
+                                <button type="submit" class="btn btn-outline-secondary">Apply</button>
+                                <a href="{{ url_for('admin.users_list') }}" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Users Table -->
     <div class="row">

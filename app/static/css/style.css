@@ -1420,6 +1420,88 @@ textarea:focus {
     font-weight: 700;
 }
 
+/* Unified admin filters pattern (mobile-first) */
+.admin-filters-card {
+    border-radius: 12px;
+}
+
+.admin-filters {
+    align-items: flex-end;
+}
+
+.admin-filters .form-label {
+    font-size: 0.83rem;
+    font-weight: 700;
+    color: #6F5536;
+    margin-bottom: 0.35rem;
+}
+
+.admin-filters .form-control,
+.admin-filters .form-select {
+    min-height: 42px;
+}
+
+.admin-filters-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.admin-filters-actions .btn {
+    width: 100%;
+}
+
+.admin-filters-disclosure {
+    margin-bottom: 1rem;
+}
+
+.admin-filters-toggle {
+    display: block;
+    width: 100%;
+    list-style: none;
+    cursor: pointer;
+    min-height: 42px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    border: 1px solid rgba(139, 111, 71, 0.45);
+    border-radius: 10px;
+    background: #FFFFFF;
+    padding: 0.65rem 0.9rem;
+    text-align: center;
+    margin-bottom: 0.65rem;
+}
+
+.admin-filters-disclosure > summary::-webkit-details-marker {
+    display: none;
+}
+
+.admin-filters-disclosure > summary::marker {
+    content: '';
+}
+
+.admin-filters-disclosure[open] .admin-filters-toggle {
+    background: rgba(139, 111, 71, 0.08);
+}
+
+@media (min-width: 768px) {
+    .admin-filters .form-label {
+        font-size: 0.86rem;
+    }
+
+    .admin-filters-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-filters-disclosure > summary {
+        display: none;
+    }
+
+    .admin-filters-disclosure > .admin-filters-content {
+        display: block !important;
+    }
+}
+
 .table {
     margin-bottom: 0;
 }
@@ -1660,12 +1742,8 @@ a:hover {
 }
 
 /* =================
-   CHECKOUT FORM (MOBILE-OPTIMIZED)
-   ================= */
-
-.order-form {
-    /* Mobile-first spacing */
-}
+    CHECKOUT FORM (MOBILE-OPTIMIZED)
+    ================= */
 
 .order-form .form-label {
     font-weight: 600;

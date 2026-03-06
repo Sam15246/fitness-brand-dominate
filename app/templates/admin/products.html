@@ -17,41 +17,49 @@
     </div>
 
     <!-- Filters and Search -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <form method="GET" action="{{ url_for('admin.products_list') }}" class="row g-3">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" name="search" placeholder="Search products..." value="{{ search }}">
-                        </div>
+    {% set products_filters_active = search or status != 'all' or sort_by != 'latest' %}
+    <details class="admin-filters-disclosure" {% if products_filters_active %}open{% endif %}>
+        <summary class="admin-filters-toggle d-md-none">Filter & Sort</summary>
+        <div class="admin-filters-content row mb-4">
+            <div class="col-12">
+                <div class="card admin-filters-card">
+                    <div class="card-body">
+                        <form method="GET" action="{{ url_for('admin.products_list') }}" class="row g-3 admin-filters">
+                            <div class="col-12 col-md-4">
+                                <label for="products-search" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="products-search" name="search" placeholder="Search products..." value="{{ search }}">
+                            </div>
 
-                        <div class="col-md-3">
-                            <select class="form-select" name="status">
-                                <option value="all" {% if status == 'all' %}selected{% endif %}>All Statuses</option>
-                                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
-                                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
-                            </select>
-                        </div>
+                            <div class="col-6 col-md-3">
+                                <label for="products-status" class="form-label">Status</label>
+                                <select class="form-select" id="products-status" name="status">
+                                    <option value="all" {% if status == 'all' %}selected{% endif %}>All Statuses</option>
+                                    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-3">
-                            <select class="form-select" name="sort">
-                                <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>Latest</option>
-                                <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest</option>
-                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
-                                <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price (Low to High)</option>
-                                <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price (High to Low)</option>
-                            </select>
-                        </div>
+                            <div class="col-6 col-md-2">
+                                <label for="products-sort" class="form-label">Sort</label>
+                                <select class="form-select" id="products-sort" name="sort">
+                                    <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>Latest</option>
+                                    <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest</option>
+                                    <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                                    <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price (Low to High)</option>
+                                    <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price (High to Low)</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-outline-secondary w-100">Filter</button>
-                        </div>
-                    </form>
+                            <div class="col-12 col-md-3 admin-filters-actions">
+                                <button type="submit" class="btn btn-outline-secondary">Apply</button>
+                                <a href="{{ url_for('admin.products_list') }}" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Products Table -->
     <div class="row">

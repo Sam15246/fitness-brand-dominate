@@ -14,45 +14,49 @@
     </div>
 
     <!-- Filters and Search -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <form method="GET" action="{{ url_for('admin.orders_list') }}" class="row g-3">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" name="search" placeholder="Search order #, name, phone, email" value="{{ search }}">
-                        </div>
+    {% set orders_filters_active = search or status_filter != 'all' or order_type != 'all' %}
+    <details class="admin-filters-disclosure" {% if orders_filters_active %}open{% endif %}>
+        <summary class="admin-filters-toggle d-md-none">Filter & Sort</summary>
+        <div class="admin-filters-content row mb-4">
+            <div class="col-12">
+                <div class="card admin-filters-card">
+                    <div class="card-body">
+                        <form method="GET" action="{{ url_for('admin.orders_list') }}" class="row g-3 admin-filters">
+                            <div class="col-12 col-md-4">
+                                <label for="orders-search" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="orders-search" name="search" placeholder="Search order #, name, phone, email" value="{{ search }}">
+                            </div>
 
-                        <div class="col-md-2">
-                            <select class="form-select" name="status">
-                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
-                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                                <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
-                                <option value="shipped" {% if status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
-                                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                            </select>
-                        </div>
+                            <div class="col-6 col-md-2">
+                                <label for="orders-status" class="form-label">Status</label>
+                                <select class="form-select" id="orders-status" name="status">
+                                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                    <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                    <option value="shipped" {% if status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
+                                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-2">
-                            <select class="form-select" name="type">
-                                <option value="all" {% if order_type == 'all' %}selected{% endif %}>All Orders</option>
-                                <option value="guest" {% if order_type == 'guest' %}selected{% endif %}>Guest Orders</option>
-                                <option value="registered" {% if order_type == 'registered' %}selected{% endif %}>Registered Users</option>
-                            </select>
-                        </div>
+                            <div class="col-6 col-md-2">
+                                <label for="orders-type" class="form-label">Customer Type</label>
+                                <select class="form-select" id="orders-type" name="type">
+                                    <option value="all" {% if order_type == 'all' %}selected{% endif %}>All Orders</option>
+                                    <option value="guest" {% if order_type == 'guest' %}selected{% endif %}>Guest Orders</option>
+                                    <option value="registered" {% if order_type == 'registered' %}selected{% endif %}>Registered Users</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-outline-secondary w-100">Filter</button>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <a href="{{ url_for('admin.orders_list') }}" class="btn btn-outline-secondary w-100">Reset</a>
-                        </div>
-                    </form>
+                            <div class="col-12 col-md-4 admin-filters-actions">
+                                <button type="submit" class="btn btn-outline-secondary">Apply</button>
+                                <a href="{{ url_for('admin.orders_list') }}" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Orders Table -->
     <div class="row">

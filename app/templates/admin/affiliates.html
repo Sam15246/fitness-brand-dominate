@@ -14,24 +14,35 @@
         </div>
     </div>
     
-    <!-- Filters -->
-    <div class="mb-3">
-        <a href="{{ url_for('admin.affiliates_list', status='all') }}" 
-           class="btn btn-sm btn-{{ 'primary' if status == 'all' else 'outline-primary' }}">All</a>
-        <a href="{{ url_for('admin.affiliates_list', status='active') }}" 
-           class="btn btn-sm btn-{{ 'success' if status == 'active' else 'outline-success' }}">Active</a>
-        <a href="{{ url_for('admin.affiliates_list', status='inactive') }}" 
-           class="btn btn-sm btn-{{ 'secondary' if status == 'inactive' else 'outline-secondary' }}">Inactive</a>
-    </div>
-    
-    <!-- Search -->
-    <form method="GET" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="search" class="form-control" placeholder="Search by name, email, or code" 
-                   value="{{ search if search else '' }}">
-            <button type="submit" class="btn btn-outline-secondary">Search</button>
+    <!-- Filters and Search -->
+    {% set affiliates_filters_active = search or status != 'all' %}
+    <details class="admin-filters-disclosure" {% if affiliates_filters_active %}open{% endif %}>
+        <summary class="admin-filters-toggle d-md-none">Filter & Sort</summary>
+        <div class="admin-filters-content mb-4">
+            <div class="card admin-filters-card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 admin-filters">
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="affiliates-status">Status</label>
+                            <select name="status" id="affiliates-status" class="form-select">
+                                <option value="all" {% if status == 'all' %}selected{% endif %}>All</option>
+                                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-5">
+                            <label class="form-label" for="affiliates-search">Search</label>
+                            <input type="text" name="search" id="affiliates-search" class="form-control" placeholder="Search by name, email, or code" value="{{ search if search else '' }}">
+                        </div>
+                        <div class="col-12 col-md-4 admin-filters-actions">
+                            <button type="submit" class="btn btn-outline-secondary">Apply</button>
+                            <a href="{{ url_for('admin.affiliates_list') }}" class="btn btn-outline-secondary">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    </form>
+    </details>
     
     <!-- Affiliates Table -->
     <div class="card">
