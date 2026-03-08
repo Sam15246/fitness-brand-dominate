@@ -3070,6 +3070,10 @@ button, a, .card, .form-control {
     flex: 1 1 auto;
 }
 
+.product-card-actions-mobile {
+    display: none;
+}
+
 .product-card-stock .stock-low {
     color: #A94442;
     font-weight: 600;
@@ -3366,37 +3370,105 @@ button, a, .card, .form-control {
 
 /* Mobile: turn long sections into horizontal rails */
 @media (max-width: 768px) {
-    /* Featured products - break out of container to show horizontal scroll */
-    .featured-products-section {
-        overflow: visible;  /* Allow row to overflow section */
-    }
-
-    .featured-products-section .container {
-        overflow: hidden;  /* Constrain container but let row escape */
-    }
-
+    /* Featured products - keep discoverable 2-column grid on mobile */
     .featured-products-section .row {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        gap: 1rem;
-        padding-bottom: 0.75rem;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        width: 100vw;
-        position: relative;
-        left: 50%;
-        right: 50%;
-        margin-left: -50vw;
-        margin-right: -50vw;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        flex-wrap: wrap;
+        overflow: visible;
+        margin: 0;
+        --bs-gutter-x: 1rem;
+        --bs-gutter-y: 1rem;
     }
 
-    .featured-products-section .row > [class*="col-"] {
-        flex: 0 0 calc(100vw - 2rem);
-        max-width: calc(100vw - 2rem);
-        scroll-snap-align: start;
+    .featured-products-section .product-card-enhanced {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(88, 60, 32, 0.1);
+    }
+
+    .featured-products-section .product-card-image-wrapper {
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+    }
+
+    .featured-products-section .product-card-image,
+    .featured-products-section .placeholder-product-image,
+    .featured-products-section .placeholder-product-image svg {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .featured-products-section .product-card-body {
+        padding: 0.65rem 0.75rem;
+    }
+
+    .featured-products-section .product-card-title {
+        font-size: 0.875rem;
+        line-height: 1.3;
+        margin-bottom: 0.4rem !important;
+        font-weight: 600;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.25em;
+    }
+
+    .featured-products-section .product-card-rating {
+        display: none;
+    }
+
+    .featured-products-section .product-card-price-section {
+        margin-bottom: 0.4rem !important;
+    }
+
+    .featured-products-section .product-card-price-section .current-price,
+    .featured-products-section .product-card-price-section .product-card-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .featured-products-section .product-card-price-section .original-price {
+        font-size: 0.8rem;
+    }
+
+    .featured-products-section .product-card-price-section .discount-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .featured-products-section .product-card-stock {
+        margin-bottom: 0.6rem !important;
+        font-size: 0.8rem;
+    }
+
+    .featured-products-section .product-card-stock .stock-low {
+        display: none;
+    }
+
+    .featured-products-section .product-card-actions {
+        padding-top: 0;
+    }
+
+    .featured-products-section .product-card-actions-desktop {
+        display: none !important;
+    }
+
+    .featured-products-section .product-card-actions-mobile {
+        display: block;
+    }
+
+    .featured-products-section .product-card-actions-mobile .btn {
+        min-height: 38px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .featured-products-section .discount-badge-card {
+        top: 8px;
+        right: 8px;
+        font-size: 0.65rem;
+        padding: 0.3rem 0.5rem;
     }
 
     /* Other sections - keep original behavior */
@@ -3448,30 +3520,14 @@ button, a, .card, .form-control {
     }
 }
 
-/* Desktop - restore featured products normal grid layout */
+/* Desktop - keep full featured product card actions */
 @media (min-width: 769px) {
-    .featured-products-section {
-        overflow: auto;
+    .featured-products-section .product-card-actions-desktop {
+        display: grid;
     }
 
-    .featured-products-section .container {
-        overflow: visible;
-    }
-
-    .featured-products-section .row {
-        flex-wrap: wrap;
-        overflow-x: visible;
-        width: auto;
-        position: static;
-        left: auto;
-        right: auto;
-        margin: 0;
-        padding: 0;
-    }
-
-    .featured-products-section .row > [class*="col-"] {
-        flex: unset;
-        max-width: 100%;
+    .featured-products-section .product-card-actions-mobile {
+        display: none;
     }
 }
 

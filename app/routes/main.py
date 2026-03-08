@@ -311,7 +311,7 @@ def index():
         Product.query
         .filter_by(is_active=True)
         .order_by(Product.created_at.desc())
-        .limit(3)
+        .limit(4)
         .all()
     )
 
