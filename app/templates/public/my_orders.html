@@ -85,7 +85,16 @@
                                     <p class="small mb-2"><strong>Items Ordered:</strong></p>
                                     <ul class="small text-muted mb-3 ps-3">
                                         {% for item in order.items %}
-                                        <li>{{ item.product.name }} - Qty: {{ item.quantity }} × {{ item.get_unit_price_display() }} = {{ item.get_subtotal_display() }}</li>
+                                        <li class="mb-2">
+                                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                                                <span>{{ item.product.name }} - Qty: {{ item.quantity }} × {{ item.get_unit_price_display() }} = {{ item.get_subtotal_display() }}</span>
+                                                {% if item.id in reviewable_order_item_ids %}
+                                                    <a href="{{ url_for('main.product_detail', slug=item.product.slug, _anchor='write-review') }}" class="btn btn-sm btn-outline-primary">Write Review</a>
+                                                {% elif item.id in reviewed_order_item_ids %}
+                                                    <span class="badge text-bg-light border">Review Submitted</span>
+                                                {% endif %}
+                                            </div>
+                                        </li>
                                         {% endfor %}
                                     </ul>
 

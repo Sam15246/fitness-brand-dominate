@@ -81,11 +81,12 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 25%;">Reviewer</th>
-                            <th style="width: 30%;">Product</th>
-                            <th style="width: 15%;">Rating</th>
-                            <th style="width: 15%;">Status</th>
-                            <th style="width: 15%;">Actions</th>
+                            <th style="width: 23%;">Reviewer</th>
+                            <th style="width: 25%;">Product</th>
+                            <th style="width: 14%;">Rating</th>
+                            <th style="width: 14%;">Source</th>
+                            <th style="width: 12%;">Status</th>
+                            <th style="width: 12%;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -95,6 +96,9 @@
                                     <div class="fw-bold">{{ review.name }}</div>
                                     {% if review.role %}
                                         <small class="text-muted">{{ review.role }}</small>
+                                    {% endif %}
+                                    {% if review.author %}
+                                        <div><small class="text-muted">Account: {{ review.author.email }}</small></div>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -112,6 +116,16 @@
                                         {% endfor %}
                                     </div>
                                     <small class="text-muted">{{ review.created_at.strftime('%b %d, %Y') }}</small>
+                                </td>
+                                <td>
+                                    {% if review.is_verified_purchase() %}
+                                        <span class="badge bg-primary">Verified Purchase</span>
+                                        <div><small class="text-muted">Order item #{{ review.order_item_id }}</small></div>
+                                    {% elif review.user_id %}
+                                        <span class="badge bg-info">User Submitted</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Admin Testimonial</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if review.is_approved %}

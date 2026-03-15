@@ -121,6 +121,7 @@ class User(UserMixin, db.Model):
     products_created = db.relationship('Product', backref='created_by_user', foreign_keys='Product.created_by')
     orders = db.relationship('Order', backref='user', foreign_keys='Order.user_id')
     addresses = db.relationship('UserAddress', backref='user', foreign_keys='UserAddress.user_id', cascade='all, delete-orphan')
+    submitted_reviews = db.relationship('Review', backref='author', foreign_keys='Review.user_id')
     
     def set_password(self, password):
         """
@@ -968,6 +969,7 @@ class OrderItem(db.Model):
     order = db.relationship('Order', backref='items')
     product = db.relationship('Product', backref='order_items')
     variant = db.relationship('ProductVariant', backref='order_items', foreign_keys=[variant_id])
+    reviews = db.relationship('Review', backref='order_item', foreign_keys='Review.order_item_id')
     
     def get_subtotal(self):
         """Calculate subtotal: quantity × unit_price (in paise)."""
@@ -2179,6 +2181,8 @@ class Review(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    order_item_id = db.Column(db.Integer, db.ForeignKey('order_items.id'), nullable=True, index=True)
     
     # Reviewer Information
     name = db.Column(db.String(120), nullable=False)  # e.g., "Rahul Sharma"
@@ -2195,6 +2199,10 @@ class Review(db.Model):
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def is_verified_purchase(self):
+        """A review is verified when it is linked to an actual order item."""
+        return self.order_item_id is not None
     
     def __repr__(self):
         return f'<Review {self.id} - Product {self.product_id} - {self.rating}★>'

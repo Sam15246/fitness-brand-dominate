@@ -3,11 +3,14 @@ from flask_login import current_user, login_required
 from datetime import datetime
 import secrets
 from urllib.parse import quote
-from app.models import db, Product, ProductVariant, Order, OrderItem, User, UserAddress, AffiliateProfile, CouponCode, PolicyPage, CartItem, Payment, InventoryLog
+from app.models import db, Product, ProductVariant, Order, OrderItem, OrderStatus, ShippingStatus, Review, User, UserAddress, AffiliateProfile, CouponCode, PolicyPage, CartItem, Payment, InventoryLog
 from app.business_logic import OrderManager, AffiliateManager
 from app.utils import send_order_confirmation_email
 
 main_bp = Blueprint('main', __name__)
+
+
+REVIEW_ELIGIBLE_SHIPPING_STATUS = ShippingStatus.DELIVERED.value
 
 
 @main_bp.before_request
@@ -165,6 +168,68 @@ def get_or_create_default_variant(product):
     db.session.add(variant)
     db.session.flush()
     return variant
+
+
+def get_review_eligible_order_items(user_id, product_id, include_reviewed=False):
+    """Get delivered-order items that can be used for review submission."""
+    if not user_id or not product_id:
+        return []
+
+    query = (
+        OrderItem.query
+        .join(Order, OrderItem.order_id == Order.id)
+        .filter(
+            Order.user_id == user_id,
+            OrderItem.product_id == product_id,
+            Order.status != OrderStatus.CANCELLED.value,
+            Order.shipping_status == REVIEW_ELIGIBLE_SHIPPING_STATUS,
+        )
+    )
+
+    if not include_reviewed:
+        query = (
+            query
+            .outerjoin(Review, Review.order_item_id == OrderItem.id)
+            .filter(Review.id.is_(None))
+        )
+
+    return (
+        query
+        .order_by(Order.confirmed_at.desc(), Order.created_at.desc(), OrderItem.created_at.desc())
+        .all()
+    )
+
+
+def build_product_review_context(product, user):
+    """Build product review eligibility and submission state for the active user."""
+    context = {
+        'eligible_order_items': [],
+        'has_delivered_purchase': False,
+        'can_submit_review': False,
+        'has_pending_review': False,
+        'has_approved_review': False,
+    }
+
+    if not product or not user or not user.is_authenticated:
+        return context
+
+    delivered_order_items = get_review_eligible_order_items(user.id, product.id, include_reviewed=True)
+    eligible_order_items = get_review_eligible_order_items(user.id, product.id, include_reviewed=False)
+    submitted_reviews = (
+        Review.query
+        .filter_by(user_id=user.id, product_id=product.id)
+        .order_by(Review.created_at.desc())
+        .all()
+    )
+
+    context.update({
+        'eligible_order_items': eligible_order_items,
+        'has_delivered_purchase': bool(delivered_order_items),
+        'can_submit_review': bool(eligible_order_items),
+        'has_pending_review': any(not review.is_approved for review in submitted_reviews),
+        'has_approved_review': any(review.is_approved for review in submitted_reviews),
+    })
+    return context
 
 
 def sync_session_cart_to_db():
@@ -419,7 +484,82 @@ def product_detail(slug):
     # product.views_count += 1
     # db.session.commit()
     
-    return render_template('public/product.html', product=product, related_products=related_products)
+    return render_template(
+        'public/product.html',
+        product=product,
+        related_products=related_products,
+        review_context=build_product_review_context(product, current_user)
+    )
+
+
+@main_bp.route('/product/<slug>/review', methods=['POST'])
+@login_required
+def submit_product_review(slug):
+    """Submit a product review for a delivered purchase only."""
+    product = Product.query.filter_by(slug=slug, is_active=True).first_or_404()
+    review_context = build_product_review_context(product, current_user)
+
+    if not review_context['can_submit_review']:
+        flash('Only customers with a delivered order can submit a review for this product.', 'warning')
+        return redirect(url_for('main.product_detail', slug=product.slug, _anchor='write-review'))
+
+    eligible_order_items = {
+        item.id: item for item in review_context['eligible_order_items']
+    }
+    selected_order_item_id = request.form.get('order_item_id', type=int)
+
+    if selected_order_item_id is None and len(eligible_order_items) == 1:
+        selected_order_item_id = next(iter(eligible_order_items))
+
+    selected_order_item = eligible_order_items.get(selected_order_item_id)
+    if not selected_order_item:
+        flash('Select a valid delivered purchase before submitting your review.', 'danger')
+        return redirect(url_for('main.product_detail', slug=product.slug, _anchor='write-review'))
+
+    rating = request.form.get('rating', type=int)
+    title = request.form.get('title', '').strip()
+    comment = request.form.get('comment', '').strip()
+
+    errors = []
+
+    if rating is None or rating < 1 or rating > 5:
+        errors.append('Please select a rating between 1 and 5 stars.')
+
+    if title and len(title) < 3:
+        errors.append('Review title must be at least 3 characters long.')
+
+    if not comment or len(comment) < 10:
+        errors.append('Review comment must be at least 10 characters long.')
+
+    if Review.query.filter_by(order_item_id=selected_order_item.id).first():
+        errors.append('A review has already been submitted for this delivered purchase.')
+
+    if errors:
+        for error in errors:
+            flash(error, 'danger')
+        return redirect(url_for('main.product_detail', slug=product.slug, _anchor='write-review'))
+
+    try:
+        review = Review(
+            product_id=product.id,
+            user_id=current_user.id,
+            order_item_id=selected_order_item.id,
+            name=current_user.name,
+            role='Verified Buyer',
+            rating=rating,
+            title=title or None,
+            comment=comment,
+            is_approved=False,
+        )
+        db.session.add(review)
+        db.session.commit()
+        flash('Your review has been submitted. It will appear after approval.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error(f'Review submission error for product {product.id}: {str(exc)}')
+        flash('We could not submit your review right now. Please try again.', 'danger')
+
+    return redirect(url_for('main.product_detail', slug=product.slug, _anchor='write-review'))
 
 
 # ============= SHOPPING CART ROUTES =============
@@ -1173,8 +1313,40 @@ def my_orders():
         .order_by(Order.created_at.desc())
         .paginate(page=page, per_page=10)
     )
+
+    order_item_ids = [item.id for order in orders.items for item in order.items]
+    reviewed_order_item_ids = set()
+    reviewable_order_item_ids = set()
+
+    if order_item_ids:
+        reviewed_order_item_ids = {
+            review_order_item_id
+            for (review_order_item_id,) in (
+                db.session.query(Review.order_item_id)
+                .filter(Review.order_item_id.in_(order_item_ids))
+                .all()
+            )
+            if review_order_item_id is not None
+        }
+
+        for order in orders.items:
+            is_delivered_purchase = (
+                order.status != OrderStatus.CANCELLED.value and
+                order.shipping_status == REVIEW_ELIGIBLE_SHIPPING_STATUS
+            )
+            if not is_delivered_purchase:
+                continue
+
+            for item in order.items:
+                if item.id not in reviewed_order_item_ids:
+                    reviewable_order_item_ids.add(item.id)
     
-    return render_template('public/my_orders.html', orders=orders)
+    return render_template(
+        'public/my_orders.html',
+        orders=orders,
+        reviewable_order_item_ids=reviewable_order_item_ids,
+        reviewed_order_item_ids=reviewed_order_item_ids,
+    )
 
 
 @main_bp.route('/profile')

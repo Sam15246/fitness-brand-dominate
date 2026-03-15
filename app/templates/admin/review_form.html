@@ -76,6 +76,23 @@
                     </div>
                 </div>
 
+                {% if review and (review.user_id or review.order_item_id) %}
+                    <div class="alert alert-secondary" role="alert">
+                        <strong>Review Source</strong>
+                        <div class="mt-2 small">
+                            {% if review.order_item_id %}
+                                <div>Verified purchase linked to order item #{{ review.order_item_id }}</div>
+                            {% endif %}
+                            {% if review.author %}
+                                <div>Submitted by account: {{ review.author.email }}</div>
+                            {% endif %}
+                            {% if not review.order_item_id and review.author %}
+                                <div>User-linked review without verified purchase linkage.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary btn-lg">
                         {% if review %}Update Review{% else %}Add Review{% endif %}
