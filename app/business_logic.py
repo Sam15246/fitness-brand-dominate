@@ -72,6 +72,7 @@ class StockManager:
             return False, 'Product not found'
         
         if product.decrease_stock(quantity):
+            db.session.commit()
             return True, f'Reserved {quantity} units'
         else:
             return False, 'Insufficient stock'
@@ -94,6 +95,7 @@ class StockManager:
             return False, 'Product not found'
         
         if product.increase_stock(quantity):
+            db.session.commit()
             return True, f'Released {quantity} units back to stock'
         else:
             return False, 'Failed to release stock'
@@ -126,22 +128,34 @@ class StockManager:
             return False, 'Stock quantity cannot be negative'
         
         old_quantity = product.stock_quantity
-        
-        if product.set_stock(new_quantity):
-            # Log admin action
+        delta = new_quantity - old_quantity
+
+        if not product.set_stock(new_quantity):
+            return False, 'Failed to adjust stock'
+
+        try:
             from app.models import AdminActionLog
             from app.security import get_client_ip
-            
-            AdminActionLog.create_log(
+
+            InventoryLog.log_manual_adjustment(
+                product_id=product_id,
+                quantity=delta,
+                admin_id=admin_id,
+                notes=f'Stock adjusted from {old_quantity} to {new_quantity}. Reason: {reason}'
+            )
+
+            action_log = AdminActionLog(
                 admin_id=admin_id,
                 action_type='ADJUST_STOCK',
                 target_id=product_id,
                 ip_address=get_client_ip(),
                 description=f'Adjusted stock from {old_quantity} to {new_quantity}. Reason: {reason}'
             )
-            
+            db.session.add(action_log)
+            db.session.commit()
             return True, f'Stock adjusted to {new_quantity} units'
-        else:
+        except Exception:
+            db.session.rollback()
             return False, 'Failed to adjust stock'
 
 

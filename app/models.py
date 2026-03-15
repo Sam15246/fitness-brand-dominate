@@ -97,8 +97,12 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)
     phone = db.Column(db.String(20))  # User's preferred phone for orders
+    auth_provider = db.Column(db.String(30), nullable=False, default='local', index=True)
+    auth_provider_id = db.Column(db.String(255), nullable=True, index=True)
+    avatar_url = db.Column(db.Text, nullable=True)
+    full_name = db.Column(db.String(255), nullable=True)
     role = db.Column(
         db.String(20),
         nullable=False,
@@ -106,6 +110,7 @@ class User(UserMixin, db.Model):
         index=True
     )
     is_active = db.Column(db.Boolean, default=True, index=True)
+    deleted_at = db.Column(db.DateTime, nullable=True, index=True)
     email_marketing_opt_in = db.Column(db.Boolean, default=False)  # User consent for marketing emails
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -171,7 +176,13 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         """Verify password against hash."""
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, password)
+
+    def can_login_with_password(self):
+        """Password login is valid only for local accounts with a password hash."""
+        return self.auth_provider == 'local' and self.password_hash is not None
     
     def is_admin(self):
         """Check if user is admin or superadmin."""
@@ -528,8 +539,8 @@ class ProductCategory(db.Model):
     products = db.relationship('Product', backref='category', lazy='dynamic')
     
     # FUTURE: SEO metadata
-    # meta_title = db.Column(db.String(200))
-    # meta_description = db.Column(db.String(300))
+    meta_title = db.Column(db.String(255), nullable=True)
+    meta_desc = db.Column(db.Text, nullable=True)
     # image_url = db.Column(db.String(255))
     
     def get_breadcrumb_trail(self):
@@ -683,6 +694,9 @@ class Product(db.Model):
     
     # Product Metadata
     image_url = db.Column(db.String(255))
+    hsn_code = db.Column(db.String(10), nullable=True)
+    tax_rate = db.Column(db.Numeric(5, 2), nullable=False, default=18.00)
+    deleted_at = db.Column(db.DateTime, nullable=True, index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
     
     # Admin tracking
@@ -826,7 +840,6 @@ class Product(db.Model):
             return False
         
         self.stock_quantity -= quantity
-        db.session.commit()
         return True
     
     def increase_stock(self, quantity):
@@ -841,7 +854,6 @@ class Product(db.Model):
         """
         if quantity > 0:
             self.stock_quantity += quantity
-            db.session.commit()
             return True
         return False
     
@@ -864,7 +876,6 @@ class Product(db.Model):
             return False
         
         self.stock_quantity = quantity
-        db.session.commit()
         return True
     
     def is_in_stock(self):
@@ -955,7 +966,7 @@ class OrderItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
 
     # Variant reference (nullable during transition/backfill)
-    variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), nullable=True, index=True)
+    variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), nullable=False, index=True)
     variant_snapshot = db.Column(db.JSON, nullable=True)  # e.g. {"size": "M", "flavour": "Chocolate"}
     
     # Quantity and price (snapshot - never modified)
@@ -1474,10 +1485,21 @@ class Order(db.Model):
             return False  # Already confirmed
         
         try:
+            order_item_product_ids = [item.product_id for item in self.items]
+            locked_products = {
+                product.id: product
+                for product in (
+                    Product.query
+                    .filter(Product.id.in_(order_item_product_ids))
+                    .with_for_update()
+                    .all()
+                )
+            }
+
             # ATOMIC TRANSACTION: All or nothing
             # Check stock availability first (before committing)
             for item in self.items:
-                product = item.product
+                product = locked_products.get(item.product_id)
                 if not product or product.stock_quantity < item.quantity:
                     return False  # Insufficient stock - abort without changes
             
@@ -1498,7 +1520,7 @@ class Order(db.Model):
             
             # 2. Reduce stock and create inventory logs for each item
             for item in self.items:
-                product = item.product
+                product = locked_products.get(item.product_id)
                 if not product.decrease_stock(item.quantity):
                     return False  # Should not happen (checked above), but safety check
                 
@@ -1685,7 +1707,7 @@ class AffiliateProfile(db.Model):
     user = db.relationship('User', backref=db.backref('affiliate_profile', uselist=False))
     
     # FUTURE: Tier system
-    # tier = db.Column(db.String(20), default='bronze')  # bronze, silver, gold, platinum
+    tier = db.Column(db.String(20), nullable=False, default='bronze', index=True)  # bronze, silver, gold, platinum
     # tier_updated_at = db.Column(db.DateTime)
     
     # FUTURE: Performance tracking
@@ -2297,7 +2319,7 @@ class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
-    variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), nullable=True, index=True)
+    variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), nullable=False, index=True)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

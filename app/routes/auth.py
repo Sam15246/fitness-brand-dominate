@@ -63,7 +63,15 @@ def login():
         # Find user
         user = User.query.filter_by(email=email).first()
         
-        if user is None or not user.check_password(password):
+        if user is None:
+            flash('Invalid email or password.', 'danger')
+            return render_template('admin/login.html')
+
+        if not user.can_login_with_password():
+            flash('This account uses social sign-in. Continue with Google/Apple login.', 'warning')
+            return render_template('admin/login.html')
+
+        if not user.check_password(password):
             flash('Invalid email or password.', 'danger')
             return render_template('admin/login.html')
         
