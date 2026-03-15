@@ -85,3 +85,8 @@ YOUR_DECISION_CHECKLIST.md
 UI_TESTING_GUIDE.md
 seed_test_coupons.py
 test_coupons.py
+
+# Generated database documentation
+CURRENT_DB_DESIGN.md
+CURRENT_DB_DDL.md
+DB_MIGRATION_IMPLEMENTATION_PLAN.md

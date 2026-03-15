@@ -120,6 +120,7 @@ class User(UserMixin, db.Model):
     # Relationships
     products_created = db.relationship('Product', backref='created_by_user', foreign_keys='Product.created_by')
     orders = db.relationship('Order', backref='user', foreign_keys='Order.user_id')
+    addresses = db.relationship('UserAddress', backref='user', foreign_keys='UserAddress.user_id', cascade='all, delete-orphan')
     
     def set_password(self, password):
         """
@@ -409,6 +410,43 @@ class User(UserMixin, db.Model):
         return f'<User {self.email} ({self.role})>'
 
 
+class UserAddress(db.Model):
+    """
+    Saved address book entries for logged-in users.
+
+    Orders continue storing immutable snapshot address fields.
+    This table enables reusable addresses for future checkout UX.
+    """
+
+    __tablename__ = 'user_addresses'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+
+    label = db.Column(db.String(50), nullable=False, default='Home')
+    full_name = db.Column(db.String(255), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+
+    street_line1 = db.Column(db.String(255), nullable=False)
+    street_line2 = db.Column(db.String(255), nullable=True)
+    landmark = db.Column(db.String(255), nullable=True)
+
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(100), nullable=False)
+    pincode = db.Column(db.String(10), nullable=False)
+
+    is_default = db.Column(db.Boolean, nullable=False, default=False, index=True)
+
+    # Seed columns for future delivery zone logic
+    lat = db.Column(db.Numeric(9, 6), nullable=True)
+    lng = db.Column(db.Numeric(9, 6), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    def __repr__(self):
+        return f'<UserAddress {self.id} user={self.user_id} default={self.is_default}>'
+
+
 class ProductCategory(db.Model):
     """
     Product category model for hierarchical organization.
@@ -653,6 +691,7 @@ class Product(db.Model):
     
     # Relationships
     # Note: Orders accessed through OrderItem (Product → OrderItem → Order)
+    variants = db.relationship('ProductVariant', backref='product', cascade='all, delete-orphan')
     reviews = db.relationship('Review', backref='product', cascade='all, delete-orphan')
     # images relationship is defined in ProductImage model
     
@@ -835,6 +874,48 @@ class Product(db.Model):
         return f'<Product {self.name}>'
 
 
+class ProductVariant(db.Model):
+    """
+    Product variants for size/flavour/color/weight style differentiation.
+
+    DESIGN GOAL:
+    - Keep parent product as merchandising container
+    - Store variant-specific attributes in option_values JSON
+    - Support variant-level inventory and optional price override
+    """
+
+    __tablename__ = 'product_variants'
+    __table_args__ = (
+        CheckConstraint('stock_quantity >= 0', name='ck_variant_stock_non_negative'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    sku = db.Column(db.String(100), unique=True, nullable=False, index=True)
+
+    # Flexible attributes, e.g. {"size": "XL", "color": "Black"}
+    option_values = db.Column(db.JSON, nullable=False, default=dict)
+
+    # Null means inherit from parent product pricing
+    price_override = db.Column(db.Integer, nullable=True)
+
+    stock_quantity = db.Column(db.Integer, nullable=False, default=0, index=True)
+    weight_grams = db.Column(db.Integer, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    def get_effective_price(self):
+        """Get variant price, inheriting parent product price when override is unset."""
+        return self.price_override if self.price_override is not None else self.product.price
+
+    def get_effective_weight_grams(self):
+        """Get variant weight, inheriting parent product weight when override is unset."""
+        return self.weight_grams if self.weight_grams is not None else self.product.weight_grams
+
+    def __repr__(self):
+        return f'<ProductVariant {self.sku} (Product {self.product_id})>'
+
+
 class OrderItem(db.Model):
     """
     Order line items - individual products within an order.
@@ -871,6 +952,10 @@ class OrderItem(db.Model):
     
     # Product reference (immutable snapshot)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+
+    # Variant reference (nullable during transition/backfill)
+    variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), nullable=True, index=True)
+    variant_snapshot = db.Column(db.JSON, nullable=True)  # e.g. {"size": "M", "flavour": "Chocolate"}
     
     # Quantity and price (snapshot - never modified)
     quantity = db.Column(db.Integer, nullable=False)  # How many units
@@ -882,6 +967,7 @@ class OrderItem(db.Model):
     # Relationships
     order = db.relationship('Order', backref='items')
     product = db.relationship('Product', backref='order_items')
+    variant = db.relationship('ProductVariant', backref='order_items', foreign_keys=[variant_id])
     
     def get_subtotal(self):
         """Calculate subtotal: quantity × unit_price (in paise)."""
@@ -1127,6 +1213,10 @@ class Order(db.Model):
     
     # User reference (nullable for guest orders)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+
+    # Optional link to a saved address used at checkout.
+    # Snapshot fields below remain the immutable order record.
+    address_id = db.Column(db.Integer, db.ForeignKey('user_addresses.id'), nullable=True, index=True)
     
     # Affiliate tracking (nullable - only filled if referred)
     affiliate_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
@@ -1192,6 +1282,7 @@ class Order(db.Model):
     # Relationships
     affiliate = db.relationship('User', foreign_keys=[affiliate_id], backref='referral_orders')
     coupon = db.relationship('CouponCode', backref='orders')
+    saved_address = db.relationship('UserAddress', foreign_keys=[address_id], backref='orders')
     # payment_gateway = db.Column(db.String(50))  # razorpay, stripe, paypal, etc
     # transaction_id = db.Column(db.String(100), unique=True, index=True)
     # payment_status = db.Column(db.String(20), default='pending')  # pending, completed, failed
@@ -2191,13 +2282,14 @@ class CartItem(db.Model):
     
     __tablename__ = 'cart_items'
     __table_args__ = (
-        db.UniqueConstraint('user_id', 'product_id', name='uq_user_product_cart'),
+        db.UniqueConstraint('user_id', 'variant_id', name='uq_user_variant_cart'),
         CheckConstraint('quantity > 0', name='ck_cart_quantity_positive'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), nullable=True, index=True)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -2206,11 +2298,14 @@ class CartItem(db.Model):
     # Relationships
     user = db.relationship('User', backref='cart_items', foreign_keys=[user_id])
     product = db.relationship('Product', backref='in_carts', foreign_keys=[product_id])
+    variant = db.relationship('ProductVariant', backref='in_carts', foreign_keys=[variant_id])
     
     def get_subtotal(self):
         """Calculate subtotal for this cart item in paise."""
         if not self.product:
             return 0
+        if self.variant:
+            return self.variant.get_effective_price() * self.quantity
         # Use discounted price if active, else regular price
         if self.product.is_discount_active and self.product.price_discounted:
             price = self.product.price_discounted
@@ -2224,6 +2319,8 @@ class CartItem(db.Model):
     
     def is_stock_available(self):
         """Check if requested quantity is in stock."""
+        if self.variant:
+            return self.variant.stock_quantity >= self.quantity and self.variant.is_active
         return self.product and self.product.stock_quantity >= self.quantity
     
     def __repr__(self):

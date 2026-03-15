@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 from datetime import datetime
 import secrets
 from urllib.parse import quote
-from app.models import db, Product, Order, OrderItem, User, AffiliateProfile, CouponCode, PolicyPage, CartItem, Payment, InventoryLog
+from app.models import db, Product, ProductVariant, Order, OrderItem, User, UserAddress, AffiliateProfile, CouponCode, PolicyPage, CartItem, Payment, InventoryLog
 from app.business_logic import OrderManager, AffiliateManager
 from app.utils import send_order_confirmation_email
 
@@ -138,6 +138,35 @@ def get_cart():
         return session['cart']
 
 
+def get_or_create_default_variant(product):
+    """
+    Fetch the product's default variant or create one if absent.
+
+    Transitional helper while the app moves from product-level to variant-level ordering.
+    """
+    if not product:
+        return None
+
+    variant = ProductVariant.query.filter_by(product_id=product.id).order_by(ProductVariant.id.asc()).first()
+    if variant:
+        return variant
+
+    # Deterministic fallback SKU for legacy products.
+    fallback_sku = f'PV-{product.id}-DEFAULT'
+    variant = ProductVariant(
+        product_id=product.id,
+        sku=fallback_sku,
+        option_values={},
+        price_override=product.price,
+        stock_quantity=product.stock_quantity,
+        weight_grams=product.weight_grams,
+        is_active=product.is_active,
+    )
+    db.session.add(variant)
+    db.session.flush()
+    return variant
+
+
 def sync_session_cart_to_db():
     """
     Sync session cart to database when user logs in.
@@ -156,6 +185,8 @@ def sync_session_cart_to_db():
         
         if not product or not product.is_active:
             continue
+
+        variant = get_or_create_default_variant(product)
         
         # Check if item already in DB cart
         cart_item = CartItem.query.filter_by(
@@ -165,14 +196,17 @@ def sync_session_cart_to_db():
         
         if cart_item:
             # Update quantity (add to existing)
-            cart_item.quantity = min(cart_item.quantity + quantity, product.stock_quantity)
+            cart_item.variant_id = variant.id if variant else None
+            available_stock = variant.stock_quantity if variant else product.stock_quantity
+            cart_item.quantity = min(cart_item.quantity + quantity, available_stock)
             cart_item.updated_at = datetime.utcnow()
         else:
             # Create new cart item
             cart_item = CartItem(
                 user_id=current_user.id,
                 product_id=product_id,
-                quantity=min(quantity, product.stock_quantity)
+                variant_id=variant.id if variant else None,
+                quantity=min(quantity, variant.stock_quantity if variant else product.stock_quantity)
             )
             db.session.add(cart_item)
     
@@ -183,7 +217,7 @@ def sync_session_cart_to_db():
     session.modified = True
 
 
-def save_cart_item(product_id, quantity):
+def save_cart_item(product_id, quantity, variant_id=None):
     """
     Save cart item to database (logged-in) or session (guest).
     
@@ -193,18 +227,29 @@ def save_cart_item(product_id, quantity):
     """
     if current_user.is_authenticated:
         # Save to database
-        cart_item = CartItem.query.filter_by(
-            user_id=current_user.id,
-            product_id=product_id
-        ).first()
+        if variant_id is None:
+            product = Product.query.get(product_id)
+            variant = get_or_create_default_variant(product) if product else None
+            variant_id = variant.id if variant else None
+
+        query_filters = {
+            'user_id': current_user.id,
+            'product_id': product_id,
+        }
+        if variant_id is not None:
+            query_filters['variant_id'] = variant_id
+
+        cart_item = CartItem.query.filter_by(**query_filters).first()
         
         if cart_item:
             cart_item.quantity = quantity
+            cart_item.variant_id = variant_id
             cart_item.updated_at = datetime.utcnow()
         else:
             cart_item = CartItem(
                 user_id=current_user.id,
                 product_id=product_id,
+                variant_id=variant_id,
                 quantity=quantity
             )
             db.session.add(cart_item)
@@ -400,14 +445,17 @@ def add_to_cart(product_id):
     if not product.is_active:
         flash('This product is no longer available.', 'danger')
         return redirect(url_for('main.product_detail', slug=product.slug))
+
+    default_variant = get_or_create_default_variant(product)
+    available_stock = default_variant.stock_quantity if default_variant else product.stock_quantity
     
-    if product.stock_quantity < 1:
+    if available_stock < 1:
         flash('This product is out of stock.', 'danger')
         return redirect(url_for('main.product_detail', slug=product.slug))
     
     # Get quantity from form (default 1)
     quantity = request.form.get('quantity', 1, type=int)
-    quantity = max(1, min(quantity, product.stock_quantity))  # Ensure valid range
+    quantity = max(1, min(quantity, available_stock))  # Ensure valid range
     
     # Get current cart
     cart = get_cart()
@@ -417,9 +465,9 @@ def add_to_cart(product_id):
     if product_id_str in cart:
         new_qty = cart[product_id_str] + quantity
         # Check stock limit
-        if new_qty > product.stock_quantity:
-            new_qty = product.stock_quantity
-            flash(f'Updated quantity to maximum available stock ({product.stock_quantity}).', 'warning')
+        if new_qty > available_stock:
+            new_qty = available_stock
+            flash(f'Updated quantity to maximum available stock ({available_stock}).', 'warning')
         else:
             flash(f'Added {quantity} more {product.name} to cart!', 'success')
     else:
@@ -427,7 +475,7 @@ def add_to_cart(product_id):
         flash(f'{product.name} added to cart!', 'success')
     
     # Save to database or session
-    save_cart_item(product_id, new_qty)
+    save_cart_item(product_id, new_qty, variant_id=default_variant.id if default_variant else None)
     
     # Return JSON response for AJAX request
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -539,6 +587,87 @@ def checkout():
     if not cart_data['items']:
         flash('Your cart is empty. Add some products first!', 'info')
         return redirect(url_for('main.cart'))
+
+    saved_addresses = []
+    selected_address = None
+    selected_address_id = request.form.get('saved_address_id', type=int) if request.method == 'POST' else None
+
+    form_values = {
+        'customer_name': current_user.name if current_user.is_authenticated else '',
+        'email': current_user.email if current_user.is_authenticated else '',
+        'phone_number': current_user.phone if current_user.is_authenticated and current_user.phone else '',
+        'city': '',
+        'state': '',
+        'pincode': '',
+        'address': '',
+        'coupon_code': '',
+        'saved_address_id': '',
+    }
+
+    if current_user.is_authenticated:
+        saved_addresses = UserAddress.query.filter_by(user_id=current_user.id).order_by(
+            UserAddress.is_default.desc(),
+            UserAddress.created_at.desc()
+        ).all()
+
+        if saved_addresses and request.method == 'GET':
+            selected_address = saved_addresses[0]
+            selected_address_id = selected_address.id
+            form_values.update({
+                'customer_name': selected_address.full_name,
+                'phone_number': selected_address.phone,
+                'city': selected_address.city,
+                'state': selected_address.state,
+                'pincode': selected_address.pincode,
+                'address': ', '.join(
+                    [part for part in [selected_address.street_line1, selected_address.street_line2, selected_address.landmark] if part]
+                ),
+                'saved_address_id': selected_address.id,
+            })
+
+    if request.method == 'POST':
+        form_values.update({
+            'customer_name': request.form.get('customer_name', '').strip(),
+            'email': request.form.get('email', '').strip().lower(),
+            'phone_number': request.form.get('phone_number', '').strip(),
+            'city': request.form.get('city', '').strip(),
+            'state': request.form.get('state', '').strip(),
+            'pincode': request.form.get('pincode', '').strip(),
+            'address': request.form.get('address', '').strip(),
+            'coupon_code': request.form.get('coupon_code', '').strip().upper(),
+            'saved_address_id': selected_address_id or '',
+        })
+
+        if current_user.is_authenticated and selected_address_id:
+            selected_address = UserAddress.query.filter_by(
+                id=selected_address_id,
+                user_id=current_user.id
+            ).first()
+
+            if selected_address:
+                form_values.update({
+                    'customer_name': selected_address.full_name,
+                    'phone_number': selected_address.phone,
+                    'city': selected_address.city,
+                    'state': selected_address.state,
+                    'pincode': selected_address.pincode,
+                    'address': ', '.join(
+                        [part for part in [selected_address.street_line1, selected_address.street_line2, selected_address.landmark] if part]
+                    ),
+                })
+
+    def render_checkout_page():
+        return render_template(
+            'public/checkout.html',
+            cart=cart_data,
+            coupon_code=coupon_code,
+            applied_discount=applied_discount,
+            discount_message=discount_message,
+            referral_detected=referral_detected,
+            saved_addresses=saved_addresses,
+            selected_address_id=selected_address_id,
+            form_values=form_values,
+        )
     
     # Get coupon code from URL, form, or session
     # Supports legacy referral links (?ref=CODE) captured in session['affiliate_code']
@@ -579,16 +708,16 @@ def checkout():
     
     if request.method == 'POST':
         # Extract form data
-        name = request.form.get('customer_name', '').strip()
-        phone = request.form.get('phone_number', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        city = request.form.get('city', '').strip()
-        state = request.form.get('state', '').strip()
-        pincode = request.form.get('pincode', '').strip()
-        address = request.form.get('address', '').strip()
+        name = form_values['customer_name']
+        phone = form_values['phone_number']
+        email = form_values['email']
+        city = form_values['city']
+        state = form_values['state']
+        pincode = form_values['pincode']
+        address = form_values['address']
         email_opt_in = request.form.get('email_opt_in', False) == 'on'
         coupon_code_form = (
-            request.form.get('coupon_code', '').strip().upper() or
+            form_values['coupon_code'] or
             coupon_code or
             session.get('coupon_code', '').strip().upper() or
             session.get('affiliate_code', '').strip().upper()
@@ -621,9 +750,7 @@ def checkout():
         if errors:
             for error in errors:
                 flash(error, 'danger')
-            return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code, 
-                                 applied_discount=applied_discount, discount_message=discount_message,
-                                 referral_detected=referral_detected)
+            return render_checkout_page()
         
         # Process checkout - create ONE order with multiple OrderItems
         try:
@@ -641,16 +768,17 @@ def checkout():
             for item in cart_data['items']:
                 product = item['product']
                 quantity = item['quantity']
-                if quantity > product.stock_quantity:
-                    flash(f'{product.name}: Only {product.stock_quantity} available in stock', 'danger')
-                    return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code,
-                                         applied_discount=applied_discount, discount_message=discount_message,
-                                         referral_detected=referral_detected)
+                variant = get_or_create_default_variant(product)
+                stock_to_check = variant.stock_quantity if variant else product.stock_quantity
+                if quantity > stock_to_check:
+                    flash(f'{product.name}: Only {stock_to_check} available in stock', 'danger')
+                    return render_checkout_page()
             
             # Create single order
             order = Order(
                 order_number=generate_order_number(),
                 user_id=current_user.id if current_user.is_authenticated else None,
+                address_id=selected_address.id if selected_address else None,
                 guest_name=name,
                 guest_phone=phone,
                 guest_email=email,
@@ -684,9 +812,12 @@ def checkout():
             for item in cart_data['items']:
                 product = item['product']
                 quantity = item['quantity']
+                variant = get_or_create_default_variant(product)
                 
                 # Get price snapshot (use discounted price if active)
-                if product.is_discount_active and product.price_discounted:
+                if variant and variant.price_override is not None:
+                    unit_price = variant.price_override
+                elif product.is_discount_active and product.price_discounted:
                     unit_price = product.price_discounted
                 else:
                     unit_price = product.price
@@ -694,6 +825,8 @@ def checkout():
                 order_item = OrderItem(
                     order_id=order.id,
                     product_id=product.id,
+                    variant_id=variant.id if variant else None,
+                    variant_snapshot=variant.option_values if variant else None,
                     quantity=quantity,
                     unit_price=unit_price
                 )
@@ -707,6 +840,42 @@ def checkout():
             # Update user email opt-in if logged in
             if current_user.is_authenticated and email_opt_in:
                 current_user.email_marketing_opt_in = True
+                db.session.commit()
+
+            # Optionally store/update this address for logged-in users
+            if current_user.is_authenticated and request.form.get('save_address') == 'on':
+                address_parts = [part.strip() for part in address.split(',') if part.strip()]
+                street_line1 = address_parts[0] if address_parts else address
+                street_line2 = address_parts[1] if len(address_parts) > 1 else None
+                landmark = ', '.join(address_parts[2:]) if len(address_parts) > 2 else None
+
+                address_label = request.form.get('address_label', 'Home').strip() or 'Home'
+                set_default = request.form.get('set_default_address') == 'on'
+
+                address_record = selected_address
+                if not address_record:
+                    address_record = UserAddress(user_id=current_user.id)
+                    db.session.add(address_record)
+
+                address_record.label = address_label
+                address_record.full_name = name
+                address_record.phone = phone
+                address_record.street_line1 = street_line1
+                address_record.street_line2 = street_line2
+                address_record.landmark = landmark
+                address_record.city = city
+                address_record.state = state
+                address_record.pincode = pincode
+
+                if set_default:
+                    UserAddress.query.filter(
+                        UserAddress.user_id == current_user.id,
+                        UserAddress.id != address_record.id
+                    ).update({'is_default': False}, synchronize_session=False)
+                    address_record.is_default = True
+                elif not saved_addresses:
+                    address_record.is_default = True
+
                 db.session.commit()
             
             # Clear the cart (database or session)
@@ -726,14 +895,10 @@ def checkout():
             db.session.rollback()
             flash('An error occurred while processing your order. Please try again.', 'danger')
             current_app.logger.error(f'Checkout error: {str(e)}')
-            return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code,
-                                 applied_discount=applied_discount, discount_message=discount_message,
-                                 referral_detected=referral_detected)
+            return render_checkout_page()
     
     # GET request - show checkout form with cart items
-    return render_template('public/checkout.html', cart=cart_data, coupon_code=coupon_code,
-                         applied_discount=applied_discount, discount_message=discount_message,
-                         referral_detected=referral_detected)
+    return render_checkout_page()
 
 # ============= END CHECKOUT =============
 
@@ -928,7 +1093,10 @@ def order_form(product_id):
             db.session.flush()  # Generate order ID
             
             # Get price snapshot (use discounted price if active)
-            if product.is_discount_active and product.price_discounted:
+            variant = get_or_create_default_variant(product)
+            if variant and variant.price_override is not None:
+                unit_price = variant.price_override
+            elif product.is_discount_active and product.price_discounted:
                 unit_price = product.price_discounted
             else:
                 unit_price = product.price
@@ -937,6 +1105,8 @@ def order_form(product_id):
             order_item = OrderItem(
                 order_id=order.id,
                 product_id=product.id,
+                variant_id=variant.id if variant else None,
+                variant_snapshot=variant.option_values if variant else None,
                 quantity=quantity,
                 unit_price=unit_price
             )

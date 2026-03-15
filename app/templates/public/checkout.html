@@ -93,6 +93,29 @@
                             </div>
                         {% endif %}
 
+                        {% if current_user.is_authenticated and saved_addresses %}
+                            <div class="mb-3">
+                                <label for="saved_address_id" class="form-label">Use saved address</label>
+                                <select class="form-select" id="saved_address_id" name="saved_address_id">
+                                    <option value="">Enter address manually</option>
+                                    {% for addr in saved_addresses %}
+                                        {% set display_address = [addr.street_line1, addr.street_line2, addr.landmark]|select|join(', ') %}
+                                        <option value="{{ addr.id }}"
+                                                data-full-name="{{ addr.full_name }}"
+                                                data-phone="{{ addr.phone }}"
+                                                data-city="{{ addr.city }}"
+                                                data-state="{{ addr.state }}"
+                                                data-pincode="{{ addr.pincode }}"
+                                                data-address="{{ display_address }}"
+                                                {% if selected_address_id and selected_address_id == addr.id %}selected{% endif %}>
+                                            {{ addr.label }} - {{ addr.city }}, {{ addr.state }} {% if addr.is_default %}(Default){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">Selecting a saved address auto-fills delivery fields.</small>
+                            </div>
+                        {% endif %}
+
                         <!-- Name -->
                         <div class="mb-3">
                             <label for="customer_name" class="form-label">Name <span class="text-danger">*</span></label>
@@ -101,7 +124,7 @@
                                    id="customer_name"
                                    name="customer_name" 
                                    placeholder="Full name"
-                                   value="{% if current_user.is_authenticated %}{{ current_user.name }}{% endif %}"
+                                value="{{ form_values.customer_name if form_values else '' }}"
                                    required>
                             <small class="form-text text-muted">We'll use this to contact you about your order</small>
                         </div>
@@ -114,7 +137,7 @@
                                    id="email"
                                    name="email" 
                                    placeholder="your@email.com"
-                                   value="{% if current_user.is_authenticated %}{{ current_user.email }}{% endif %}"
+                                value="{{ form_values.email if form_values else '' }}"
                                    autocomplete="email" required>
                             <small class="form-text text-muted">Order confirmation will be sent here</small>
                         </div>
@@ -129,7 +152,7 @@
                                    placeholder="10-digit mobile number"
                                    pattern="\d{10}"
                                    inputmode="numeric"
-                                   value="{% if current_user.is_authenticated %}{{ current_user.phone or '' }}{% endif %}"
+                                value="{{ form_values.phone_number if form_values else '' }}"
                                    autocomplete="tel" required>
                             <small class="form-text text-muted">10-digit mobile number starting with 6-9</small>
                         </div>
@@ -137,6 +160,7 @@
                         <!-- State -->
                         <div class="mb-3">
                             <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                            <input type="hidden" id="initial_state" value="{{ form_values.state if form_values else '' }}">
                             <select class="form-select" id="state" name="state" required>
                                 <option value="">Select a state</option>
                                 <option value="Andhra Pradesh">Andhra Pradesh</option>
@@ -179,6 +203,7 @@
                                    id="city"
                                    name="city" 
                                    placeholder="City name"
+                                value="{{ form_values.city if form_values else '' }}"
                                    required>
                         </div>
 
@@ -193,6 +218,7 @@
                                    pattern="\d{6}"
                                    inputmode="numeric"
                                    maxlength="6"
+                                value="{{ form_values.pincode if form_values else '' }}"
                                    required>
                             <small class="form-text text-muted">6-digit postal code (e.g., 400001)</small>
                         </div>
@@ -205,9 +231,38 @@
                                       name="address" 
                                       rows="3" 
                                       placeholder="Enter your complete delivery address including street, building name, flat number, etc."
-                                      required></textarea>
+                                      required>{{ form_values.address if form_values else '' }}</textarea>
                             <small class="form-text text-muted">Complete information helps with accurate delivery</small>
                         </div>
+
+                        {% if current_user.is_authenticated %}
+                            <div class="border rounded p-3 mb-3 bg-light">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="save_address" name="save_address">
+                                    <label class="form-check-label" for="save_address">
+                                        Save this address to my address book
+                                    </label>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-6">
+                                        <label for="address_label" class="form-label mb-1">Address label</label>
+                                        <select class="form-select form-select-sm" id="address_label" name="address_label">
+                                            <option value="Home">Home</option>
+                                            <option value="Work">Work</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 pt-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="set_default_address" name="set_default_address">
+                                            <label class="form-check-label" for="set_default_address">
+                                                Set as default address
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
 
                         <!-- Email Marketing Opt-in -->
                         <div class="form-check mb-3">
@@ -231,7 +286,7 @@
                                        id="coupon_code"
                                        name="coupon_code" 
                                        placeholder="Enter coupon code (e.g., SAVE10)"
-                                       value="{{ coupon_code or '' }}"
+                                       value="{{ form_values.coupon_code if form_values and form_values.coupon_code else (coupon_code or '') }}"
                                        maxlength="50">
                                 <button class="btn btn-outline-secondary" type="submit" id="apply-coupon-btn" style="display: none;">
                                     Apply
@@ -380,4 +435,44 @@
         }
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stateSelect = document.getElementById('state');
+    const initialState = document.getElementById('initial_state');
+    if (stateSelect && initialState && initialState.value) {
+        stateSelect.value = initialState.value;
+    }
+
+    const savedAddressSelect = document.getElementById('saved_address_id');
+    if (!savedAddressSelect) {
+        return;
+    }
+
+    const fields = {
+        customer_name: document.getElementById('customer_name'),
+        phone_number: document.getElementById('phone_number'),
+        city: document.getElementById('city'),
+        state: document.getElementById('state'),
+        pincode: document.getElementById('pincode'),
+        address: document.getElementById('address')
+    };
+
+    function applySelectedAddress() {
+        const option = savedAddressSelect.options[savedAddressSelect.selectedIndex];
+        if (!option || !option.value) {
+            return;
+        }
+
+        if (fields.customer_name) fields.customer_name.value = option.dataset.fullName || fields.customer_name.value;
+        if (fields.phone_number) fields.phone_number.value = option.dataset.phone || fields.phone_number.value;
+        if (fields.city) fields.city.value = option.dataset.city || fields.city.value;
+        if (fields.state) fields.state.value = option.dataset.state || fields.state.value;
+        if (fields.pincode) fields.pincode.value = option.dataset.pincode || fields.pincode.value;
+        if (fields.address) fields.address.value = option.dataset.address || fields.address.value;
+    }
+
+    savedAddressSelect.addEventListener('change', applySelectedAddress);
+});
+</script>
 {% endblock %}
