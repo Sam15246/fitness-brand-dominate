@@ -52,6 +52,17 @@
                                 <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
                             </div>
 
+                            <div class="text-center text-muted small mb-3">or</div>
+                            <div class="mb-3" id="googleSignInContainer">
+                                {% if google_client_id %}
+                                    <div id="googleSignInButton" class="w-100"></div>
+                                {% else %}
+                                    <div class="alert alert-light border small mb-0" role="alert">
+                                        Google sign-in is currently unavailable.
+                                    </div>
+                                {% endif %}
+                            </div>
+
                             <div class="text-center">
                                 <p class="text-muted mb-0 small">
                                     Don't have an account? 
@@ -133,7 +144,70 @@
     </div>
 </div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
+const GOOGLE_CLIENT_ID = {{ (google_client_id or '')|tojson }};
+const NEXT_URL = {{ (next_url or '')|tojson }};
+
+function showAuthError(message) {
+    window.alert(message || 'Unable to complete sign-in. Please try again.');
+}
+
+async function handleGoogleCredentialResponse(response) {
+    try {
+        const res = await fetch("{{ url_for('auth.google_sign_in') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                credential: response.credential,
+                next: NEXT_URL
+            })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            showAuthError(data.message || 'Google sign-in failed.');
+            return;
+        }
+
+        if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+            return;
+        }
+
+        window.location.href = "{{ url_for('main.index') }}";
+    } catch (error) {
+        showAuthError('Google sign-in failed. Please try again.');
+    }
+}
+
+function initializeGoogleSignIn() {
+    if (!GOOGLE_CLIENT_ID || !window.google || !window.google.accounts || !window.google.accounts.id) {
+        return;
+    }
+
+    const buttonHost = document.getElementById('googleSignInButton');
+    if (!buttonHost) {
+        return;
+    }
+
+    window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+        ux_mode: 'popup'
+    });
+
+    window.google.accounts.id.renderButton(buttonHost, {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        width: 360
+    });
+}
+
 function showLogin() {
     document.getElementById('loginForm').classList.remove('d-none');
     document.getElementById('registerForm').classList.add('d-none');
@@ -165,5 +239,7 @@ function togglePassword(inputId) {
         icon.className = 'bi bi-eye';
     }
 }
+
+window.addEventListener('load', initializeGoogleSignIn);
 </script>
 {% endblock %}

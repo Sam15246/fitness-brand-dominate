@@ -1,8 +1,37 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from datetime import datetime
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_user, logout_user, current_user
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from app.models import db, User, UserRole
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _safe_next_url(next_page):
+    """Allow only local redirects."""
+    if next_page and isinstance(next_page, str) and next_page.startswith('/'):
+        return next_page
+    return None
+
+
+def _post_login_redirect(user, next_page=None):
+    """Resolve role-aware post-login redirect URL."""
+    safe_next = _safe_next_url(next_page)
+    if safe_next:
+        return safe_next
+    if user.is_admin():
+        return url_for('admin.dashboard')
+    return url_for('main.index')
+
+
+def _render_login_template():
+    """Render login page with social-auth config context."""
+    return render_template(
+        'admin/login.html',
+        google_client_id=current_app.config.get('GOOGLE_CLIENT_ID', ''),
+        next_url=request.args.get('next', ''),
+    )
 
 
 @auth_bp.before_request
@@ -58,43 +87,136 @@ def login():
         # Validation
         if not email or not password:
             flash('Please provide both email and password.', 'danger')
-            return render_template('admin/login.html')
+            return _render_login_template()
         
         # Find user
         user = User.query.filter_by(email=email).first()
         
         if user is None:
             flash('Invalid email or password.', 'danger')
-            return render_template('admin/login.html')
+            return _render_login_template()
 
         if not user.can_login_with_password():
             flash('This account uses social sign-in. Continue with Google/Apple login.', 'warning')
-            return render_template('admin/login.html')
+            return _render_login_template()
 
         if not user.check_password(password):
             flash('Invalid email or password.', 'danger')
-            return render_template('admin/login.html')
+            return _render_login_template()
         
         if not user.is_active:
             flash('Your account has been deactivated.', 'warning')
-            return render_template('admin/login.html')
+            return _render_login_template()
         
         # Login user
         login_user(user, remember=remember)
         
         # Redirect to next page or dashboard
         next_page = request.args.get('next')
-        if next_page and next_page.startswith('/'):
-            return redirect(next_page)
-        
         if user.is_admin():
             flash(f'Welcome back, {user.name}!', 'success')
-            return redirect(url_for('admin.dashboard'))
-        
+            return redirect(_post_login_redirect(user, next_page=next_page))
+
         flash(f'Welcome, {user.name}!', 'success')
-        return redirect(url_for('main.index'))
+        return redirect(_post_login_redirect(user, next_page=next_page))
     
-    return render_template('admin/login.html')
+    return _render_login_template()
+
+
+@auth_bp.route('/google', methods=['POST'])
+def google_sign_in():
+    """Authenticate with Google ID token and log in/link/create local user."""
+    payload = request.get_json(silent=True) or {}
+    credential = (payload.get('credential') or '').strip()
+    next_page = payload.get('next') or request.args.get('next', '')
+
+    if not credential:
+        return jsonify({'success': False, 'message': 'Missing Google credential.'}), 400
+
+    google_client_id = (current_app.config.get('GOOGLE_CLIENT_ID') or '').strip()
+    if not google_client_id:
+        return jsonify({'success': False, 'message': 'Google sign-in is not configured yet.'}), 503
+
+    try:
+        token_info = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            google_client_id,
+        )
+    except Exception:
+        return jsonify({'success': False, 'message': 'Google token verification failed.'}), 401
+
+    issuer = token_info.get('iss')
+    if issuer not in ('accounts.google.com', 'https://accounts.google.com'):
+        return jsonify({'success': False, 'message': 'Invalid Google token issuer.'}), 401
+
+    if not token_info.get('email_verified', False):
+        return jsonify({'success': False, 'message': 'Google email is not verified.'}), 401
+
+    email = (token_info.get('email') or '').strip().lower()
+    provider_id = (token_info.get('sub') or '').strip()
+    full_name = (token_info.get('name') or '').strip()
+    avatar_url = (token_info.get('picture') or '').strip() or None
+
+    if not email or not provider_id:
+        return jsonify({'success': False, 'message': 'Google profile data is incomplete.'}), 400
+
+    user = User.query.filter_by(auth_provider='google', auth_provider_id=provider_id).first()
+
+    if not user:
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            if existing_user.auth_provider not in ('local', 'google'):
+                return jsonify({
+                    'success': False,
+                    'message': 'This email is linked to another sign-in method. Please use that provider.',
+                }), 409
+
+            if existing_user.auth_provider == 'google' and existing_user.auth_provider_id and existing_user.auth_provider_id != provider_id:
+                return jsonify({
+                    'success': False,
+                    'message': 'This Google account is already linked differently. Please contact support.',
+                }), 409
+
+            existing_user.auth_provider = 'google'
+            existing_user.auth_provider_id = provider_id
+            existing_user.full_name = full_name or existing_user.full_name
+            existing_user.avatar_url = avatar_url or existing_user.avatar_url
+            if full_name and not existing_user.name:
+                existing_user.name = full_name
+            user = existing_user
+        else:
+            display_name = full_name or email.split('@')[0]
+            user = User(
+                name=display_name,
+                full_name=full_name or display_name,
+                email=email,
+                password_hash=None,
+                role=UserRole.USER.value,
+                is_active=True,
+                auth_provider='google',
+                auth_provider_id=provider_id,
+                avatar_url=avatar_url,
+                created_at=datetime.utcnow(),
+            )
+            db.session.add(user)
+
+    if not user.is_active:
+        return jsonify({'success': False, 'message': 'Your account has been deactivated.'}), 403
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Google sign-in DB commit failed')
+        return jsonify({'success': False, 'message': 'Could not complete sign-in. Please try again.'}), 500
+
+    login_user(user, remember=True)
+
+    return jsonify({
+        'success': True,
+        'redirect_url': _post_login_redirect(user, next_page=next_page),
+    })
 
 
 @auth_bp.route('/logout')
@@ -144,12 +266,12 @@ def register():
             return render_template('auth/register.html')
         
         # Create user
-        from datetime import datetime
         user = User(
             name=name,
             email=email,
             role=UserRole.USER.value,
             is_active=True,
+            auth_provider='local',
             created_at=datetime.utcnow()
         )
         user.set_password(password)

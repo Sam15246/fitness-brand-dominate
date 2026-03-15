@@ -50,6 +50,7 @@ class Config:
     
     # WhatsApp Configuration
     WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '919876543210')
+    GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 
     # Social Links
     INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/dominate.cali')
