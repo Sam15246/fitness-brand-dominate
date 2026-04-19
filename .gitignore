@@ -51,10 +51,19 @@ wheels/
 # Testing
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.hypothesis/
+.tox/
+.nox/
 
 # Node modules (if using npm for frontend tools)
 node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+frontend/.turbo/
+frontend/.cache/
 
 # Logs
 *.log
@@ -78,6 +87,14 @@ _archive/
 # Temporary files
 *.tmp
 *.temp
+.cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.ipynb_checkpoints/
+pip-wheel-metadata/
+site/
+coverage/
 PRODUCTION_READINESS.md
 
 # Local planning/testing docs & scripts
@@ -92,3 +109,6 @@ CURRENT_DB_DDL.md
 DB_MIGRATION_IMPLEMENTATION_PLAN.md
 
 google_cllient_id.txt
+
+# OS metadata
+Desktop.ini
