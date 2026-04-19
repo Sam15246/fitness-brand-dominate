@@ -219,8 +219,11 @@ class ProductionConfig(Config):
     SQLALCHEMY_ECHO = False
 
     SQLALCHEMY_ENGINE_OPTIONS = {
-    "pool_pre_ping": True,
-     "pool_recycle": 300
+        "pool_pre_ping": True,
+        "pool_size": int(os.getenv('SQLALCHEMY_POOL_SIZE', '15')),
+        "max_overflow": int(os.getenv('SQLALCHEMY_MAX_OVERFLOW', '20')),
+        "pool_timeout": int(os.getenv('SQLALCHEMY_POOL_TIMEOUT', '30')),
+        "pool_recycle": int(os.getenv('SQLALCHEMY_POOL_RECYCLE', '3600')),
     }
     
     def __init__(self):

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_mail import Mail
@@ -73,11 +73,13 @@ def create_app(config=None):
     from app.routes.auth import auth_bp
     from app.routes.admin import admin_bp
     from app.routes.admin_coupons import admin_coupons_bp
+    from app.routes.api_v1 import api_v1_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(admin_coupons_bp)
+    app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
 
     @app.context_processor
     def inject_brand_links():
@@ -120,5 +122,19 @@ def create_app(config=None):
         from flask import render_template
         db.session.rollback()
         return render_template('errors/500.html'), 500
+
+    @app.after_request
+    def set_security_headers(response):
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        response.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+        response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+        response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+
+        # Enable HSTS only when request is served over HTTPS.
+        is_https = request.is_secure or request.headers.get('X-Forwarded-Proto', '').lower() == 'https'
+        if is_https:
+            response.headers.setdefault('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+
+        return response
     
     return app

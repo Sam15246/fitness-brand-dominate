@@ -1,0 +1,32 @@
+"use client";
+
+import Link from "next/link";
+
+type ErrorPageProps = {
+  error: Error & { digest?: string };
+  reset: () => void;
+};
+
+export default function ErrorPage({ error, reset }: ErrorPageProps) {
+  return (
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-center justify-center px-6 text-center">
+      <p className="text-xs uppercase tracking-[0.2em] text-[#b59a73]">500</p>
+      <h1 className="text-brand-display mt-2 text-5xl uppercase tracking-[0.05em] text-[#f2dfc0]">Something Went Wrong</h1>
+      <p className="mt-4 text-sm text-[#d8c19a]">{error.message || "An unexpected error occurred."}</p>
+      <div className="mt-8 flex items-center gap-3">
+        <button
+          onClick={reset}
+          className="rounded-full bg-[#c89e65] px-6 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#1d150e] hover:bg-[#ddb684]"
+        >
+          Try Again
+        </button>
+        <Link
+          href="/"
+          className="rounded-full border border-[#8b6f47]/60 px-6 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#d8c19a] hover:bg-[#8b6f47] hover:text-[#1d150e]"
+        >
+          Go Home
+        </Link>
+      </div>
+    </div>
+  );
+}
