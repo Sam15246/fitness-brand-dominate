@@ -26,6 +26,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _frontend_base_url() -> str:
+    return (current_app.config.get('FRONTEND_BASE_URL') or 'http://localhost:3000').rstrip('/')
+
+
 def send_password_reset_email(user_email: str, reset_token: str) -> dict:
     """
     Send password reset email with secure token link.
@@ -52,8 +56,8 @@ def send_password_reset_email(user_email: str, reset_token: str) -> dict:
         # Import here to avoid circular imports
         from app import mail
         
-        # Generate reset URL (full URL with protocol and domain)
-        reset_url = url_for('auth.reset_password_form', token=reset_token, _external=True)
+        # Use frontend reset page as source of truth after API-only cutover.
+        reset_url = f"{_frontend_base_url()}/auth/reset-password/{reset_token}"
         
         # Generate logo URL (full URL for email)
         logo_url = url_for('static', filename='images/logo.png', _external=True)
@@ -252,7 +256,8 @@ Need help? Contact us via WhatsApp or Instagram.
         # Send email
         mail.send(msg)
         
-        logger.info(f"Password reset email sent to {user_email}")
+        if not current_app.config.get('TESTING', False):
+            logger.info(f"Password reset email sent to {user_email}")
         return {'success': True, 'message': 'Password reset email sent'}
         
     except Exception as e:
@@ -283,7 +288,7 @@ def send_welcome_email(user_email: str, user_name: str) -> dict:
             <h2>Welcome, {user_name}!</h2>
             <p>Your account has been created successfully.</p>
             <p>Start exploring our handcrafted calisthenics equipment:</p>
-            <a href="{url_for('main.index', _external=True)}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            <a href="{_frontend_base_url()}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                 Browse Products
             </a>
         </body>
@@ -293,7 +298,8 @@ def send_welcome_email(user_email: str, user_name: str) -> dict:
         msg = Message(subject=subject, recipients=[user_email], html=html_body)
         mail.send(msg)
         
-        logger.info(f"Welcome email sent to {user_email}")
+        if not current_app.config.get('TESTING', False):
+            logger.info(f"Welcome email sent to {user_email}")
         return {'success': True, 'message': 'Welcome email sent'}
         
     except Exception as e:
@@ -358,7 +364,8 @@ def send_order_confirmation_email(order):
         """
         
         # LOG FOR DEBUGGING/TESTING (remove in production after email setup)
-        current_app.logger.info(f"[EMAIL] Order confirmation for {customer_email} - {order_number}")
+        if not current_app.config.get('TESTING', False):
+            current_app.logger.info(f"[EMAIL] Order confirmation for {customer_email} - {order_number}")
         
         # TODO: Implement actual email sending here
         # Option 1: SMTP with Flask-Mail

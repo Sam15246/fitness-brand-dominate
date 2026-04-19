@@ -1273,6 +1273,7 @@ class Order(db.Model):
     tracking_number = db.Column(db.String(100), nullable=True, index=True)
     courier_name = db.Column(db.String(50), nullable=True)  # Delhivery, BlueDart, etc
     shipping_cost = db.Column(db.Integer, nullable=True)  # In paise (optional for now)
+    currency_code = db.Column(db.String(3), nullable=False, default='INR', index=True)  # ISO 4217
     
     # Financial Snapshot Fields (IMMUTABLE - captured at order creation/confirmation)
     # These fields preserve historical financial data for accurate reporting
@@ -2412,6 +2413,29 @@ class Payment(db.Model):
     
     def __repr__(self):
         return f'<Payment order={self.order_id} gateway={self.gateway} status={self.status}>'
+
+
+class ExchangeRate(db.Model):
+    """Historical FX rates used for presentment and reporting conversions."""
+
+    __tablename__ = 'exchange_rates'
+    __table_args__ = (
+        db.UniqueConstraint('base_currency', 'quote_currency', 'effective_at', name='uq_exchange_rates_pair_effective_at'),
+        CheckConstraint('base_currency <> quote_currency', name='ck_exchange_rates_pair_distinct'),
+        CheckConstraint('rate_to_quote > 0', name='ck_exchange_rates_rate_positive'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    base_currency = db.Column(db.String(3), nullable=False, index=True)  # ISO 4217
+    quote_currency = db.Column(db.String(3), nullable=False, index=True)  # ISO 4217
+    rate_to_quote = db.Column(db.Numeric(18, 8), nullable=False)
+    effective_at = db.Column(db.DateTime, nullable=False, index=True)
+    source = db.Column(db.String(50), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f'<ExchangeRate {self.base_currency}/{self.quote_currency} rate={self.rate_to_quote} at={self.effective_at}>'
 
 
 class InventoryLog(db.Model):

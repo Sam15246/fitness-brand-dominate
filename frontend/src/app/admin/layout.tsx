@@ -1,5 +1,8 @@
-import AdminGuard from "@/components/admin/AdminGuard";
+import type { ReactNode } from "react";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminGuard>{children}</AdminGuard>;
+import { requireRoles } from "@/lib/server-auth";
+
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  await requireRoles(["admin", "superadmin"], "/admin/dashboard");
+  return <>{children}</>;
 }

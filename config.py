@@ -51,6 +51,12 @@ class Config:
     # WhatsApp Configuration
     WHATSAPP_NUMBER = os.getenv('WHATSAPP_NUMBER', '919876543210')
     GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+    FRONTEND_BASE_URL = os.getenv('FRONTEND_BASE_URL', 'http://localhost:3000')
+    # Error strategy values: json | frontend_redirect | hybrid
+    # - json: always return JSON errors
+    # - frontend_redirect: redirect non-API errors to Next.js error pages
+    # - hybrid: JSON for /api/*, redirect for non-API browser requests
+    API_ERROR_STRATEGY = os.getenv('API_ERROR_STRATEGY', 'hybrid')
 
     # Social Links
     INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/dominate.cali')

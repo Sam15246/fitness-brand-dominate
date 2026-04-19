@@ -13,13 +13,8 @@ Scope: Compare legacy Flask template pages with current Next.js App Router pages
 
 ## Source Inventory
 
-Legacy templates analyzed:
-- app/templates/public/*.html
-- app/templates/auth/*.html
-- app/templates/admin/*.html
-- app/templates/admin/coupons/*.html
-- app/templates/affiliate/*.html
-- app/templates/errors/*.html
+Legacy template routes analyzed from migration history and archived sources.
+Runtime note: `app/templates` has been removed after API-only cutover.
 
 Current Next.js pages analyzed:
 - frontend/src/app/**/page.tsx

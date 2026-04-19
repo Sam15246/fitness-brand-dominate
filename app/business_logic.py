@@ -39,7 +39,7 @@ class StockManager:
         Returns:
             tuple: (bool, str) - (is_available, message)
         """
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         
         if not product:
             return False, 'Product not found'
@@ -66,7 +66,7 @@ class StockManager:
         Returns:
             tuple: (bool, str) - (success, message)
         """
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         
         if not product:
             return False, 'Product not found'
@@ -89,7 +89,7 @@ class StockManager:
         Returns:
             tuple: (bool, str) - (success, message)
         """
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         
         if not product:
             return False, 'Product not found'
@@ -119,7 +119,7 @@ class StockManager:
         Returns:
             tuple: (bool, str) - (success, message)
         """
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         
         if not product:
             return False, 'Product not found'
@@ -205,7 +205,7 @@ class AffiliateManager:
         Returns:
             tuple: (int, str) - (commission_amount in paise, message)
         """
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         
         if not order:
             return 0, 'Order not found'
@@ -246,7 +246,7 @@ class AffiliateManager:
         Returns:
             tuple: (bool, str) - (success, message)
         """
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         
         if not order:
             return False, 'Order not found'
@@ -296,7 +296,7 @@ class AffiliateManager:
         Returns:
             tuple: (AffiliateProfile or None, str message)
         """
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         
         if not user:
             return None, 'User not found'
@@ -368,7 +368,7 @@ class OrderManager:
             return None, msg
         
         # Get product
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         
         # Calculate total price
         total_price = product.price * quantity
@@ -431,7 +431,7 @@ class OrderManager:
         Returns:
             tuple: (bool, str) - (success, message)
         """
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         
         if not order:
             return False, 'Order not found'
@@ -474,7 +474,7 @@ class OrderManager:
         Returns:
             tuple: (bool, str) - (success, message)
         """
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         
         if not order:
             return False, 'Order not found'
@@ -515,7 +515,7 @@ class OrderManager:
         Returns:
             tuple: (bool, str) - (success, message)
         """
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         
         if not order:
             return False, 'Order not found'

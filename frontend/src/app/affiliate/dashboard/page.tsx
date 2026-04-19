@@ -1,61 +1,20 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import AdminShell from "@/components/admin/AdminShell";
-import { getAffiliateDashboard, type AffiliateDashboardData } from "@/lib/api";
+import type { AffiliateDashboardData } from "@/lib/api";
+import { serverApiGet } from "@/lib/server-api";
+import { requireUser } from "@/lib/server-auth";
 
-export default function AffiliateDashboardPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<AffiliateDashboardData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export default async function AffiliateDashboardPage() {
+  await requireUser("/affiliate/dashboard");
 
-  useEffect(() => {
-    let active = true;
+  let data: AffiliateDashboardData | null = null;
+  let error: string | null = null;
 
-    async function validateAccess() {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await getAffiliateDashboard();
-        if (active) {
-          setData(response);
-        }
-      } catch (err) {
-        if (!active) {
-          return;
-        }
-
-        if (err instanceof Error && err.message.toLowerCase().includes("authentication required")) {
-          router.replace("/auth/login?next=/affiliate/dashboard");
-          return;
-        }
-        setError(err instanceof Error ? err.message : "Failed to load affiliate dashboard");
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void validateAccess();
-
-    return () => {
-      active = false;
-    };
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div className="mx-auto w-full max-w-6xl px-6 py-10">
-        <div className="rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-6 text-sm text-[#d8c19a]">
-          Verifying affiliate access...
-        </div>
-      </div>
-    );
+  try {
+    data = await serverApiGet<AffiliateDashboardData>("/affiliate/dashboard");
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load affiliate dashboard";
   }
 
   return (

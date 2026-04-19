@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import AdminShell from "@/components/admin/AdminShell";
+import AppImage from "@/components/ui/AppImage";
 import {
   createAdminProductImage,
   deleteAdminProductImage,
@@ -183,8 +184,14 @@ export default function AdminProductImagesPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
             <div key={item.id} className="rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.thumbnail_url || item.url || ""} alt="Product" className="h-36 w-full rounded-md object-cover" />
+              <AppImage
+                src={item.thumbnail_url || item.url || ""}
+                alt="Product"
+                width={720}
+                height={360}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="h-36 w-full rounded-md object-cover"
+              />
               <p className="mt-2 text-xs text-[#cdb793]">{item.is_primary ? "Primary" : "Secondary"} • Order {item.display_order}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button

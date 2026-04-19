@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import Modal from "@/components/ui/Modal";
+import AppImage from "@/components/ui/AppImage";
 import type { ProductDetail } from "@/lib/api";
 
 type ProductQuickViewModalProps = {
@@ -8,10 +10,9 @@ type ProductQuickViewModalProps = {
 
 export default function ProductQuickViewModal({ product }: ProductQuickViewModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-[#8b6f47]/40 bg-[#14100d] text-[#f4eee4] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-[#8b6f47]/30 px-5 py-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#c7ac85]">Quick View</p>
+    <Modal title="Quick View">
+      <div>
+        <div className="flex items-center justify-end border-b border-[#8b6f47]/30 px-5 py-3">
           <Link href="/products" className="text-xs uppercase tracking-[0.16em] text-[#d8c19a] hover:text-[#f0d4a7]">
             Close
           </Link>
@@ -20,8 +21,14 @@ export default function ProductQuickViewModal({ product }: ProductQuickViewModal
         <div className="grid gap-5 p-5 md:grid-cols-2">
           <div className="aspect-[4/3] overflow-hidden rounded-xl border border-[#8b6f47]/30 bg-[#1b1612]">
             {product.images[0]?.url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
+              <AppImage
+                src={product.images[0].url}
+                alt={product.name}
+                width={900}
+                height={675}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.18em] text-[#9f8a6b]">
                 No image
@@ -51,6 +58,6 @@ export default function ProductQuickViewModal({ product }: ProductQuickViewModal
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

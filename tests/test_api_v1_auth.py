@@ -133,7 +133,7 @@ class ApiV1AuthTests(unittest.TestCase):
         )
         self.assertEqual(login_new.status_code, 200)
 
-    @patch("app.routes.api_v1.id_token.verify_oauth2_token")
+    @patch("app.routes.api_v1_auth.id_token.verify_oauth2_token")
     def test_google_sign_in_links_existing_user(self, mock_verify):
         self._create_user(email="google@example.com", password="pass123", name="Google Local")
         self.app.config["GOOGLE_CLIENT_ID"] = "test-google-client-id"

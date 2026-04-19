@@ -178,7 +178,7 @@ class ApiV1AdminActionsTests(unittest.TestCase):
 
         self._login_superadmin()
 
-        with patch("app.routes.api_v1.get_storage") as mock_get_storage:
+        with patch("app.routes.api_v1_admin.get_storage") as mock_get_storage:
             mock_storage = mock_get_storage.return_value
             mock_storage.upload.return_value = {
                 "success": True,
