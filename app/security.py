@@ -40,7 +40,11 @@ def validate_password_strength(password):
     # Minimum length
     if len(password) < 6:
         return False, 'Password must be at least 6 characters'
-    
+
+    # Maximum length (prevent DoS with huge passwords)
+    if len(password) > 128:
+        return False, 'Password cannot exceed 128 characters'
+
     # Must contain letters
     if not re.search(r'[a-zA-Z]', password):
         return False, 'Password must contain letters (a-z, A-Z)'

@@ -1,5 +1,6 @@
 from flask import current_app, request
 from flask_login import current_user
+from sqlalchemy.orm import selectinload
 
 from app.models import Product, ProductImage, Review, db
 from app.routes.api_v1_common import api_error, api_success
@@ -48,7 +49,12 @@ def register_api_v1_product_routes(
 
     @api_v1_bp.get('/products/<string:slug>')
     def product_detail(slug):
-        product = Product.query.filter_by(slug=slug, is_active=True).first()
+        product = (
+            Product.query
+            .options(selectinload(Product.variants), selectinload(Product.reviews))
+            .filter_by(slug=slug, is_active=True)
+            .first()
+        )
         if not product:
             return api_error('Product not found', status=404, code='not_found')
 
@@ -64,7 +70,12 @@ def register_api_v1_product_routes(
 
     @api_v1_bp.get('/products/id/<int:product_id>')
     def product_detail_by_id(product_id):
-        product = Product.query.filter_by(id=product_id, is_active=True).first()
+        product = (
+            Product.query
+            .options(selectinload(Product.variants), selectinload(Product.reviews))
+            .filter_by(id=product_id, is_active=True)
+            .first()
+        )
         if not product:
             return api_error('Product not found', status=404, code='not_found')
 

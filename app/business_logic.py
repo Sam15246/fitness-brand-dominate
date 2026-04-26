@@ -154,9 +154,11 @@ class StockManager:
             db.session.add(action_log)
             db.session.commit()
             return True, f'Stock adjusted to {new_quantity} units'
-        except Exception:
+        except Exception as exc:
             db.session.rollback()
-            return False, 'Failed to adjust stock'
+            from flask import current_app
+            current_app.logger.error(f'Stock adjustment failed for product {product_id}: {exc}')
+            return False, f'Failed to adjust stock: {type(exc).__name__}'
 
 
 class AffiliateManager:
