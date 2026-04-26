@@ -375,6 +375,7 @@ def _resolve_coupon(cart_total, coupon_code):
         return None, 0, api_error(f'Coupon code unavailable: {reason}', status=409, code='coupon_unavailable')
 
     discount = coupon.calculate_discount(cart_total)
+    discount = min(discount, cart_total)  # Never exceed cart total
     return coupon, discount, None
 
 

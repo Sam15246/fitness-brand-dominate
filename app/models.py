@@ -1484,8 +1484,15 @@ class Order(db.Model):
         """
         if self.status == OrderStatus.CONFIRMED.value:
             return False  # Already confirmed
-        
+
         try:
+            # Lock this order row to prevent double-confirmation
+            locked_order = db.session.execute(
+                db.select(Order).where(Order.id == self.id).with_for_update()
+            ).scalar_one_or_none()
+            if not locked_order or locked_order.status == OrderStatus.CONFIRMED.value:
+                return False
+
             order_item_product_ids = [item.product_id for item in self.items]
             locked_products = {
                 product.id: product
@@ -1510,7 +1517,7 @@ class Order(db.Model):
             
             # Apply discount from coupon if present
             if self.coupon_id and self.applied_discount > 0:
-                self.discount_amount = self.applied_discount
+                self.discount_amount = min(self.applied_discount, self.subtotal_amount)
                 self.discount_type = self.coupon.coupon_type if self.coupon else None
             else:
                 self.discount_amount = 0
