@@ -60,7 +60,14 @@ class Config:
 
     # Social Links
     INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/dominate.cali')
-    
+
+    # CORS
+    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
+
+    # Rate Limiting
+    RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'memory://')
+    RATELIMIT_DEFAULT = '200/hour'
+
     # ============= IMAGE STORAGE CONFIGURATION =============
     # Pluggable storage system for product images
     # 
@@ -230,6 +237,7 @@ class ProductionConfig(Config):
         "max_overflow": int(os.getenv('SQLALCHEMY_MAX_OVERFLOW', '20')),
         "pool_timeout": int(os.getenv('SQLALCHEMY_POOL_TIMEOUT', '30')),
         "pool_recycle": int(os.getenv('SQLALCHEMY_POOL_RECYCLE', '3600')),
+        "connect_args": {"options": "-c statement_timeout=10000"},
     }
     
     def __init__(self):

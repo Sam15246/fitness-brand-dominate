@@ -13,3 +13,5 @@ pillow-heif==0.17.0
 boto3==1.28.85
 google-auth==2.38.0
 requests==2.32.3
+Flask-Cors==4.0.0
+Flask-Limiter==3.5.0
