@@ -132,6 +132,22 @@ def register_api_v1_admin_routes(
         if status_value not in valid_statuses:
             return api_error('Invalid order status', status=400, code='validation_error')
 
+        VALID_TRANSITIONS = {
+            'pending': {'confirmed', 'cancelled'},
+            'confirmed': {'shipped', 'cancelled'},
+            'shipped': {'delivered', 'cancelled'},
+            'delivered': set(),
+            'cancelled': set(),
+        }
+
+        allowed = VALID_TRANSITIONS.get(order.status, set())
+        if status_value not in allowed:
+            return api_error(
+                f'Cannot transition from {order.status} to {status_value}',
+                status=400,
+                code='invalid_transition',
+            )
+
         order.status = status_value
         db.session.commit()
         db.session.refresh(order)
