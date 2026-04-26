@@ -6,6 +6,7 @@ from flask_login import current_user, login_user, logout_user
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
+from app import limiter
 from app.models import User, UserRole, db
 from app.routes.api_v1_common import api_error, api_success, serialize_current_user
 
@@ -18,6 +19,7 @@ def register_api_v1_auth_routes(api_v1_bp, merge_session_cart_into_db):
         return api_success(data={'user': serialize_current_user(current_user)})
 
     @api_v1_bp.post('/auth/login')
+    @limiter.limit('10 per 15 minutes')
     def auth_login():
         payload = request.get_json(silent=True) or {}
         email = (payload.get('email') or '').strip().lower()
@@ -141,6 +143,7 @@ def register_api_v1_auth_routes(api_v1_bp, merge_session_cart_into_db):
         return api_success(data={'logged_out': True})
 
     @api_v1_bp.post('/auth/register')
+    @limiter.limit('5 per hour')
     def auth_register():
         payload = request.get_json(silent=True) or {}
         name = (payload.get('name') or '').strip()
@@ -180,6 +183,7 @@ def register_api_v1_auth_routes(api_v1_bp, merge_session_cart_into_db):
         return api_success(data={'user': serialize_current_user(user)}, status=201)
 
     @api_v1_bp.post('/auth/forgot-password')
+    @limiter.limit('3 per hour')
     def auth_forgot_password():
         payload = request.get_json(silent=True) or {}
         email = (payload.get('email') or '').strip().lower()
