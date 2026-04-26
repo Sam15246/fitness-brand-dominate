@@ -195,8 +195,10 @@ def _merge_session_cart_into_db(user):
     if not session_cart:
         return
 
-    for product_id_str, quantity in session_cart.items():
-        product_id = _parse_int(product_id_str, 0)
+    for key, quantity in session_cart.items():
+        parts = str(key).split(':')
+        product_id = _parse_int(parts[0], 0)
+        variant_id_from_cart = _parse_int(parts[1] if len(parts) > 1 else '0', 0)
         qty = max(_parse_int(quantity, 0), 0)
 
         if product_id <= 0 or qty <= 0:
@@ -206,7 +208,14 @@ def _merge_session_cart_into_db(user):
         if not product or not product.is_active:
             continue
 
-        variant = _get_or_create_default_variant(product)
+        if variant_id_from_cart > 0:
+            variant = ProductVariant.query.filter_by(
+                id=variant_id_from_cart, product_id=product.id, is_active=True
+            ).first()
+            if not variant:
+                variant = _get_or_create_default_variant(product)
+        else:
+            variant = _get_or_create_default_variant(product)
         available_stock = variant.stock_quantity if variant else product.stock_quantity
         if available_stock < 1:
             continue
@@ -268,8 +277,10 @@ def _build_cart_payload():
             count += row.quantity
     else:
         cart = _get_session_cart()
-        for product_id_str, quantity in cart.items():
-            product_id = _parse_int(product_id_str, 0)
+        for key, quantity in cart.items():
+            parts = str(key).split(':')
+            product_id = _parse_int(parts[0], 0)
+            variant_id_from_cart = _parse_int(parts[1] if len(parts) > 1 else '0', 0)
             qty = max(_parse_int(quantity, 0), 0)
             if product_id <= 0 or qty <= 0:
                 continue
@@ -278,7 +289,14 @@ def _build_cart_payload():
             if not product or not product.is_active:
                 continue
 
-            variant = _get_or_create_default_variant(product)
+            if variant_id_from_cart > 0:
+                variant = ProductVariant.query.filter_by(
+                    id=variant_id_from_cart, product_id=product.id, is_active=True
+                ).first()
+                if not variant:
+                    variant = _get_or_create_default_variant(product)
+            else:
+                variant = _get_or_create_default_variant(product)
             unit_price = _resolve_unit_price(product, variant)
             subtotal = unit_price * qty
 

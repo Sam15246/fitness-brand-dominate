@@ -23,6 +23,7 @@ def register_api_v1_cart_routes(
         payload = request.get_json(silent=True) or {}
         product_id = parse_int(payload.get('product_id'), 0)
         quantity = max(parse_int(payload.get('quantity', 1), 1), 1)
+        variant_id = parse_int(payload.get('variant_id'), 0)
 
         if product_id <= 0:
             return api_error('Valid product_id is required', status=400, code='validation_error')
@@ -31,7 +32,15 @@ def register_api_v1_cart_routes(
         if not product or not product.is_active:
             return api_error('Product not found', status=404, code='not_found')
 
-        variant = get_or_create_default_variant(product)
+        if variant_id > 0:
+            from app.models import ProductVariant
+            variant = ProductVariant.query.filter_by(
+                id=variant_id, product_id=product.id, is_active=True
+            ).first()
+            if not variant:
+                return api_error('Variant not found or inactive', status=404, code='variant_not_found')
+        else:
+            variant = get_or_create_default_variant(product)
         available_stock = variant.stock_quantity if variant else product.stock_quantity
         if available_stock < 1:
             return api_error('Product is out of stock', status=409, code='out_of_stock')
@@ -59,8 +68,9 @@ def register_api_v1_cart_routes(
             db.session.commit()
         else:
             cart = get_session_cart()
-            current_qty = max(parse_int(cart.get(str(product.id), 0), 0), 0)
-            cart[str(product.id)] = min(current_qty + quantity, available_stock)
+            cart_key = f"{product.id}:{variant.id}" if variant else str(product.id)
+            current_qty = max(parse_int(cart.get(cart_key, 0), 0), 0)
+            cart[cart_key] = min(current_qty + quantity, available_stock)
             session['cart'] = cart
             session.modified = True
 
