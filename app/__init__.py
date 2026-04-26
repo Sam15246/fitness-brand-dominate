@@ -1,4 +1,7 @@
 from flask import Flask, jsonify, redirect, request
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_mail import Mail
@@ -7,6 +10,7 @@ from app.models import db, User
 
 # Initialize Flask-Mail (configured in create_app)
 mail = Mail()
+limiter = Limiter(key_func=get_remote_address)
 
 
 def create_app(config=None):
@@ -56,7 +60,17 @@ def create_app(config=None):
     db.init_app(app)
     Migrate(app, db)
     mail.init_app(app)  # Initialize Flask-Mail
-    
+
+    # Initialize CORS
+    CORS(app,
+         origins=app.config.get('CORS_ORIGINS', ['http://localhost:3000']),
+         supports_credentials=True,
+         allow_headers=['Content-Type', 'Accept'],
+         expose_headers=['Content-Type'])
+
+    # Initialize rate limiter
+    limiter.init_app(app)
+
     # Initialize Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)
