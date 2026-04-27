@@ -83,15 +83,21 @@ export default function AdminOrdersPage() {
               <p className="text-sm text-[#d8c19a]">No orders found.</p>
             ) : (
               orders.map((order) => (
-                <div key={order.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#8b6f47]/20 bg-[#120f0c] px-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-[#f2dfc0]">{order.order_number}</p>
-                    <p className="text-xs text-[#cdb793]">{order.guest_name} • {order.guest_email}</p>
-                    <p className="text-xs text-[#cdb793]">{order.status} • {order.total_price_display}</p>
+                <div key={order.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#8b6f47]/20 bg-[#120f0c] px-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-[#f2dfc0]">{order.order_number}</span>
+                      <OrderStatusBadge status={order.status} />
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-4 text-xs text-[#d8c19a]/60">
+                      <span>{order.guest_name}</span>
+                      <span>{order.guest_email}</span>
+                      <span className="text-[#c89e65]">{order.total_price_display}</span>
+                    </div>
                   </div>
                   <Link
                     href={`/admin/orders/${order.id}`}
-                    className="rounded-full border border-[#8b6f47]/60 px-4 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#d8c19a] hover:bg-[#8b6f47] hover:text-[#1d150e]"
+                    className="rounded-md px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#c89e65] transition hover:bg-[#c89e65]/15"
                   >
                     View
                   </Link>
@@ -120,5 +126,22 @@ export default function AdminOrdersPage() {
         </div>
       ) : null}
     </AdminShell>
+  );
+}
+
+const STATUS_STYLES: Record<string, string> = {
+  pending: "bg-[#c89e65]/15 text-[#c89e65]",
+  confirmed: "bg-[#4f7d9a]/15 text-[#b8d8ec]",
+  shipped: "bg-[#6b5bcd]/15 text-[#c4bef0]",
+  delivered: "bg-[#2b4a2b]/60 text-[#a3d9a5]",
+  cancelled: "bg-[#a94442]/15 text-[#f4c2c2]",
+};
+
+function OrderStatusBadge({ status }: { status: string }) {
+  const style = STATUS_STYLES[status] || "bg-[#8b6f47]/15 text-[#d8c19a]";
+  return (
+    <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${style}`}>
+      {status}
+    </span>
   );
 }

@@ -6,7 +6,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 
 from app.business_logic import AffiliateManager, OrderManager
-from app.models import AffiliateProfile, CartItem, CommissionStatus, CouponCode, Order, OrderItem, OrderStatus, PolicyPage, Product, ProductImage, Review, User, UserRole, db
+from app.models import AffiliateProfile, CartItem, CommissionStatus, CouponCode, Order, OrderItem, OrderStatus, PolicyPage, Product, ProductImage, ProductVariant, Review, User, UserRole, db
 from app.routes.api_v1_common import api_error, api_success
 from app.storage import get_storage
 
@@ -1270,3 +1270,127 @@ def register_api_v1_admin_routes(
 
         db.session.commit()
         return api_success(data={'policy': serialize_policy_page(policy)})
+
+    # ──────────────────────────────────────────
+    # Product Variants
+    # ──────────────────────────────────────────
+
+    def _serialize_variant(v):
+        return {
+            'id': v.id,
+            'product_id': v.product_id,
+            'sku': v.sku,
+            'option_values': v.option_values or {},
+            'price_override': v.price_override,
+            'effective_price': v.get_effective_price(),
+            'stock_quantity': v.stock_quantity,
+            'weight_grams': v.get_effective_weight_grams(),
+            'is_active': bool(v.is_active),
+            'created_at': v.created_at.isoformat() + 'Z' if v.created_at else None,
+        }
+
+    @api_v1_bp.get('/admin/products/<int:product_id>/variants')
+    def admin_list_variants(product_id):
+        auth_error = require_admin()
+        if auth_error:
+            return auth_error
+
+        product = Product.query.get(product_id)
+        if not product:
+            return api_error('Product not found', status=404, code='not_found')
+
+        variants = ProductVariant.query.filter_by(product_id=product_id).order_by(ProductVariant.id).all()
+        return api_success(data={'variants': [_serialize_variant(v) for v in variants]})
+
+    @api_v1_bp.post('/admin/products/<int:product_id>/variants')
+    def admin_create_variant(product_id):
+        auth_error = require_admin()
+        if auth_error:
+            return auth_error
+
+        product = Product.query.get(product_id)
+        if not product:
+            return api_error('Product not found', status=404, code='not_found')
+
+        payload = request.get_json(silent=True) or {}
+        sku = (payload.get('sku') or '').strip()
+        option_values = payload.get('option_values') or {}
+        price_override = parse_int(payload.get('price_override'), None)
+        stock_quantity = parse_int(payload.get('stock_quantity'), 0)
+        is_active = parse_bool(payload.get('is_active'), True)
+
+        if not sku or len(sku) < 2:
+            return api_error('SKU must be at least 2 characters', status=400, code='validation_error')
+
+        existing = ProductVariant.query.filter_by(sku=sku).first()
+        if existing:
+            return api_error('A variant with this SKU already exists', status=400, code='duplicate_sku')
+
+        variant = ProductVariant(
+            product_id=product_id,
+            sku=sku,
+            option_values=option_values,
+            price_override=price_override,
+            stock_quantity=max(stock_quantity, 0),
+            is_active=is_active,
+        )
+        db.session.add(variant)
+        db.session.commit()
+
+        return api_success(data={'variant': _serialize_variant(variant)}, status=201)
+
+    @api_v1_bp.put('/admin/products/<int:product_id>/variants/<int:variant_id>')
+    def admin_update_variant(product_id, variant_id):
+        auth_error = require_admin()
+        if auth_error:
+            return auth_error
+
+        variant = ProductVariant.query.filter_by(id=variant_id, product_id=product_id).first()
+        if not variant:
+            return api_error('Variant not found', status=404, code='not_found')
+
+        payload = request.get_json(silent=True) or {}
+
+        if 'sku' in payload:
+            sku = (payload['sku'] or '').strip()
+            if len(sku) < 2:
+                return api_error('SKU must be at least 2 characters', status=400, code='validation_error')
+            existing = ProductVariant.query.filter(ProductVariant.sku == sku, ProductVariant.id != variant_id).first()
+            if existing:
+                return api_error('A variant with this SKU already exists', status=400, code='duplicate_sku')
+            variant.sku = sku
+
+        if 'option_values' in payload:
+            variant.option_values = payload['option_values'] or {}
+        if 'price_override' in payload:
+            variant.price_override = parse_int(payload['price_override'], None)
+        if 'stock_quantity' in payload:
+            variant.stock_quantity = max(parse_int(payload['stock_quantity'], 0), 0)
+        if 'is_active' in payload:
+            variant.is_active = parse_bool(payload['is_active'], True)
+
+        db.session.commit()
+        return api_success(data={'variant': _serialize_variant(variant)})
+
+    @api_v1_bp.delete('/admin/products/<int:product_id>/variants/<int:variant_id>')
+    def admin_delete_variant(product_id, variant_id):
+        auth_error = require_admin()
+        if auth_error:
+            return auth_error
+
+        variant = ProductVariant.query.filter_by(id=variant_id, product_id=product_id).first()
+        if not variant:
+            return api_error('Variant not found', status=404, code='not_found')
+
+        # Prevent deletion if variant is referenced in orders
+        order_item_count = OrderItem.query.filter_by(variant_id=variant_id).count()
+        if order_item_count > 0:
+            return api_error(
+                f'Cannot delete variant — it is referenced in {order_item_count} order(s). Deactivate it instead.',
+                status=400,
+                code='has_orders',
+            )
+
+        db.session.delete(variant)
+        db.session.commit()
+        return api_success(data={'deleted': True})

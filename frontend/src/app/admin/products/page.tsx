@@ -78,7 +78,18 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <AdminShell title="Products" subtitle="Manage product catalog and stock.">
+    <AdminShell
+      title="Products"
+      subtitle="Manage product catalog and stock."
+      actions={
+        <Link
+          href="/admin/products/new"
+          className="rounded-full bg-[#c89e65] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0d0b09] transition hover:bg-[#ddb684]"
+        >
+          + New Product
+        </Link>
+      }
+    >
       <div className="mb-4 grid gap-3 md:grid-cols-4">
         <input
           value={query}
@@ -127,37 +138,57 @@ export default function AdminProductsPage() {
               <p className="text-sm text-[#d8c19a]">No products found.</p>
             ) : (
               items.map((product) => (
-                <div key={product.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#8b6f47]/20 bg-[#120f0c] px-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-[#f2dfc0]">{product.name}</p>
-                    <p className="text-xs text-[#cdb793]">{product.price_display} • Stock {product.stock_quantity} • {product.is_active ? "Active" : "Inactive"}</p>
+                <div
+                  key={product.id}
+                  className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${
+                    product.is_active
+                      ? "border-[#8b6f47]/25 bg-[#120f0c]"
+                      : "border-[#8b6f47]/10 bg-[#120f0c]/60 opacity-70"
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-[#f2dfc0]">{product.name}</p>
+                      <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                        product.is_active
+                          ? "bg-[#2b4a2b]/60 text-[#a3d9a5]"
+                          : "bg-[#a94442]/15 text-[#f4c2c2]"
+                      }`}>
+                        {product.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-4 text-xs text-[#d8c19a]/60">
+                      <span>{product.price_display}</span>
+                      <span>Stock: {product.stock_quantity}</span>
+                      <span>ID: {product.id}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <Link
                       href={`/admin/products/${product.id}/images`}
-                      className="rounded-full border border-[#4f7d9a]/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#b8d8ec] hover:bg-[#4f7d9a] hover:text-[#0f1a22]"
+                      className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#b8d8ec] transition hover:bg-[#4f7d9a]/15"
                     >
                       Images
                     </Link>
                     <Link
                       href={`/admin/products/${product.id}/edit`}
-                      className="rounded-full border border-[#8b6f47]/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#d8c19a] hover:bg-[#8b6f47] hover:text-[#1d150e]"
+                      className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#c89e65] transition hover:bg-[#c89e65]/15"
                     >
                       Edit
                     </Link>
                     <button
                       disabled={savingProductId === product.id || !product.is_active}
                       onClick={() => void handleArchive(product.id)}
-                      className="rounded-full border border-[#8b6f47]/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#d8c19a] disabled:opacity-40"
+                      className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#d8c19a]/70 transition hover:bg-[#8b6f47]/15 disabled:opacity-30"
                     >
                       Archive
                     </button>
                     <button
                       disabled={savingProductId === product.id}
                       onClick={() => void handleHardDelete(product.id)}
-                      className="rounded-full border border-[#a94442]/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#f4c2c2] disabled:opacity-40"
+                      className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#a94442] transition hover:bg-[#a94442]/15 disabled:opacity-30"
                     >
-                      Hard Delete
+                      Delete
                     </button>
                   </div>
                 </div>

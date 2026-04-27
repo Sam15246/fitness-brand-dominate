@@ -100,7 +100,11 @@ export function GoogleSignInButton() {
     document.head.appendChild(script);
 
     return () => {
-      // Keep loaded script cached across auth pages.
+      // Script stays in DOM (cached by browser), but clean up button
+      // to avoid re-initialization issues on remount.
+      if (buttonRef.current) {
+        buttonRef.current.innerHTML = "";
+      }
     };
   }, [router, searchParams]);
 
@@ -111,9 +115,9 @@ export function GoogleSignInButton() {
   return (
     <div className="space-y-2">
       <div ref={buttonRef} className="flex justify-center" />
-      {!ready && !error ? <p className="text-center text-xs text-[#b59a73]">Loading Google sign-in...</p> : null}
+      {!ready && !error ? <p className="text-center text-xs text-[#9a7147]">Loading Google sign-in...</p> : null}
       {error ? (
-        <p role="alert" className="rounded-lg border border-[#a94442]/50 bg-[#2b1414]/70 px-3 py-2 text-sm text-[#f4c2c2]">
+        <p role="alert" className="rounded-xl border border-[#cc8a7b] bg-[#fff0eb] px-3 py-2 text-sm text-[#8a3f33]">
           {error}
         </p>
       ) : null}

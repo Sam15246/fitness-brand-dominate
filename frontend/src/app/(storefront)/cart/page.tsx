@@ -8,7 +8,7 @@ import { clearCart, getCart, removeCartItem, type CartData, updateCartItem } fro
 
 function CartSkeleton() {
   return (
-    <div className="rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-6 text-sm text-[#d4c4a7]">
+    <div className="rounded-2xl border border-[#dcc9ab] bg-[#fff8ec] p-6 text-sm text-[#6f5640]">
       Loading cart...
     </div>
   );
@@ -95,20 +95,24 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0b09] px-6 py-12 text-[#f4eee4]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
       <div className="mx-auto w-full max-w-5xl">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.28em] text-[#b59a73]">Storefront</p>
-            <h1 className="text-brand-display mt-2 text-5xl uppercase tracking-[0.05em]">Cart</h1>
-            <p className="mt-2 text-sm text-[#ccbca1]">{itemCountLabel}</p>
+            <p className="text-sm uppercase tracking-[0.22em] text-[#9a7147]">Storefront</p>
+            <h1 className="text-brand-display mt-2 text-4xl uppercase tracking-[0.05em] text-[#3b2513] sm:text-5xl">Cart</h1>
+            <p className="mt-2 text-sm text-[#6f5640]">{itemCountLabel}</p>
           </div>
           <Link
             href="/products"
-            className="rounded-full border border-[#8b6f47]/50 px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#d9c19a] hover:bg-[#8b6f47] hover:text-[#1d150e]"
+            className="rounded-full border border-[#c7ac84] bg-[#fff2dd] px-5 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7e5935] hover:bg-[#f7e6c8]"
           >
             Continue Shopping
           </Link>
+        </div>
+
+        <div className="mb-5 rounded-xl border border-[#dcc9ab] bg-[#fffaf1] p-3 text-xs text-[#6f5640] sm:text-sm">
+          Fast dispatch in 24-48 hours, secure checkout, and easy returns if something is not right.
         </div>
 
         {error ? (
@@ -118,9 +122,9 @@ export default function CartPage() {
         {loading ? <CartSkeleton /> : null}
 
         {!loading && cart && cart.items.length === 0 ? (
-          <div className="rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-8 text-center">
-            <p className="text-lg text-[#e7d5ba]">Your cart is empty.</p>
-            <p className="mt-2 text-sm text-[#c5b395]">Add products to start checkout.</p>
+          <div className="rounded-2xl border border-[#dcc9ab] bg-[#fff8ec] p-8 text-center">
+            <p className="text-lg text-[#3b2513]">Your cart is empty.</p>
+            <p className="mt-2 text-sm text-[#6f5640]">Add products to start checkout.</p>
             <div className="mt-6">
               <Link
                 href="/products"
@@ -140,10 +144,10 @@ export default function CartPage() {
                 return (
                   <article
                     key={`${item.product_id}-${item.variant_id ?? "default"}`}
-                    className="rounded-2xl border border-[#8b6f47]/25 bg-[#15120f]/85 p-4"
+                    className="rounded-2xl border border-[#dcc9ab] bg-[#fff8ec] p-4"
                   >
                     <div className="flex gap-4">
-                      <div className="h-24 w-24 overflow-hidden rounded-lg border border-[#8b6f47]/20 bg-[#1b1612]">
+                      <div className="h-24 w-24 overflow-hidden rounded-lg border border-[#dcc9ab] bg-[#f5ebdb]">
                         {item.product.primary_image?.thumbnail_url || item.product.primary_image?.url ? (
                           <AppImage
                             src={item.product.primary_image.thumbnail_url || item.product.primary_image.url || ""}
@@ -158,26 +162,26 @@ export default function CartPage() {
 
                       <div className="flex flex-1 flex-col justify-between gap-3">
                         <div>
-                          <h2 className="text-base font-semibold text-[#f0dfc3]">{item.product.name}</h2>
-                          <p className="text-sm text-[#cdbca1]">{item.unit_price_display} each</p>
+                          <h2 className="text-base font-semibold text-[#4f341f]">{item.product.name}</h2>
+                          <p className="text-sm text-[#6f5640]">{item.unit_price_display} each</p>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3">
-                          <div className="inline-flex items-center rounded-full border border-[#8b6f47]/40 bg-[#1d1813]">
+                          <div className="inline-flex items-center rounded-full border border-[#c7ac84] bg-[#fff2dd]">
                             <button
                               type="button"
                               disabled={isPending}
                               onClick={() => handleQuantityChange(item.product_id, Math.max(item.quantity - 1, 0))}
-                              className="px-3 py-1 text-sm text-[#d7c4a8] disabled:opacity-50"
+                              className="px-3 py-1 text-sm text-[#7e5935] disabled:opacity-50"
                             >
                               -
                             </button>
-                            <span className="px-3 py-1 text-sm font-semibold text-[#f0dfc3]">{item.quantity}</span>
+                            <span className="px-3 py-1 text-sm font-semibold text-[#4f341f]">{item.quantity}</span>
                             <button
                               type="button"
                               disabled={isPending}
                               onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}
-                              className="px-3 py-1 text-sm text-[#d7c4a8] disabled:opacity-50"
+                              className="px-3 py-1 text-sm text-[#7e5935] disabled:opacity-50"
                             >
                               +
                             </button>
@@ -195,8 +199,8 @@ export default function CartPage() {
                       </div>
 
                       <div className="text-right">
-                        <p className="text-sm text-[#cdbca1]">Subtotal</p>
-                        <p className="text-base font-bold text-[#f0d4a7]">{item.subtotal_display}</p>
+                        <p className="text-sm text-[#6f5640]">Subtotal</p>
+                        <p className="text-base font-bold text-[#6f4a2c]">{item.subtotal_display}</p>
                       </div>
                     </div>
                   </article>
@@ -204,13 +208,13 @@ export default function CartPage() {
               })}
             </section>
 
-            <aside className="h-fit rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/90 p-5">
-              <h2 className="text-sm uppercase tracking-[0.2em] text-[#d8c19a]">Order Summary</h2>
-              <div className="mt-4 flex items-center justify-between text-sm text-[#d3c1a5]">
+            <aside className="h-fit rounded-2xl border border-[#dcc9ab] bg-[#fff8ec] p-5">
+              <h2 className="text-sm uppercase tracking-[0.16em] text-[#8f673f]">Order Summary</h2>
+              <div className="mt-4 flex items-center justify-between text-sm text-[#6f5640]">
                 <span>Items</span>
                 <span>{cart.count}</span>
               </div>
-              <div className="mt-2 flex items-center justify-between text-base font-semibold text-[#f0dfc3]">
+              <div className="mt-2 flex items-center justify-between text-base font-semibold text-[#4f341f]">
                 <span>Total</span>
                 <span>{cart.total_display}</span>
               </div>
@@ -222,14 +226,34 @@ export default function CartPage() {
                 Proceed to Checkout
               </Link>
 
+              <div className="mt-4 rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-3 text-xs text-[#6f5640]">
+                <p className="font-semibold uppercase tracking-[0.08em] text-[#8f673f]">Checkout Confidence</p>
+                <p className="mt-1">Encrypted checkout process</p>
+                <p className="mt-1">Dispatch target: 24-48 business hours</p>
+                <p className="mt-1">Simple return support within policy window</p>
+                <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#7e5935]">
+                  <Link href="/shipping" className="hover:text-[#5f3f24]">
+                    Shipping Policy
+                  </Link>
+                  <Link href="/returns" className="hover:text-[#5f3f24]">
+                    Returns Policy
+                  </Link>
+                  <Link href="/terms" className="hover:text-[#5f3f24]">
+                    Terms
+                  </Link>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={handleClear}
                 disabled={clearing}
-                className="mt-3 w-full rounded-full border border-[#8b6f47]/50 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#d8c19a] hover:bg-[#8b6f47] hover:text-[#1d150e] disabled:opacity-60"
+                className="mt-3 w-full rounded-full border border-[#c7ac84] px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#7e5935] hover:bg-[#f7e6c8] disabled:opacity-60"
               >
                 {clearing ? "Clearing..." : "Clear Cart"}
               </button>
+
+              <p className="mt-3 text-xs text-[#7a6048]">Need help before ordering? Contact support from the Contact page.</p>
             </aside>
           </div>
         ) : null}

@@ -50,50 +50,50 @@ export default function OrderConfirmationClient() {
     : "/order/status";
 
   return (
-    <div className="min-h-screen bg-[#0d0b09] px-6 py-12 text-[#f4eee4]">
-      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/85 p-8 text-center">
-        <p className="text-sm uppercase tracking-[0.28em] text-[#b59a73]">Order Placed</p>
-        <h1 className="text-brand-display mt-2 text-5xl uppercase tracking-[0.05em]">Thank You</h1>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
+      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-8 text-center shadow-[0_8px_24px_rgba(146,104,56,0.08)]">
+        <p className="text-sm uppercase tracking-[0.28em] text-[#9a7147]">Order Placed</p>
+        <h1 className="text-brand-display mt-2 text-5xl uppercase tracking-[0.05em] text-[#3b2513]">Thank You</h1>
 
         {orderNumber ? (
-          <p className="mt-4 text-base text-[#dbc9ac]">
-            Your order number is <span className="font-semibold text-[#f2dfc0]">{orderNumber}</span>.
+          <p className="mt-4 text-base text-[#6f5640]">
+            Your order number is <span className="font-semibold text-[#4f341f]">{orderNumber}</span>.
           </p>
         ) : (
-          <p className="mt-4 text-base text-[#dbc9ac]">Your order has been placed successfully.</p>
+          <p className="mt-4 text-base text-[#6f5640]">Your order has been placed successfully.</p>
         )}
 
-        <p className="mt-3 text-sm text-[#c8b799]">
+        <p className="mt-3 text-sm text-[#7a6048]">
           Complete your confirmation in WhatsApp, then you can track the order status anytime.
         </p>
 
         {loadingOrder ? (
-          <div className="mt-6 rounded-xl border border-[#8b6f47]/25 bg-[#1b1612] p-4 text-sm text-[#d3c1a5]">Loading order details...</div>
+          <div className="mt-6 rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-4 text-sm text-[#6f5640]">Loading order details...</div>
         ) : null}
 
         {order ? (
           <div className="mt-6 space-y-4 text-left">
-            <div className="rounded-xl border border-[#8b6f47]/25 bg-[#1b1612] p-4">
-              <p className="text-xs uppercase tracking-[0.14em] text-[#b59a73]">Products Ordered</p>
+            <div className="rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#8f673f]">Products Ordered</p>
               <div className="mt-3 space-y-3">
                 {order.items.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-[#8b6f47]/20 bg-[#16120e] p-3 text-sm">
-                    <p className="font-medium text-[#eddcc0]">{item.product_name}</p>
-                    <p className="mt-1 text-[#d3c1a5]">
+                  <div key={item.id} className="rounded-lg border border-[#decdb2] bg-[#fef5e8] p-3 text-sm">
+                    <p className="font-medium text-[#4f341f]">{item.product_name}</p>
+                    <p className="mt-1 text-[#6f5640]">
                       Qty {item.quantity} x {item.unit_price_display} = {item.subtotal_display}
                     </p>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-[#8b6f47]/25 pt-3 text-sm text-[#d3c1a5]">
+              <div className="mt-3 flex items-center justify-between border-t border-[#dcc9ab] pt-3 text-sm text-[#6f5640]">
                 <span>Order Total</span>
-                <span className="text-base font-semibold text-[#f0dfc3]">{order.total_price_display}</span>
+                <span className="text-base font-semibold text-[#4f341f]">{order.total_price_display}</span>
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#8b6f47]/25 bg-[#1b1612] p-4 text-sm text-[#d3c1a5]">
-              <p className="text-xs uppercase tracking-[0.14em] text-[#b59a73]">Delivery Details</p>
-              <p className="mt-2 font-medium text-[#eddcc0]">{order.guest_name}</p>
+            <div className="rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-4 text-sm text-[#6f5640]">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#8f673f]">Delivery Details</p>
+              <p className="mt-2 font-medium text-[#4f341f]">{order.guest_name}</p>
               <p>{order.guest_phone}</p>
               <p>{order.guest_email}</p>
               <p className="mt-2">{order.address}</p>
@@ -114,17 +114,36 @@ export default function OrderConfirmationClient() {
 
           <Link
             href={statusUrl}
-            className="rounded-full border border-[#8b6f47]/60 px-6 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#d8c19a] hover:bg-[#8b6f47] hover:text-[#1d150e]"
+            className="rounded-full border border-[#c7ac84] px-6 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#7e5935] hover:bg-[#f7e6c8]"
           >
             Track Order
           </Link>
 
           <Link
             href="/products"
-            className="rounded-full border border-[#8b6f47]/45 px-6 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#cfbc9d] hover:bg-[#2a221a]"
+            className="rounded-full border border-[#c7ac84] px-6 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#7e5935] hover:bg-[#f7e6c8]"
           >
             Continue Shopping
           </Link>
+        </div>
+
+        <div className="mt-6 rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-4 text-left text-sm text-[#6f5640]">
+          <p className="text-xs uppercase tracking-[0.14em] text-[#8f673f]">Need Help After Ordering?</p>
+          <p className="mt-2">For shipping timelines, returns, or support, use the quick links below.</p>
+          <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#7e5935]">
+            <Link href="/shipping" className="hover:text-[#3b2513]">
+              Shipping
+            </Link>
+            <Link href="/returns" className="hover:text-[#3b2513]">
+              Returns
+            </Link>
+            <Link href="/contact" className="hover:text-[#3b2513]">
+              Contact
+            </Link>
+            <Link href="/terms" className="hover:text-[#3b2513]">
+              Terms
+            </Link>
+          </div>
         </div>
       </div>
     </div>

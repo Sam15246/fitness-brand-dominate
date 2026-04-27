@@ -38,11 +38,14 @@ def resolve_image_url(path: str, size: str = 'original') -> str | None:
     if normalized.startswith('http://') or normalized.startswith('https://'):
         return normalized
 
-    normalized = normalized.lstrip('/')
-    if normalized.startswith('static/'):
+    # Paths under /static are served by Flask
+    if normalized.lstrip('/').startswith('static/'):
+        normalized = normalized.lstrip('/')
         normalized = normalized[len('static/'):]
+        return url_for('static', filename=normalized)
 
-    return url_for('static', filename=normalized)
+    # All other absolute paths (e.g. /1.png) are served by the frontend as-is
+    return normalized
 
 
 def resolve_image_thumbnail_url(path: str) -> str | None:

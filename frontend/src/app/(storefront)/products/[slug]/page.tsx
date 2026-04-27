@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import ImageGallery from "@/components/product/ImageGallery";
 import ReviewSubmissionCard from "@/components/reviews/ReviewSubmissionCard";
-import AppImage from "@/components/ui/AppImage";
 import { AddToCartButton } from "@/features/cart";
 import { fetchProductBySlug } from "@/features/products";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -22,104 +22,69 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0b09] px-6 py-12 text-[#f4eee4]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
       <div className="mx-auto w-full max-w-6xl">
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/products" className="text-xs uppercase tracking-[0.18em] text-[#b59a73] hover:text-[#d8c19a]">
+        <div className="flex items-center justify-between gap-4 text-xs uppercase tracking-[0.14em]">
+          <Link href="/products" className="text-[#8f673f] hover:text-[#6e4d2f]">
             Back to products
           </Link>
-          <Link href="/cart" className="text-xs uppercase tracking-[0.18em] text-[#b59a73] hover:text-[#d8c19a]">
+          <Link href="/cart" className="text-[#8f673f] hover:text-[#6e4d2f]">
             View cart
           </Link>
         </div>
 
-        <section className="mt-6 grid gap-8 lg:grid-cols-2">
-          <div className="space-y-4">
-            <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-[#8b6f47]/30 bg-[#171411]">
-              {product.images[0]?.url ? (
-                <AppImage
-                  src={product.images[0].url}
-                  alt={product.name}
-                  width={1200}
-                  height={900}
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="h-full w-full object-cover"
-                  priority
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.2em] text-[#9f8a6b]">
-                  No image
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {product.images.slice(0, 4).map((image) => (
-                <div key={image.id} className="aspect-square overflow-hidden rounded-lg border border-[#8b6f47]/25 bg-[#171411]">
-                  {image.thumbnail_url || image.url ? (
-                    <AppImage
-                      src={image.thumbnail_url || image.url || ""}
-                      alt={product.name}
-                      width={320}
-                      height={320}
-                      sizes="(max-width: 1024px) 25vw, 160px"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
+        <section className="mt-6 grid gap-6 lg:grid-cols-2 lg:gap-8">
+          <ImageGallery images={product.images} productName={product.name} />
 
-          <div>
-            <p className="text-sm uppercase tracking-[0.26em] text-[#b59a73]">DOMINATE Product</p>
-            <h1 className="text-brand-display mt-2 text-5xl uppercase tracking-[0.04em]">{product.name}</h1>
-            <p className="mt-4 text-base leading-7 text-[#d7c7ad]">{product.description}</p>
+          <div className="rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-5 shadow-[0_8px_24px_rgba(146,104,56,0.08)] sm:p-6">
+            <p className="text-xs uppercase tracking-[0.24em] text-[#9a7147]">DOMINATE Product</p>
+            <h1 className="text-brand-display mt-2 text-4xl uppercase tracking-[0.04em] text-[#3b2513] sm:text-5xl">{product.name}</h1>
+            <p className="mt-4 text-sm leading-6 text-[#6f5640] sm:text-base sm:leading-7">{product.description}</p>
 
             <div className="mt-6 flex items-center gap-4">
-              <span className="text-2xl font-bold text-[#f0d4a7]">{product.price_display}</span>
+              <span className="text-2xl font-bold text-[#6f4a2c]">{product.price_display}</span>
               {product.discount_percentage > 0 ? (
-                <span className="rounded-full border border-[#8b6f47]/50 px-3 py-1 text-xs uppercase tracking-[0.16em] text-[#e0c59f]">
+                <span className="rounded-full border border-[#c7ac84] bg-[#fff2dd] px-3 py-1 text-xs uppercase tracking-[0.12em] text-[#8b5e34]">
                   {product.discount_percentage}% off
                 </span>
               ) : null}
             </div>
 
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border border-[#dcc9ab] bg-[#fef5e8] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6b4a2e]">
+                {product.in_stock ? "In stock" : "Out of stock"}
+              </span>
+              <span className="rounded-full border border-[#dcc9ab] bg-[#fef5e8] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6b4a2e]">
+                {product.review_count} reviews
+              </span>
+            </div>
+
             <div className="mt-6">
-              <AddToCartButton productId={product.id} defaultQuantity={1} maxQuantity={product.stock_quantity} showBuyNow />
+              <AddToCartButton
+                productId={product.id}
+                defaultQuantity={1}
+                maxQuantity={product.stock_quantity}
+                showBuyNow
+                variants={product.variants}
+              />
             </div>
 
-            <p className="mt-2 text-sm text-[#c7b69d]">{product.review_count} reviews</p>
-
-            <div className="mt-8 rounded-xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-4">
-              <h2 className="text-sm uppercase tracking-[0.2em] text-[#d8c19a]">Variants</h2>
-              {product.variants.length === 0 ? (
-                <p className="mt-2 text-sm text-[#c7b69d]">No variants configured.</p>
-              ) : (
-                <ul className="mt-3 space-y-2 text-sm text-[#e5d7c1]">
-                  {product.variants.map((variant) => (
-                    <li key={variant.id} className="rounded-lg border border-[#8b6f47]/20 bg-[#1c1712]/70 px-3 py-2">
-                      <span className="font-semibold">{variant.sku}</span>
-                      <span className="ml-2 text-[#c7b69d]">Stock: {variant.stock_quantity}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <p className="mt-3 text-xs text-[#7a6048]">Secure checkout and order tracking available after purchase.</p>
           </div>
         </section>
 
-        <section className="mt-10 rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-6">
-          <h2 className="text-brand-display text-3xl uppercase tracking-[0.05em] text-[#e9d3ae]">Reviews</h2>
+        <section className="mt-8 rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-5 shadow-[0_8px_24px_rgba(146,104,56,0.08)] sm:p-6">
+          <h2 className="text-brand-display text-3xl uppercase tracking-[0.05em] text-[#3b2513]">Reviews</h2>
           {product.reviews.length === 0 ? (
-            <p className="mt-3 text-sm text-[#c7b69d]">No approved reviews yet.</p>
+            <p className="mt-3 text-sm text-[#6f5640]">No approved reviews yet.</p>
           ) : (
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               {product.reviews.map((review) => (
-                <article key={review.id} className="rounded-xl border border-[#8b6f47]/25 bg-[#1b1612]/80 p-4">
-                  <p className="text-sm font-semibold text-[#f1ddbe]">{review.name}</p>
-                  <p className="text-xs uppercase tracking-[0.15em] text-[#b59a73]">{review.rating} / 5</p>
-                  {review.title ? <p className="mt-2 text-sm font-medium text-[#ebdbc3]">{review.title}</p> : null}
-                  <p className="mt-2 text-sm text-[#d7c7ad]">{review.comment}</p>
+                <article key={review.id} className="rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-4">
+                  <p className="text-sm font-semibold text-[#4f341f]">{review.name}</p>
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#8f673f]">{review.rating} / 5</p>
+                  {review.title ? <p className="mt-2 text-sm font-medium text-[#4f341f]">{review.title}</p> : null}
+                  <p className="mt-2 text-sm text-[#6f5640]">{review.comment}</p>
                 </article>
               ))}
             </div>

@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import {
   getCheckoutPreview,
   getCurrentUser,
@@ -88,6 +90,16 @@ export default function CheckoutClient() {
   const [saveAddress, setSaveAddress] = useState(false);
   const [setDefaultAddress, setSetDefaultAddress] = useState(false);
   const [addressLabel, setAddressLabel] = useState("Home");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  const phoneDigits = form.phone_number.replace(/\D/g, "");
+  const pincodeDigits = form.pincode.replace(/\D/g, "");
+  const emailValue = form.email.trim();
+
+  const phoneError = phoneDigits.length > 0 && phoneDigits.length < 10 ? "Enter at least 10 digits." : null;
+  const pincodeError = pincodeDigits.length > 0 && pincodeDigits.length < 5 ? "Enter at least 5 digits." : null;
+  const emailError = emailValue.length > 0 && !/^\S+@\S+\.\S+$/.test(emailValue) ? "Enter a valid email address." : null;
+  const hasFieldErrors = Boolean(phoneError || pincodeError || emailError);
 
   async function loadPreview(couponCode?: string) {
     setLoadingPreview(true);
@@ -214,10 +226,23 @@ export default function CheckoutClient() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitAttempted(true);
     setError(null);
+
+    if (hasFieldErrors) {
+      setError("Please correct highlighted fields before placing your order.");
+      return;
+    }
+
+    if (!preview || preview.cart.items.length === 0) {
+      setError("Your cart is empty.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      // Try backend-first
       const result = await placeOrder({
         customer_name: form.customer_name,
         phone_number: form.phone_number,
@@ -236,18 +261,46 @@ export default function CheckoutClient() {
 
       const confirmationUrl = `/order/confirmation?order=${encodeURIComponent(result.order.order_number)}&wa=${encodeURIComponent(result.whatsapp_url)}&email=${encodeURIComponent(form.email)}`;
       router.push(confirmationUrl);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to place order");
+    } catch {
+      // Backend failed — fallback to direct WhatsApp
+      const waUrl = buildWhatsAppUrl({
+        customer: {
+          name: form.customer_name,
+          phone: form.phone_number,
+          email: form.email,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode,
+        },
+        items: preview.cart.items.map((item) => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })),
+        total: preview.cart.total,
+        discount: preview.discount,
+        coupon_code: form.coupon_code.trim() || undefined,
+      });
+
+      window.open(waUrl, "_blank");
+      router.push(`/order/confirmation?wa=${encodeURIComponent(waUrl)}&email=${encodeURIComponent(form.email)}&fallback=true`);
+    } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0b09] px-6 py-12 text-[#f4eee4]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 pb-24 text-[#302115] sm:px-6 sm:py-8 sm:pb-8">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-8">
-          <p className="text-sm uppercase tracking-[0.28em] text-[#b59a73]">Storefront</p>
-          <h1 className="text-brand-display mt-2 text-5xl uppercase tracking-[0.05em]">Checkout</h1>
+          <p className="text-sm uppercase tracking-[0.22em] text-[#9a7147]">Storefront</p>
+          <h1 className="text-brand-display mt-2 text-4xl uppercase tracking-[0.05em] text-[#3b2513] sm:text-5xl">Checkout</h1>
+          <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.08em] sm:text-xs">
+            <span className="rounded-full border border-[#dcc9ab] bg-[#fef5e8] px-3 py-1 text-[#6b4a2e]">Secure checkout</span>
+            <span className="rounded-full border border-[#dcc9ab] bg-[#fef5e8] px-3 py-1 text-[#6b4a2e]">Dispatch in 24-48h</span>
+            <span className="rounded-full border border-[#dcc9ab] bg-[#fef5e8] px-3 py-1 text-[#6b4a2e]">Easy return support</span>
+          </div>
         </div>
 
         {error ? (
@@ -255,13 +308,13 @@ export default function CheckoutClient() {
         ) : null}
 
         {loadingPreview ? (
-          <div className="rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-6 text-sm text-[#d4c4a7]">Loading checkout...</div>
+          <div className="rounded-2xl border border-[#dcc9ab] bg-[#fff8ec] p-6 text-sm text-[#6f5640]">Loading checkout...</div>
         ) : null}
 
         {!loadingPreview && preview ? (
           <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-            <form onSubmit={handleSubmit} className="rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/85 p-5">
-              <h2 className="text-sm uppercase tracking-[0.2em] text-[#d8c19a]">Delivery Details</h2>
+            <form id="checkout-form" onSubmit={handleSubmit} className="rounded-2xl border border-[#dcc9ab] bg-[#fff8ec] p-5">
+              <h2 className="text-sm uppercase tracking-[0.16em] text-[#8f673f]">Delivery Details</h2>
 
               {isAuthenticated && savedAddresses.length > 0 ? (
                 <div className="mt-4">
@@ -272,7 +325,7 @@ export default function CheckoutClient() {
                     id="saved_address_id"
                     value={selectedAddressId || ""}
                     onChange={(event) => handleSavedAddressChange(event.target.value)}
-                    className="w-full rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                    className="w-full rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
                   >
                     <option value="">Enter address manually</option>
                     {savedAddresses.map((addr) => (
@@ -287,33 +340,53 @@ export default function CheckoutClient() {
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <input
                   placeholder="Full name"
+                  autoComplete="name"
+                  required
                   value={form.customer_name}
                   onChange={(e) => setForm((prev) => ({ ...prev, customer_name: e.target.value }))}
-                  className="rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                  className="rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
                 />
-                <input
-                  placeholder="Phone number"
-                  value={form.phone_number}
-                  onChange={(e) => setForm((prev) => ({ ...prev, phone_number: e.target.value }))}
-                  className="rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
-                />
-                <input
-                  placeholder="Email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                  className="rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
-                />
+                <div>
+                  <input
+                    placeholder="Phone number"
+                    autoComplete="tel"
+                    inputMode="numeric"
+                    minLength={10}
+                    maxLength={15}
+                    required
+                    value={form.phone_number}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, phone_number: e.target.value.replace(/\D/g, "").slice(0, 15) }))
+                    }
+                    className="w-full rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
+                  />
+                  {submitAttempted && phoneError ? <p className="mt-1 text-xs text-[#a94442]">{phoneError}</p> : null}
+                </div>
+                <div>
+                  <input
+                    placeholder="Email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={form.email}
+                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                    className="w-full rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
+                  />
+                  {submitAttempted && emailError ? <p className="mt-1 text-xs text-[#a94442]">{emailError}</p> : null}
+                </div>
                 <input
                   placeholder="City"
+                  autoComplete="address-level2"
+                  required
                   value={form.city}
                   onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
-                  className="rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                  className="rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
                 />
                 <select
+                  required
                   value={form.state}
                   onChange={(e) => setForm((prev) => ({ ...prev, state: e.target.value }))}
-                  className="rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                  className="rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
                 >
                   <option value="">Select state</option>
                   {INDIA_STATES.map((stateValue) => (
@@ -322,23 +395,35 @@ export default function CheckoutClient() {
                     </option>
                   ))}
                 </select>
-                <input
-                  placeholder="Pincode"
-                  value={form.pincode}
-                  onChange={(e) => setForm((prev) => ({ ...prev, pincode: e.target.value }))}
-                  className="rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
-                />
+                <div>
+                  <input
+                    placeholder="Pincode"
+                    autoComplete="postal-code"
+                    inputMode="numeric"
+                    minLength={5}
+                    maxLength={10}
+                    required
+                    value={form.pincode}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, pincode: e.target.value.replace(/\D/g, "").slice(0, 10) }))
+                    }
+                    className="w-full rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
+                  />
+                  {submitAttempted && pincodeError ? <p className="mt-1 text-xs text-[#a94442]">{pincodeError}</p> : null}
+                </div>
               </div>
 
               <textarea
                 placeholder="Full delivery address"
+                autoComplete="street-address"
+                required
                 value={form.address}
                 onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value }))}
                 rows={4}
-                className="mt-3 w-full rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                className="mt-3 w-full rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
               />
 
-              <label className="mt-3 flex items-center gap-2 text-sm text-[#d7c7ad]">
+              <label className="mt-3 flex items-center gap-2 text-sm text-[#6f5640]">
                 <input
                   type="checkbox"
                   checked={form.email_opt_in}
@@ -348,8 +433,8 @@ export default function CheckoutClient() {
               </label>
 
               {isAuthenticated ? (
-                <div className="mt-4 rounded-lg border border-[#8b6f47]/35 bg-[#1a1510] p-4">
-                  <label className="flex items-center gap-2 text-sm text-[#d7c7ad]">
+                <div className="mt-4 rounded-lg border border-[#dcc9ab] bg-[#fffefb] p-4">
+                  <label className="flex items-center gap-2 text-sm text-[#6f5640]">
                     <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
                     Save this address to my address book
                   </label>
@@ -359,13 +444,13 @@ export default function CheckoutClient() {
                       <select
                         value={addressLabel}
                         onChange={(e) => setAddressLabel(e.target.value)}
-                        className="rounded-lg border border-[#8b6f47]/45 bg-[#130f0b] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                        className="rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
                       >
                         <option value="Home">Home</option>
                         <option value="Work">Work</option>
                         <option value="Other">Other</option>
                       </select>
-                      <label className="flex items-center gap-2 text-sm text-[#d7c7ad]">
+                      <label className="flex items-center gap-2 text-sm text-[#6f5640]">
                         <input
                           type="checkbox"
                           checked={setDefaultAddress}
@@ -381,19 +466,34 @@ export default function CheckoutClient() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="mt-6 w-full rounded-full bg-[#c89e65] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#1d150e] hover:bg-[#ddb684] disabled:opacity-60"
+                className="mt-6 hidden w-full rounded-full bg-[#c89e65] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#1d150e] hover:bg-[#ddb684] disabled:opacity-60 lg:block"
               >
                 {submitting ? "Placing Order..." : "Place Order On WhatsApp"}
               </button>
+
+              <p className="mt-3 text-xs text-[#7a6048]">
+                By placing an order, you agree to our shipping, returns, and support policy terms.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#7e5935]">
+                <Link href="/shipping" className="hover:text-[#5f3f24]">
+                  Shipping Policy
+                </Link>
+                <Link href="/returns" className="hover:text-[#5f3f24]">
+                  Returns Policy
+                </Link>
+                <Link href="/terms" className="hover:text-[#5f3f24]">
+                  Terms
+                </Link>
+              </div>
             </form>
 
-            <aside className="h-fit rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/90 p-5">
-              <h2 className="text-sm uppercase tracking-[0.2em] text-[#d8c19a]">Order Summary</h2>
+            <aside className="h-fit rounded-2xl border border-[#dcc9ab] bg-[#fff8ec] p-5">
+              <h2 className="text-sm uppercase tracking-[0.16em] text-[#8f673f]">Order Summary</h2>
 
               <div className="mt-4 space-y-3">
                 {preview.cart.items.map((item) => (
-                  <div key={`${item.product_id}-${item.variant_id ?? "default"}`} className="text-sm text-[#d3c1a5]">
-                    <p className="font-medium text-[#eddcc0]">{item.product.name}</p>
+                  <div key={`${item.product_id}-${item.variant_id ?? "default"}`} className="text-sm text-[#6f5640]">
+                    <p className="font-medium text-[#4f341f]">{item.product.name}</p>
                     <p>
                       Qty {item.quantity} x {item.unit_price_display}
                     </p>
@@ -401,19 +501,19 @@ export default function CheckoutClient() {
                 ))}
               </div>
 
-              <div className="mt-4 rounded-lg border border-[#8b6f47]/30 bg-[#1a1510] p-3">
+              <div className="mt-4 rounded-lg border border-[#dcc9ab] bg-[#fffefb] p-3">
                 <div className="flex gap-2">
                   <input
                     placeholder="Coupon code"
                     value={form.coupon_code}
                     onChange={(e) => setForm((prev) => ({ ...prev, coupon_code: e.target.value.toUpperCase() }))}
-                    className="flex-1 rounded-lg border border-[#8b6f47]/45 bg-[#130f0b] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                    className="flex-1 rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
                   />
                   <button
                     type="button"
                     disabled={applyingCoupon}
                     onClick={handleApplyCoupon}
-                    className="rounded-lg border border-[#8b6f47]/50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#d8c19a] hover:bg-[#8b6f47] hover:text-[#1d150e] disabled:opacity-60"
+                    className="rounded-lg border border-[#c7ac84] px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7e5935] hover:bg-[#f7e6c8] disabled:opacity-60"
                   >
                     {applyingCoupon ? "Applying..." : "Apply"}
                   </button>
@@ -425,7 +525,7 @@ export default function CheckoutClient() {
                 ) : null}
               </div>
 
-              <div className="mt-4 space-y-2 text-sm text-[#d3c1a5]">
+              <div className="mt-4 space-y-2 text-sm text-[#6f5640]">
                 <div className="flex items-center justify-between">
                   <span>Subtotal</span>
                   <span>{preview.cart.total_display}</span>
@@ -434,12 +534,38 @@ export default function CheckoutClient() {
                   <span>Discount</span>
                   <span>- {preview.discount_display}</span>
                 </div>
-                <div className="flex items-center justify-between text-base font-semibold text-[#f0dfc3]">
+                <div className="flex items-center justify-between text-base font-semibold text-[#4f341f]">
                   <span>Payable</span>
                   <span>{preview.payable_total_display}</span>
                 </div>
               </div>
+
+              <div className="mt-4 rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-3 text-xs text-[#6f5640]">
+                <p className="font-semibold uppercase tracking-[0.08em] text-[#8f673f]">Why Order With Confidence</p>
+                <p className="mt-1">Order confirmation and updates sent promptly.</p>
+                <p className="mt-1">Support available for delivery and return queries.</p>
+                <p className="mt-1">No hidden fees beyond the payable amount shown.</p>
+              </div>
             </aside>
+          </div>
+        ) : null}
+
+        {!loadingPreview && preview ? (
+          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#dcc9ab] bg-[#fff8ec]/95 px-4 py-3 backdrop-blur-sm lg:hidden">
+            <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8f673f]">Payable</p>
+                <p className="text-base font-bold text-[#4f341f]">{preview.payable_total_display}</p>
+              </div>
+              <button
+                type="submit"
+                form="checkout-form"
+                disabled={submitting}
+                className="rounded-full bg-[#c89e65] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1d150e] hover:bg-[#ddb684] disabled:opacity-60"
+              >
+                {submitting ? "Placing..." : "Place Order"}
+              </button>
+            </div>
           </div>
         ) : null}
       </div>

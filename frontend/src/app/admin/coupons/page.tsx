@@ -76,7 +76,18 @@ export default function AdminCouponsPage() {
   }
 
   return (
-    <AdminShell title="Coupons" subtitle="Manage affiliate and promotional coupon codes.">
+    <AdminShell
+      title="Coupons"
+      subtitle="Manage affiliate and promotional coupon codes."
+      actions={
+        <Link
+          href="/admin/coupons/new"
+          className="rounded-full bg-[#c89e65] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0d0b09] transition hover:bg-[#ddb684]"
+        >
+          + New Coupon
+        </Link>
+      }
+    >
       <div className="mb-4 grid gap-3 md:grid-cols-4">
         <input
           value={q}
@@ -122,33 +133,59 @@ export default function AdminCouponsPage() {
         <div className="rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-5">
           <div className="space-y-3">
             {items.map((item) => (
-              <div key={item.id} className="rounded-lg border border-[#8b6f47]/20 bg-[#120f0c] px-3 py-2">
-                <p className="text-sm font-medium text-[#f2dfc0]">{item.code} • {item.discount_display}</p>
-                <p className="text-xs text-[#cdb793]">{item.coupon_type} • Uses {item.current_uses}/{item.max_uses ?? "∞"} • {item.is_active ? "Active" : "Inactive"}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <Link
-                    href={`/admin/coupons/${item.id}/edit`}
-                    className="rounded-full border border-[#8b6f47]/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#d8c19a] hover:bg-[#8b6f47] hover:text-[#1d150e]"
-                  >
-                    Edit
-                  </Link>
+              <div
+                key={item.id}
+                className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${
+                  item.is_active
+                    ? "border-[#8b6f47]/25 bg-[#120f0c]"
+                    : "border-[#8b6f47]/10 bg-[#120f0c]/60 opacity-70"
+                }`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-md bg-[#8b6f47]/15 px-2 py-0.5 font-mono text-xs font-semibold text-[#f2dfc0]">{item.code}</span>
+                    <span className="text-sm text-[#c89e65]">{item.discount_display}</span>
+                    <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                      item.is_active
+                        ? "bg-[#2b4a2b]/60 text-[#a3d9a5]"
+                        : "bg-[#a94442]/15 text-[#f4c2c2]"
+                    }`}>
+                      {item.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-xs text-[#d8c19a]/60">
+                    <span className="capitalize">{item.coupon_type}</span>
+                    <span>Uses: {item.current_uses}/{item.max_uses ?? "\u221E"}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Link
                     href={`/admin/coupons/${item.id}/stats`}
-                    className="rounded-full border border-[#4f7d9a]/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#b8d8ec] hover:bg-[#4f7d9a] hover:text-[#0f1a22]"
+                    className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#b8d8ec] transition hover:bg-[#4f7d9a]/15"
                   >
                     Stats
+                  </Link>
+                  <Link
+                    href={`/admin/coupons/${item.id}/edit`}
+                    className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#c89e65] transition hover:bg-[#c89e65]/15"
+                  >
+                    Edit
                   </Link>
                   <button
                     disabled={savingCouponId === item.id}
                     onClick={() => void handleToggle(item)}
-                    className="rounded-full border border-[#5b8f45]/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#c7e5b9] disabled:opacity-40"
+                    className={`rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition disabled:opacity-30 ${
+                      item.is_active
+                        ? "text-[#f4c2c2] hover:bg-[#a94442]/15"
+                        : "text-[#a3d9a5] hover:bg-[#2b4a2b]/30"
+                    }`}
                   >
                     {item.is_active ? "Deactivate" : "Activate"}
                   </button>
                   <button
                     disabled={savingCouponId === item.id}
                     onClick={() => void handleDelete(item)}
-                    className="rounded-full border border-[#a94442]/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#f4c2c2] disabled:opacity-40"
+                    className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#a94442] transition hover:bg-[#a94442]/15 disabled:opacity-30"
                   >
                     Delete
                   </button>

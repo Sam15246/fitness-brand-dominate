@@ -37,6 +37,8 @@ def api_error(message, status=400, code=None, meta=None):
 
 
 def serialize_current_user(user):
+    from app.models import AffiliateProfile
+    affiliate = AffiliateProfile.query.filter_by(user_id=user.id, is_active=True).first()
     return {
         'id': user.id,
         'name': user.name,
@@ -47,6 +49,7 @@ def serialize_current_user(user):
         'auth_provider': user.auth_provider,
         'avatar_url': user.avatar_url,
         'full_name': user.full_name,
+        'is_affiliate': affiliate is not None,
         'created_at': user.created_at.isoformat() + 'Z' if user.created_at else None,
         'updated_at': user.updated_at.isoformat() + 'Z' if user.updated_at else None,
     }

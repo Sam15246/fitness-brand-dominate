@@ -36,15 +36,15 @@ export default async function LegacyOrderStartPage({
   const formUrl = `/order/${product.id}/form?qty=${qty}${coupon ? `&coupon=${encodeURIComponent(coupon)}` : ""}${ref ? `&ref=${encodeURIComponent(ref)}` : ""}`;
 
   return (
-    <div className="min-h-screen bg-[#0d0b09] px-6 py-14 text-[#f4eee4]">
-      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/85 p-7">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#b59a73]">Legacy Order Link</p>
-        <h1 className="text-brand-display mt-2 text-4xl uppercase tracking-[0.04em] text-[#eed8b1]">Start Order</h1>
-        <p className="mt-4 text-sm text-[#d4c4a7]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
+      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-7 shadow-[0_8px_24px_rgba(146,104,56,0.08)]">
+        <p className="text-xs uppercase tracking-[0.2em] text-[#9a7147]">Legacy Order Link</p>
+        <h1 className="text-brand-display mt-2 text-4xl uppercase tracking-[0.04em] text-[#3b2513]">Start Order</h1>
+        <p className="mt-4 text-sm text-[#6f5640]">
           You are placing an order for <span className="font-semibold text-[#f1ddbe]">{product.name}</span>.
         </p>
 
-        <div className="mt-5 rounded-xl border border-[#8b6f47]/25 bg-[#1a1510] p-4 text-sm text-[#d7c7ad]">
+        <div className="mt-5 rounded-xl border border-[#dcc9ab] bg-[#fffefb] p-4 text-sm text-[#6f5640]">
           <p>Price: {product.price_display}</p>
           <p>Quantity: {qty}</p>
           {coupon ? <p>Coupon: {coupon.toUpperCase()}</p> : null}
@@ -60,7 +60,7 @@ export default async function LegacyOrderStartPage({
           </Link>
           <Link
             href={`/products/${encodeURIComponent(product.slug)}`}
-            className="rounded-full border border-[#8b6f47]/45 px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#d8c19a] hover:bg-[#8b6f47]/20"
+            className="rounded-full border border-[#c7ac84] px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#7e5935] hover:bg-[#f7e6c8]"
           >
             View Product Page
           </Link>

@@ -131,15 +131,40 @@ export default function AdminUsersPage() {
         <div className="rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-5">
           <div className="space-y-3">
             {items.map((item) => (
-              <div key={item.id} className="rounded-lg border border-[#8b6f47]/20 bg-[#120f0c] px-3 py-2">
-                <p className="text-sm font-medium text-[#f2dfc0]">{item.name} ({item.role})</p>
-                <p className="text-xs text-[#cdb793]">{item.email} {item.phone ? `• ${item.phone}` : ""}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div
+                key={item.id}
+                className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 transition ${
+                  item.is_active
+                    ? "border-[#8b6f47]/25 bg-[#120f0c]"
+                    : "border-[#8b6f47]/10 bg-[#120f0c]/60 opacity-70"
+                }`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-[#f2dfc0]">{item.name}</span>
+                    <RoleBadge role={item.role} />
+                    {!item.is_active && (
+                      <span className="rounded-md bg-[#a94442]/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#f4c2c2]">
+                        Inactive
+                      </span>
+                    )}
+                    {item.has_affiliate_profile && (
+                      <span className="rounded-md bg-[#2b4a2b]/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#a3d9a5]">
+                        Affiliate
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-xs text-[#d8c19a]/60">
+                    <span>{item.email}</span>
+                    {item.phone ? <span>{item.phone}</span> : null}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
                   <select
                     value={item.role}
                     disabled={savingUserId === item.id}
                     onChange={(event) => void handleUserUpdate(item.id, { role: event.target.value })}
-                    className="rounded border border-[#8b6f47]/50 bg-[#1a1510] px-2 py-1 text-[10px] uppercase tracking-[0.08em] text-[#f4eee4] outline-none"
+                    className="rounded-md border border-[#8b6f47]/30 bg-[#0d0b09] px-2 py-1.5 text-[10px] uppercase tracking-wider text-[#f4eee4] outline-none focus:border-[#c89e65]"
                   >
                     <option value="user">user</option>
                     <option value="admin">admin</option>
@@ -148,7 +173,11 @@ export default function AdminUsersPage() {
                   <button
                     disabled={savingUserId === item.id}
                     onClick={() => void handleUserUpdate(item.id, { is_active: !item.is_active })}
-                    className="rounded border border-[#8b6f47]/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#d8c19a] disabled:opacity-40"
+                    className={`rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition disabled:opacity-30 ${
+                      item.is_active
+                        ? "text-[#f4c2c2] hover:bg-[#a94442]/15"
+                        : "text-[#a3d9a5] hover:bg-[#2b4a2b]/30"
+                    }`}
                   >
                     {item.is_active ? "Deactivate" : "Activate"}
                   </button>
@@ -156,15 +185,15 @@ export default function AdminUsersPage() {
                     <button
                       disabled={savingUserId === item.id}
                       onClick={() => void handleCreateAffiliateProfile(item.id)}
-                      className="rounded border border-[#496e3f]/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bde4b2] disabled:opacity-40"
+                      className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#a3d9a5] transition hover:bg-[#2b4a2b]/30 disabled:opacity-30"
                     >
-                      Create Affiliate
+                      Make Affiliate
                     </button>
                   ) : null}
                   <button
                     disabled={savingUserId === item.id}
                     onClick={() => void handleDeleteUser(item)}
-                    className="rounded border border-[#a94442]/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#f4c2c2] disabled:opacity-40"
+                    className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#a94442] transition hover:bg-[#a94442]/15 disabled:opacity-30"
                   >
                     Delete
                   </button>

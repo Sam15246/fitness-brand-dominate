@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import AdminShell from "@/components/admin/AdminShell";
+import VariantManager from "@/components/admin/VariantManager";
 import { getAdminProduct, updateAdminProduct, type AdminProduct } from "@/lib/api";
 
 export default function AdminProductEditPage() {
@@ -88,45 +89,52 @@ export default function AdminProductEditPage() {
       {success ? <div className="rounded-xl border border-[#5b8f45]/50 bg-[#1d2d17] p-5 text-sm text-[#c7e5b9]">{success}</div> : null}
 
       {product ? (
-        <form onSubmit={handleSave} className="space-y-4 rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-5">
-          <div>
-            <label className="mb-1 block text-sm text-[#d8c19a]" htmlFor="name">Name</label>
-            <input id="name" name="name" defaultValue={product.name} className="w-full rounded-lg border border-[#8b6f47]/40 bg-[#120f0c] px-3 py-2 text-sm text-[#f4eee4] outline-none focus:border-[#b59a73]" />
+        <>
+          <form onSubmit={handleSave} className="space-y-4 rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-5">
+            <div>
+              <label className="mb-1 block text-sm text-[#d8c19a]" htmlFor="name">Name</label>
+              <input id="name" name="name" defaultValue={product.name} className="w-full rounded-lg border border-[#8b6f47]/40 bg-[#120f0c] px-3 py-2 text-sm text-[#f4eee4] outline-none focus:border-[#b59a73]" />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm text-[#d8c19a]" htmlFor="description">Description</label>
+              <textarea id="description" name="description" rows={4} defaultValue={product.description} className="w-full rounded-lg border border-[#8b6f47]/40 bg-[#120f0c] px-3 py-2 text-sm text-[#f4eee4] outline-none focus:border-[#b59a73]" />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <Field label="Price (paise)" name="price" defaultValue={String(product.price)} />
+              <Field label="Stock" name="stock_quantity" defaultValue={String(product.stock_quantity)} />
+              <Field label="Weight (grams)" name="weight_grams" defaultValue={String(product.weight_grams)} />
+            </div>
+
+            <Field label="Dimensions" name="dimensions" defaultValue={product.dimensions || ""} />
+            <Field label="Image URL" name="image_url" defaultValue={product.image_url || ""} />
+
+            <div className="flex flex-wrap gap-5">
+              <label className="flex items-center gap-2 text-sm text-[#d8c19a]">
+                <input type="checkbox" name="is_active" defaultChecked={product.is_active} />
+                Active
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[#d8c19a]">
+                <input type="checkbox" name="is_discount_active" defaultChecked={product.is_discount_active} />
+                Discount Active
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-full bg-[#c89e65] px-6 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#1d150e] hover:bg-[#ddb684] disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save Product"}
+            </button>
+          </form>
+
+          {/* Variant Management */}
+          <div className="mt-6 rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-5">
+            <VariantManager productId={productId} />
           </div>
-
-          <div>
-            <label className="mb-1 block text-sm text-[#d8c19a]" htmlFor="description">Description</label>
-            <textarea id="description" name="description" rows={4} defaultValue={product.description} className="w-full rounded-lg border border-[#8b6f47]/40 bg-[#120f0c] px-3 py-2 text-sm text-[#f4eee4] outline-none focus:border-[#b59a73]" />
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-3">
-            <Field label="Price (paise)" name="price" defaultValue={String(product.price)} />
-            <Field label="Stock" name="stock_quantity" defaultValue={String(product.stock_quantity)} />
-            <Field label="Weight (grams)" name="weight_grams" defaultValue={String(product.weight_grams)} />
-          </div>
-
-          <Field label="Dimensions" name="dimensions" defaultValue={product.dimensions || ""} />
-          <Field label="Image URL" name="image_url" defaultValue={product.image_url || ""} />
-
-          <div className="flex flex-wrap gap-5">
-            <label className="flex items-center gap-2 text-sm text-[#d8c19a]">
-              <input type="checkbox" name="is_active" defaultChecked={product.is_active} />
-              Active
-            </label>
-            <label className="flex items-center gap-2 text-sm text-[#d8c19a]">
-              <input type="checkbox" name="is_discount_active" defaultChecked={product.is_discount_active} />
-              Discount Active
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-full bg-[#c89e65] px-6 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#1d150e] hover:bg-[#ddb684] disabled:opacity-60"
-          >
-            {saving ? "Saving..." : "Save Product"}
-          </button>
-        </form>
+        </>
       ) : null}
     </AdminShell>
   );
