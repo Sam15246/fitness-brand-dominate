@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import AdminShell from "@/components/admin/AdminShell";
+import RoleBadge from "@/components/admin/RoleBadge";
 import { createAdminAffiliateProfile, deleteAdminUser, listAdminUsers, updateAdminUser, type AdminUser } from "@/lib/api";
 
 export default function AdminUsersPage() {
