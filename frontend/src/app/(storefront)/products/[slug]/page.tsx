@@ -5,8 +5,57 @@ import ImageGallery from "@/components/product/ImageGallery";
 import ReviewSubmissionCard from "@/components/reviews/ReviewSubmissionCard";
 import { AddToCartButton } from "@/features/cart";
 import { fetchProductBySlug } from "@/features/products";
+import type { ProductDetail } from "@/lib/api";
 
 export const revalidate = 120;
+
+/* ── Fallback product detail data when backend is unreachable ── */
+const FALLBACK_PRODUCTS: Record<string, ProductDetail> = {
+  "liquid-chalk": {
+    id: -1,
+    name: "Liquid Chalk",
+    slug: "liquid-chalk",
+    description:
+      "Premium liquid chalk made with edible-grade Magnesium Carbonate. Strong grip, zero slip — available in 100gm and 200gm bottles. Dries fast, lasts through your entire workout, and keeps your hands clean.",
+    price: 15000,
+    price_display: "\u20B9150",
+    price_original: null,
+    price_discounted: null,
+    is_discount_active: false,
+    discount_percentage: 0,
+    in_stock: true,
+    is_coming_soon: false,
+    stock_quantity: 50,
+    average_rating: 0,
+    review_count: 0,
+    primary_image: { id: 0, path: "", url: "/liquid-chalk-dominate200ml.png", thumbnail_url: "/liquid-chalk-dominate200ml.png", is_primary: true, display_order: 0 },
+    images: [{ id: 0, path: "", url: "/liquid-chalk-dominate200ml.png", thumbnail_url: "/liquid-chalk-dominate200ml.png", is_primary: true, display_order: 0 }],
+    variants: [],
+    reviews: [],
+  },
+  "standard-parallettes": {
+    id: -2,
+    name: "Standard Parallettes",
+    slug: "standard-parallettes",
+    description:
+      "Premium wooden parallettes for calisthenics training. Handcrafted for dips, L-sits, handstands, and progression work. Stable, durable, and built for real athletes.",
+    price: 100000,
+    price_display: "\u20B91000",
+    price_original: null,
+    price_discounted: null,
+    is_discount_active: false,
+    discount_percentage: 0,
+    in_stock: false,
+    is_coming_soon: true,
+    stock_quantity: 0,
+    average_rating: 0,
+    review_count: 0,
+    primary_image: { id: 0, path: "", url: "/dominate-parallettes-standard.png", thumbnail_url: "/dominate-parallettes-standard.png", is_primary: true, display_order: 0 },
+    images: [{ id: 0, path: "", url: "/dominate-parallettes-standard.png", thumbnail_url: "/dominate-parallettes-standard.png", is_primary: true, display_order: 0 }],
+    variants: [],
+    reviews: [],
+  },
+};
 
 function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
@@ -50,14 +99,22 @@ function ReviewStars({ rating }: { rating: number }) {
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  let product;
+  let product: ProductDetail;
+  let usingFallback = false;
   try {
     product = await fetchProductBySlug(slug);
   } catch (error) {
     if (error instanceof Error && error.message.toLowerCase().includes("not found")) {
       notFound();
     }
-    throw error;
+    // Backend unreachable — try fallback
+    const fallback = FALLBACK_PRODUCTS[slug];
+    if (fallback) {
+      product = fallback;
+      usingFallback = true;
+    } else {
+      notFound();
+    }
   }
 
   return (
@@ -79,6 +136,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
       {/* Main product section */}
       <div className="mx-auto max-w-[1240px] px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
+        {usingFallback && (
+          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-[#a67126]/20 bg-[#a67126]/5 p-4">
+            <svg className="h-5 w-5 shrink-0 text-[#a67126]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-[13px] text-[#6c5641]">
+              Showing preview info. Some details may update when the store is fully loaded.
+            </p>
+          </div>
+        )}
         <section className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-12">
           {/* Gallery */}
           <ImageGallery images={product.images} productName={product.name} />

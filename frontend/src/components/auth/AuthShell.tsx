@@ -11,7 +11,7 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#fff8ec]">
+    <div className="flex min-h-svh bg-[#fff8ec]">
       {/* Left brand panel — hidden on mobile */}
       <div className="relative hidden w-[48%] overflow-hidden bg-[#0d0b09] lg:block">
         {/* Radial glow */}
@@ -104,20 +104,20 @@ export function AuthShell({
           </Link>
         </div>
 
-        {/* Form area — vertically centered */}
-        <div className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
+        {/* Form area — vertically centered on desktop, top-aligned on mobile */}
+        <div className="flex flex-1 items-start justify-center px-5 py-6 sm:px-8 sm:py-8 lg:items-center lg:py-10">
           <div className="w-full max-w-[420px]">
             {/* Header */}
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">
               DOMINATE Account
             </p>
-            <h1 className="mt-2 font-display text-[clamp(28px,5vw,40px)] uppercase leading-[0.95] tracking-[0.04em] text-[#302115]">
+            <h1 className="mt-1.5 font-display text-[clamp(24px,5vw,40px)] uppercase leading-[0.95] tracking-[0.04em] text-[#302115] sm:mt-2">
               {title}
             </h1>
-            <p className="mt-3 text-[13px] leading-[1.7] text-[#6c5641]">{subtitle}</p>
+            <p className="mt-2 text-[13px] leading-[1.7] text-[#6c5641] sm:mt-3">{subtitle}</p>
 
             {/* Form content */}
-            <div className="mt-8">{children}</div>
+            <div className="mt-5 sm:mt-8">{children}</div>
           </div>
         </div>
 
