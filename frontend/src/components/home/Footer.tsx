@@ -55,19 +55,21 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#a67126]/10 bg-[#0d0b09] pb-7 pt-16">
+    <footer className="border-t border-[#a67126]/10 bg-[#0d0b09] pb-7 pt-10 sm:pt-16">
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8 lg:px-10">
-        <div className="mb-14 grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-12">
-          {/* Brand column */}
-          <div>
-            <Link href="/" className="inline-block">
-              <p className="font-display text-[32px] tracking-[0.08em] text-[#f4eee4]">Dominate</p>
-            </Link>
-            <p className="mb-6 mt-3 max-w-[260px] text-[12px] leading-[1.8] text-[#f4eee4]/36">
-              Gear and accessories built for performance training. D2C from India for real athletes.
-            </p>
-
-            {/* Social links */}
+        {/* Mobile: brand + socials compact, then link grid */}
+        {/* Desktop: 4-col layout */}
+        <div className="mb-10 sm:mb-14">
+          {/* Brand row — always visible */}
+          <div className="mb-8 flex items-center justify-between sm:mb-0 lg:hidden">
+            <div>
+              <Link href="/" className="inline-block">
+                <p className="font-display text-[28px] tracking-[0.08em] text-[#f4eee4] sm:text-[32px]">Dominate</p>
+              </Link>
+              <p className="mt-1.5 max-w-[220px] text-[11px] leading-[1.7] text-[#f4eee4]/36 sm:max-w-[260px] sm:text-[12px]">
+                D2C fitness gear from India for real athletes.
+              </p>
+            </div>
             <div className="flex items-center gap-2">
               {SOCIALS.map((social) => (
                 <a
@@ -82,54 +84,80 @@ export default function Footer() {
                 </a>
               ))}
             </div>
-
-            <div className="mt-5 flex flex-wrap gap-1.5">
-              {["India", "D2C Fitness", "Athlete-First"].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-[#a67126]/12 px-3 py-[5px] text-[9px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/20"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
-          {/* Link columns */}
-          {COLS.map((col) => (
-            <div key={col.title}>
-              <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.2em] text-[#d4943b]">{col.title}</p>
-              <ul className="flex list-none flex-col gap-[10px]">
-                {col.links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="group flex items-center gap-1.5 text-[12px] text-[#f4eee4]/38 transition-colors hover:text-[#f4eee4]"
-                    >
-                      {link.label}
-                      <svg
-                        className="h-2.5 w-2.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                  </li>
+          {/* Link columns — 3-col on mobile, 4-col with brand on lg */}
+          <div className="grid grid-cols-3 gap-6 sm:gap-8 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-12">
+            {/* Brand column — desktop only */}
+            <div className="hidden lg:block">
+              <Link href="/" className="inline-block">
+                <p className="font-display text-[32px] tracking-[0.08em] text-[#f4eee4]">Dominate</p>
+              </Link>
+              <p className="mb-6 mt-3 max-w-[260px] text-[12px] leading-[1.8] text-[#f4eee4]/36">
+                Gear and accessories built for performance training. D2C from India for real athletes.
+              </p>
+              <div className="flex items-center gap-2">
+                {SOCIALS.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#a67126]/16 text-[#f4eee4]/30 transition-all hover:border-[#a67126]/40 hover:bg-[#a67126]/10 hover:text-[#d4943b]"
+                    aria-label={social.label}
+                  >
+                    {social.icon}
+                  </a>
                 ))}
-              </ul>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-1.5">
+                {["India", "D2C Fitness", "Athlete-First"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-[#a67126]/12 px-3 py-[5px] text-[9px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/20"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          ))}
+
+            {/* Link columns */}
+            {COLS.map((col) => (
+              <div key={col.title}>
+                <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#d4943b] sm:mb-4">{col.title}</p>
+                <ul className="flex list-none flex-col gap-2 sm:gap-[10px]">
+                  {col.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="group flex items-center gap-1.5 text-[11px] text-[#f4eee4]/38 transition-colors hover:text-[#f4eee4] sm:text-[12px]"
+                      >
+                        {link.label}
+                        <svg
+                          className="hidden h-2.5 w-2.5 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 sm:block"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2.5}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#a67126]/9 pt-5">
-          <span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-[#f4eee4]/20">
+        <div className="flex flex-col items-center gap-2 border-t border-[#a67126]/9 pt-5 text-center sm:flex-row sm:justify-between sm:text-left">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.13em] text-[#f4eee4]/20 sm:text-[9.5px]">
             &copy; 2026 Dominate. All rights reserved.
           </span>
-          <span className="text-[9.5px] font-semibold uppercase tracking-[0.13em] text-[#a67126]/30">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.13em] text-[#a67126]/30 sm:text-[9.5px]">
             Made for Athletes. Built to Dominate.
           </span>
         </div>

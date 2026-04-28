@@ -52,12 +52,12 @@ export default function FAQSection() {
                 ].join(" ")}
               >
                 <button
-                  className="flex w-full items-center justify-between gap-4 px-7 py-6 text-left transition-colors"
+                  className="flex w-full items-center justify-between gap-3 px-5 py-5 text-left transition-colors sm:gap-4 sm:px-7 sm:py-6"
                   aria-expanded={isOpen}
                   onClick={() => setOpen(isOpen ? null : index)}
                 >
-                  <span className="flex items-start gap-4">
-                    <span className="mt-0.5 font-display text-[18px] leading-none text-[#a67126]/30">
+                  <span className="flex items-start gap-3 sm:gap-4">
+                    <span className="mt-0.5 hidden font-display text-[18px] leading-none text-[#a67126]/30 sm:block">
                       0{index + 1}
                     </span>
                     <span className="text-[14px] font-semibold tracking-[0.01em] text-[#302115]">{item.q}</span>
@@ -84,7 +84,7 @@ export default function FAQSection() {
                   }}
                 >
                   <div className="overflow-hidden">
-                    <div className="px-7 pb-6 pl-[4.5rem] text-[13.5px] leading-[1.78] text-[#6c5641]">
+                    <div className="px-5 pb-6 text-[13.5px] leading-[1.78] text-[#6c5641] sm:px-7 sm:pl-[4.5rem]">
                       {item.a}
                     </div>
                   </div>

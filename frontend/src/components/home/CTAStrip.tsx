@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function CTAStrip() {
   return (
-    <section className="relative overflow-hidden bg-[#0d0b09] py-24 md:py-32">
+    <section className="relative overflow-hidden bg-[#0d0b09] py-16 sm:py-24 md:py-32">
       {/* Radial glow */}
       <div
         className="pointer-events-none absolute inset-0"
@@ -26,7 +26,7 @@ export default function CTAStrip() {
 
       <div className="relative z-10 mx-auto max-w-[1240px] px-5 text-center sm:px-8 lg:px-10">
         <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.22em] text-[#d4943b]">Ready to train</p>
-        <h2 className="mb-5 font-display text-[clamp(52px,10vw,96px)] uppercase leading-[0.93] tracking-[0.03em] text-[#f4eee4]">
+        <h2 className="mb-5 font-display text-[clamp(36px,10vw,96px)] uppercase leading-[0.93] tracking-[0.03em] text-[#f4eee4]">
           Your <em className="not-italic text-[#d4943b]">Edge</em>
           <br />
           Starts Here.

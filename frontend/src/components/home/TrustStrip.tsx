@@ -40,14 +40,16 @@ const BADGES = [
 export default function TrustStrip() {
   return (
     <div className="border-t border-[#a67126]/10 bg-[#1e1710]">
-      <div className="mx-auto grid max-w-[1240px] grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {BADGES.map((badge, index) => (
           <div
             key={badge.title}
             className={[
-              "group flex items-start gap-3.5 px-5 py-[20px] transition-colors hover:bg-[#a67126]/[0.06] md:px-[26px] md:py-[24px]",
-              index < BADGES.length - 1 ? "border-r border-[#a67126]/[0.08]" : "",
-              index < 2 ? "border-b border-[#a67126]/[0.08] lg:border-b-0" : "",
+              "group flex items-start gap-3.5 px-5 py-4 transition-colors hover:bg-[#a67126]/[0.06] sm:py-[20px] md:px-[26px] md:py-[24px]",
+              index < BADGES.length - 1 ? "border-b border-[#a67126]/[0.08] sm:border-b-0" : "",
+              index % 2 === 0 ? "sm:border-r sm:border-[#a67126]/[0.08]" : "",
+              index < 2 ? "sm:border-b sm:border-[#a67126]/[0.08] lg:border-b-0" : "",
+              index < BADGES.length - 1 ? "lg:border-r lg:border-[#a67126]/[0.08]" : "",
             ].join(" ")}
           >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#a67126]/10 text-[#d4943b] transition-colors group-hover:bg-[#a67126]/18">

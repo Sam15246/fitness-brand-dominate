@@ -125,22 +125,20 @@ export default function CartPage() {
 
       <div className="mx-auto max-w-[1240px] px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
         {/* Trust strip */}
-        <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-[#d9c8ad]/60 bg-[#fffefb] px-4 py-3 sm:gap-6">
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9a7147]">
+        <div className="mb-6 grid grid-cols-3 gap-2 rounded-xl border border-[#d9c8ad]/60 bg-[#fffefb] px-3 py-3 sm:flex sm:flex-wrap sm:items-center sm:gap-6 sm:px-4">
+          <div className="flex flex-col items-center gap-1 text-center text-[9px] font-semibold uppercase tracking-[0.1em] text-[#9a7147] sm:flex-row sm:gap-2 sm:text-[10px]">
             <svg className="h-4 w-4 text-[#a67126]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             24-48h Dispatch
           </div>
-          <div className="hidden h-3 w-px bg-[#d9c8ad] sm:block" />
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9a7147]">
+          <div className="flex flex-col items-center gap-1 text-center text-[9px] font-semibold uppercase tracking-[0.1em] text-[#9a7147] sm:flex-row sm:gap-2 sm:text-[10px]">
             <svg className="h-4 w-4 text-[#a67126]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             Secure Checkout
           </div>
-          <div className="hidden h-3 w-px bg-[#d9c8ad] sm:block" />
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9a7147]">
+          <div className="flex flex-col items-center gap-1 text-center text-[9px] font-semibold uppercase tracking-[0.1em] text-[#9a7147] sm:flex-row sm:gap-2 sm:text-[10px]">
             <svg className="h-4 w-4 text-[#a67126]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>

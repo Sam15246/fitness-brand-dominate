@@ -8,10 +8,9 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <Navbar />
-      {children}
+      <main className="pb-20 md:pb-0">{children}</main>
       <Footer />
       <MobileBottomNav />
-      <div className="h-20 md:hidden" aria-hidden="true" />
     </>
   );
 }

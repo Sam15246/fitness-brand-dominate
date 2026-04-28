@@ -120,18 +120,18 @@ export default async function ContactPage() {
           </h2>
           <div className="mx-auto mt-1 h-[2px] w-12 rounded-full bg-gradient-to-r from-[#a67126]/50 to-transparent" />
 
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
             {SUPPORT_TOPICS.map((topic) => (
               <div
                 key={topic.label}
-                className="group flex flex-col items-center rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-5 text-center transition-all hover:-translate-y-0.5 hover:border-[#a67126]/30 hover:shadow-[0_8px_24px_rgba(146,104,56,0.08)]"
+                className="group flex flex-col items-center rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#a67126]/30 hover:shadow-[0_8px_24px_rgba(146,104,56,0.08)] sm:p-5"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#a67126]/8 transition-colors group-hover:bg-[#a67126]/15">
                   <svg className="h-5 w-5 text-[#a67126]/60 transition-colors group-hover:text-[#a67126]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={topic.icon} />
                   </svg>
                 </div>
-                <span className="mt-3 text-[11px] font-semibold leading-snug text-[#302115]">
+                <span className="mt-2 text-[10px] font-semibold leading-snug text-[#302115] sm:mt-3 sm:text-[11px]">
                   {topic.label}
                 </span>
               </div>
@@ -143,12 +143,12 @@ export default async function ContactPage() {
         <div className="mt-12 rounded-2xl border border-[#d9c8ad]/60 bg-[#fffefb] p-6">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">Quick Links</p>
           <p className="mt-1 text-[13px] text-[#6c5641]">Check our policies before reaching out — your answer might already be here.</p>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
             {QUICK_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="group flex flex-col items-center rounded-xl border border-[#d9c8ad]/80 bg-[#fff8ec] p-4 text-center transition-all hover:-translate-y-0.5 hover:border-[#a67126]/40 hover:shadow-[0_4px_16px_rgba(146,104,56,0.08)]"
+                className="group flex flex-col items-center rounded-xl border border-[#d9c8ad]/80 bg-[#fff8ec] p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#a67126]/40 hover:shadow-[0_4px_16px_rgba(146,104,56,0.08)] sm:p-4"
               >
                 <svg className="h-5 w-5 text-[#a67126]/50 transition-colors group-hover:text-[#a67126]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={link.icon} />

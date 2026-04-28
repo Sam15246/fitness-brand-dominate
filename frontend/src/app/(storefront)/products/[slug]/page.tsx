@@ -86,7 +86,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           {/* Product info */}
           <div className="lg:py-2">
             {/* Tag */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="rounded-full border border-[#a67126]/20 bg-[#a67126]/8 px-3 py-[5px] text-[9px] font-bold uppercase tracking-[0.2em] text-[#a67126]">
                 DOMINATE Product
               </span>
@@ -174,7 +174,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
 
             {/* Trust badges */}
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
               <TrustBadge
                 icon="M13 10V3L4 14h7v7l9-11h-7z"
                 text="Fast Dispatch"
