@@ -60,6 +60,7 @@ def _serialize_product_card(product):
         'is_discount_active': bool(product.is_discount_active),
         'discount_percentage': product.get_discount_percentage(),
         'in_stock': product.is_in_stock(),
+        'is_coming_soon': bool(getattr(product, 'is_coming_soon', False)),
         'stock_quantity': product.stock_quantity,
         'average_rating': product.get_average_rating(),
         'review_count': product.get_review_count(),
@@ -136,6 +137,16 @@ def _parse_bool(value, default=False):
         return value
 
     return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _variant_label(variant):
+    """Return a human-readable label for a variant, e.g. '200gm'."""
+    if not variant:
+        return None
+    vals = variant.option_values or {}
+    if vals:
+        return ' / '.join(str(v) for v in vals.values())
+    return variant.sku or None
 
 
 def _resolve_unit_price(product, variant=None):
@@ -265,6 +276,7 @@ def _build_cart_payload():
                 {
                     'product_id': product.id,
                     'variant_id': variant.id if variant else None,
+                    'variant_label': _variant_label(variant),
                     'quantity': row.quantity,
                     'unit_price': unit_price,
                     'unit_price_display': f'₹{unit_price / 100:.2f}',
@@ -304,6 +316,7 @@ def _build_cart_payload():
                 {
                     'product_id': product.id,
                     'variant_id': variant.id if variant else None,
+                    'variant_label': _variant_label(variant),
                     'quantity': qty,
                     'unit_price': unit_price,
                     'unit_price_display': f'₹{unit_price / 100:.2f}',

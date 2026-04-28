@@ -698,7 +698,8 @@ class Product(db.Model):
     tax_rate = db.Column(db.Numeric(5, 2), nullable=False, default=18.00)
     deleted_at = db.Column(db.DateTime, nullable=True, index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    
+    is_coming_soon = db.Column(db.Boolean, default=False, server_default='false')
+
     # Admin tracking
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
