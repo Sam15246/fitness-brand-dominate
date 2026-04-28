@@ -57,7 +57,7 @@ export default function LegacyOrderFormClient() {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
         <div className="mx-auto max-w-3xl rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-7 shadow-[0_8px_24px_rgba(146,104,56,0.08)]">
-          <p className="text-sm text-[#f4c2c2]">Invalid product reference</p>
+          <p className="text-sm text-[#a94442]">Invalid product reference</p>
           <Link href="/products" className="mt-4 inline-block text-sm text-[#7e5935] hover:text-[#3b2513]">
             Back to products
           </Link>
@@ -105,7 +105,7 @@ export default function LegacyOrderFormClient() {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
         <div className="mx-auto max-w-3xl rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-7 shadow-[0_8px_24px_rgba(146,104,56,0.08)]">
-          <p className="text-sm text-[#f4c2c2]">{error || "Product not found"}</p>
+          <p className="text-sm text-[#a94442]">{error || "Product not found"}</p>
           <Link href="/products" className="mt-4 inline-block text-sm text-[#7e5935] hover:text-[#3b2513]">
             Back to products
           </Link>
@@ -160,7 +160,7 @@ export default function LegacyOrderFormClient() {
           </label>
         </div>
 
-        {error ? <p className="mt-4 text-sm text-[#f4c2c2]">{error}</p> : null}
+        {error ? <p className="mt-4 text-sm text-[#a94442]">{error}</p> : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
           <button

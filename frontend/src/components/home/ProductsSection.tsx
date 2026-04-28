@@ -25,12 +25,12 @@ const FALLBACK_PRODUCTS: HomeCard[] = [
   },
   {
     href: "/products?q=parallettes",
-    tag: "Strength Equipment",
+    tag: "Coming Soon",
     name: "Wooden Parallettes",
     desc: "Stable wooden parallettes built for handstands, dips, L-sits, and progression work.",
-    price_display: "View Product",
+    price_display: "Coming Soon",
     image: "/dominate-parallettes-standard.png",
-    cta: "View Details",
+    cta: "Learn More",
   },
 ];
 
@@ -82,11 +82,11 @@ export default async function ProductsSection() {
       ...(parallettesItem
         ? {
             href: `/products/${parallettesItem.slug}`,
-            tag: parallettesItem.in_stock ? "In Stock" : "Out of Stock",
+            tag: parallettesItem.is_coming_soon ? "Coming Soon" : parallettesItem.in_stock ? "In Stock" : "Out of Stock",
             name: parallettesItem.name,
             desc: parallettesItem.description,
-            price_display: parallettesItem.price_display,
-            cta: "View Product",
+            price_display: parallettesItem.is_coming_soon ? "Coming Soon" : parallettesItem.price_display,
+            cta: parallettesItem.is_coming_soon ? "Learn More" : "View Product",
           }
         : {}),
     },
@@ -104,9 +104,12 @@ export default async function ProductsSection() {
           </div>
           <Link
             href="/products"
-            className="whitespace-nowrap border-b border-[#a67126] pb-px text-[10px] font-bold uppercase tracking-[0.18em] text-[#a67126] transition-colors hover:border-[#302115] hover:text-[#302115]"
+            className="group flex items-center gap-2 whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.18em] text-[#a67126] transition-colors hover:text-[#302115]"
           >
-            View all -&gt;
+            View all
+            <svg className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </Link>
         </div>
 
@@ -115,16 +118,25 @@ export default async function ProductsSection() {
             <Link
               key={card.name}
               href={card.href}
-              className="flex flex-col overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] shadow-[0_6px_24px_rgba(146,104,56,0.07)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_20px_52px_rgba(146,104,56,0.15)]"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] shadow-[0_6px_24px_rgba(146,104,56,0.07)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_56px_rgba(146,104,56,0.16)]"
             >
-              <AppImage
-                src={card.image}
-                alt={card.name}
-                width={800}
-                height={500}
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="aspect-[4/3] w-full object-cover bg-[#f5e7d2] md:aspect-[16/10]"
-              />
+              {/* Image with zoom-on-hover */}
+              <div className="relative overflow-hidden bg-[#f5e7d2]">
+                <AppImage
+                  src={card.image}
+                  alt={card.name}
+                  width={800}
+                  height={500}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 md:aspect-[16/10]"
+                />
+                {/* Hover overlay with CTA */}
+                <div className="absolute inset-0 flex items-center justify-center bg-[#1e1710]/0 transition-colors duration-300 group-hover:bg-[#1e1710]/20">
+                  <span className="translate-y-4 rounded-full bg-[#f4eee4] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#302115] opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                    {card.cta}
+                  </span>
+                </div>
+              </div>
 
               <div className="flex flex-1 flex-col p-6 md:p-8 md:pb-9">
                 <span className="mb-3 inline-block self-start rounded-full border border-[#a67126]/18 bg-[#a67126]/8 px-3 py-[5px] text-[9px] font-bold uppercase tracking-[0.2em] text-[#a67126]">
@@ -137,8 +149,11 @@ export default async function ProductsSection() {
 
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <span className="font-display text-[28px] tracking-[0.03em] text-[#302115]">{card.price_display}</span>
-                  <span className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[#a67126]/22 bg-[#1e1710] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4eee4] transition-colors hover:bg-[#2b1e14]">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#a67126]/22 bg-[#1e1710] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4eee4] transition-all duration-300 group-hover:bg-[#a67126] group-hover:shadow-[0_4px_16px_rgba(166,113,38,0.3)]">
                     {card.cta}
+                    <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </span>
                 </div>
               </div>

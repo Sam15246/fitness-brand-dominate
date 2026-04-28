@@ -12,6 +12,7 @@ type GalleryImage = {
 
 export default function ImageGallery({ images, productName }: { images: GalleryImage[]; productName: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
 
@@ -20,11 +21,15 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
 
   const goTo = useCallback(
     (index: number) => {
-      if (index < 0) setActiveIndex(validImages.length - 1);
-      else if (index >= validImages.length) setActiveIndex(0);
-      else setActiveIndex(index);
+      const next = index < 0 ? validImages.length - 1 : index >= validImages.length ? 0 : index;
+      if (next === activeIndex) return;
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveIndex(next);
+        setIsTransitioning(false);
+      }, 150);
     },
-    [validImages.length],
+    [validImages.length, activeIndex],
   );
 
   useEffect(() => {
@@ -38,9 +43,9 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
 
   if (validImages.length === 0) {
     return (
-      <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-[#dcc9ab] bg-[#f5ebdb]">
-        <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.2em] text-[#9f8a6b]">
-          No image
+      <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#f5ebdb]">
+        <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.2em] text-[#b5a08a]">
+          No image available
         </div>
       </div>
     );
@@ -50,7 +55,7 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
     <div className="space-y-3">
       {/* Main image with swipe */}
       <div
-        className="relative aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-[#dcc9ab] bg-[#f5ebdb] shadow-[0_8px_24px_rgba(146,104,56,0.08)]"
+        className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#f5ebdb] shadow-[0_8px_32px_rgba(146,104,56,0.1)]"
         onTouchStart={(e) => {
           touchStartX.current = e.touches[0].clientX;
           touchDeltaX.current = 0;
@@ -64,72 +69,83 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
           touchDeltaX.current = 0;
         }}
       >
-        {activeImage?.url ? (
+        {activeImage?.url && (
           <AppImage
             src={activeImage.url}
             alt={`${productName} - Image ${activeIndex + 1}`}
             width={1200}
             height={900}
             sizes="(max-width: 1024px) 100vw, 50vw"
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover transition-all duration-300 ${
+              isTransitioning ? "scale-[1.02] opacity-0" : "scale-100 opacity-100"
+            }`}
             priority={activeIndex === 0}
           />
-        ) : null}
+        )}
 
-        {/* Navigation arrows (desktop) */}
-        {validImages.length > 1 ? (
+        {/* Image count badge */}
+        {validImages.length > 1 && (
+          <div className="absolute right-3 top-3 rounded-full bg-[#0d0b09]/60 px-3 py-1 text-[10px] font-semibold text-[#f4eee4] backdrop-blur-sm">
+            {activeIndex + 1} / {validImages.length}
+          </div>
+        )}
+
+        {/* Navigation arrows */}
+        {validImages.length > 1 && (
           <>
             <button
               type="button"
               onClick={() => goTo(activeIndex - 1)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-[#0d0b09]/60 p-2 text-[#f4eee4] backdrop-blur-sm transition hover:bg-[#0d0b09]/80"
+              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#fffefb]/90 text-[#302115] opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-[#fffefb] group-hover:opacity-100"
               aria-label="Previous image"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="15 18 9 12 15 6" />
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
               type="button"
               onClick={() => goTo(activeIndex + 1)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-[#0d0b09]/60 p-2 text-[#f4eee4] backdrop-blur-sm transition hover:bg-[#0d0b09]/80"
+              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#fffefb]/90 text-[#302115] opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-[#fffefb] group-hover:opacity-100"
               aria-label="Next image"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="9 18 15 12 9 6" />
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
 
             {/* Dot indicators */}
-            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
               {validImages.map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => goTo(i)}
-                  className={`h-2 rounded-full transition-all ${
-                    i === activeIndex ? "w-5 bg-[#c89e65]" : "w-2 bg-[#f4eee4]/50"
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === activeIndex
+                      ? "w-6 bg-[#a67126]"
+                      : "w-2 bg-[#302115]/25 hover:bg-[#302115]/40"
                   }`}
                   aria-label={`View image ${i + 1}`}
                 />
               ))}
             </div>
           </>
-        ) : null}
+        )}
       </div>
 
       {/* Thumbnails */}
-      {validImages.length > 1 ? (
+      {validImages.length > 1 && (
         <div className="grid grid-cols-5 gap-2">
           {validImages.map((image, i) => (
             <button
               key={image.id}
               type="button"
               onClick={() => goTo(i)}
-              className={`aspect-square overflow-hidden rounded-lg border transition-all ${
+              className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-200 ${
                 i === activeIndex
-                  ? "border-[#c89e65] ring-2 ring-[#c89e65]/40"
-                  : "border-[#dcc9ab] hover:border-[#c4a87a]"
+                  ? "border-[#a67126] shadow-[0_0_0_2px_rgba(166,113,38,0.2)]"
+                  : "border-transparent opacity-60 hover:opacity-100"
               } bg-[#f5ebdb]`}
             >
               <AppImage
@@ -143,7 +159,7 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
             </button>
           ))}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

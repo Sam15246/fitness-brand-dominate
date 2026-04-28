@@ -23,7 +23,7 @@ type WhatsAppPayload = {
   coupon_code?: string;
 };
 
-const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210";
+const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "917068462273";
 
 export function buildWhatsAppUrl(payload: WhatsAppPayload): string {
   const lines: string[] = [

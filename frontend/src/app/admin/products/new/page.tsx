@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import AdminShell from "@/components/admin/AdminShell";
 import { createAdminProduct } from "@/lib/api";
 
 export default function AdminProductCreatePage() {
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<number | null>(null);
@@ -30,7 +32,8 @@ export default function AdminProductCreatePage() {
         is_active: form.get("is_active") === "on",
       });
       setCreatedId(product.id);
-      event.currentTarget.reset();
+      // Redirect to edit page after short delay so admin can add variants/images
+      setTimeout(() => router.push(`/admin/products/${product.id}/edit`), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");
     } finally {
@@ -43,7 +46,7 @@ export default function AdminProductCreatePage() {
       {error ? <div className="mb-4 rounded-xl border border-[#a94442]/50 bg-[#2b1414]/70 p-4 text-sm text-[#f4c2c2]">{error}</div> : null}
       {createdId ? (
         <div className="mb-4 rounded-xl border border-[#5b8f45]/50 bg-[#1d2d17] p-4 text-sm text-[#c7e5b9]">
-          Product created. <Link href={`/admin/products/${createdId}/edit`} className="underline">Edit product</Link>
+          Product created! Redirecting to edit page to add variants & images... <Link href={`/admin/products/${createdId}/edit`} className="underline">Go now</Link>
         </div>
       ) : null}
 

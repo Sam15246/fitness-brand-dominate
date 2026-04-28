@@ -69,6 +69,7 @@ export type ProductCard = {
   is_discount_active: boolean;
   discount_percentage: number;
   in_stock: boolean;
+  is_coming_soon: boolean;
   stock_quantity: number;
   average_rating: number;
   review_count: number;
@@ -95,6 +96,7 @@ export type ProductDetail = ProductCard & {
 export type CartLineItem = {
   product_id: number;
   variant_id: number | null;
+  variant_label: string | null;
   quantity: number;
   unit_price: number;
   unit_price_display: string;
@@ -358,7 +360,16 @@ export type AffiliateDashboardData = {
   recent_orders: OrderSummary[];
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1";
+const API_BASE_URL = (() => {
+  const publicUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1";
+  // Server-side fetches need an absolute URL — relative paths have no host in Node.js.
+  // Use BACKEND_BASE_URL (set in .env) to build the full URL for SSR.
+  if (typeof window === "undefined" && publicUrl.startsWith("/")) {
+    const backend = (process.env.BACKEND_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
+    return `${backend}${publicUrl}`;
+  }
+  return publicUrl;
+})();
 const DEFAULT_TIMEOUT = 30_000; // 30 seconds
 
 function validateData<T>(schema: z.ZodType<T>, data: unknown, context: string): T {

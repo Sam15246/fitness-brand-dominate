@@ -43,6 +43,7 @@ export const productCardSchema = z.object({
   is_discount_active: z.boolean(),
   discount_percentage: z.number(),
   in_stock: z.boolean(),
+  is_coming_soon: z.boolean(),
   stock_quantity: z.number(),
   average_rating: z.number(),
   review_count: z.number(),

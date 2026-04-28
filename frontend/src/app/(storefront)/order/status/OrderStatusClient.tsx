@@ -69,7 +69,7 @@ export default function OrderStatusClient() {
           </form>
 
           {error ? (
-            <div className="mt-4 rounded-lg border border-[#a94442]/40 bg-[#2b1414]/70 p-3 text-sm text-[#f6c5c5]">{error}</div>
+            <div className="mt-4 rounded-lg border border-[#a94442]/30 bg-[#a94442]/5 p-3 text-sm text-[#a94442]">{error}</div>
           ) : null}
         </div>
 

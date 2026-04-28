@@ -67,7 +67,6 @@ export function GoogleSignInButton() {
               : "/products";
             const nextPath = searchParams.get("next") || defaultPath;
             router.push(nextPath.startsWith("/") ? nextPath : "/products");
-            router.refresh();
           } catch (submitError) {
             setError(submitError instanceof Error ? submitError.message : "Google sign-in failed");
           }
@@ -79,9 +78,9 @@ export function GoogleSignInButton() {
       window.google.accounts.id.renderButton(buttonRef.current, {
         theme: "outline",
         size: "large",
-        shape: "rectangular",
+        shape: "pill",
         text: "continue_with",
-        width: 340,
+        width: 380,
       });
       setReady(true);
     };
@@ -100,8 +99,6 @@ export function GoogleSignInButton() {
     document.head.appendChild(script);
 
     return () => {
-      // Script stays in DOM (cached by browser), but clean up button
-      // to avoid re-initialization issues on remount.
       if (buttonRef.current) {
         buttonRef.current.innerHTML = "";
       }
@@ -114,13 +111,24 @@ export function GoogleSignInButton() {
 
   return (
     <div className="space-y-2">
-      <div ref={buttonRef} className="flex justify-center" />
-      {!ready && !error ? <p className="text-center text-xs text-[#9a7147]">Loading Google sign-in...</p> : null}
-      {error ? (
-        <p role="alert" className="rounded-xl border border-[#cc8a7b] bg-[#fff0eb] px-3 py-2 text-sm text-[#8a3f33]">
-          {error}
-        </p>
-      ) : null}
+      <div ref={buttonRef} className="flex justify-center [&>div]:w-full [&>div]:!rounded-full" />
+      {!ready && !error && (
+        <div className="flex items-center justify-center gap-2 py-2">
+          <svg className="h-4 w-4 animate-spin text-[#b5a08a]" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-[11px] text-[#b5a08a]">Loading Google sign-in...</p>
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-[#a94442]/25 bg-[#a94442]/8 px-4 py-3">
+          <svg className="h-5 w-5 shrink-0 text-[#a94442]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p className="text-[12px] text-[#a94442]">{error}</p>
+        </div>
+      )}
     </div>
   );
 }

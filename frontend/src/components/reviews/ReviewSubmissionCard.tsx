@@ -15,6 +15,7 @@ export default function ReviewSubmissionCard({ slug }: { slug: string }) {
 
   const [orderItemId, setOrderItemId] = useState<number | undefined>(undefined);
   const [rating, setRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
 
@@ -28,9 +29,7 @@ export default function ReviewSubmissionCard({ slug }: { slug: string }) {
 
       try {
         const result = await getReviewEligibility(slug);
-        if (!active) {
-          return;
-        }
+        if (!active) return;
 
         setEligibility(result);
         setIsUnauthenticated(false);
@@ -39,9 +38,7 @@ export default function ReviewSubmissionCard({ slug }: { slug: string }) {
           setOrderItemId(result.eligible_order_items[0].order_item_id);
         }
       } catch (loadError) {
-        if (!active) {
-          return;
-        }
+        if (!active) return;
 
         const message = loadError instanceof Error ? loadError.message : "Unable to load review eligibility";
         if (message.toLowerCase().includes("authentication required")) {
@@ -52,16 +49,12 @@ export default function ReviewSubmissionCard({ slug }: { slug: string }) {
           setError(message);
         }
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     }
 
     void loadEligibility();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [slug]);
 
   const canSubmit = useMemo(() => Boolean(eligibility?.can_submit_review), [eligibility]);
@@ -96,63 +89,81 @@ export default function ReviewSubmissionCard({ slug }: { slug: string }) {
     }
   }
 
+  const displayRating = hoverRating ?? rating;
+
   if (loading) {
     return (
-      <section className="mt-8 rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-6">
-        <h3 className="text-xl font-semibold text-[#f1ddbe]">Leave a Review</h3>
-        <p className="mt-2 text-sm text-[#c7b69d]">Checking eligibility...</p>
+      <section className="mt-10 rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-6 sm:p-8">
+        <h3 className="font-display text-[24px] uppercase tracking-[0.04em] text-[#302115]">Leave a Review</h3>
+        <p className="mt-2 text-[13px] text-[#6c5641]">Checking eligibility...</p>
       </section>
     );
   }
 
   if (isUnauthenticated) {
     return (
-      <section className="mt-8 rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-6">
-        <h3 className="text-xl font-semibold text-[#f1ddbe]">Leave a Review</h3>
-        <p className="mt-2 text-sm text-[#c7b69d]">
-          You must sign in and have a delivered order for this product before submitting a review.
+      <section className="mt-10 rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-6 sm:p-8">
+        <h3 className="font-display text-[24px] uppercase tracking-[0.04em] text-[#302115]">Leave a Review</h3>
+        <p className="mt-2 text-[13px] text-[#6c5641]">
+          Sign in with a delivered order for this product to submit a review.
         </p>
-        <Link href={`/auth/login?next=${encodeURIComponent(`/products/${slug}`)}`} className="mt-4 inline-block text-sm text-[#f1ddbe] hover:text-[#d8c19a]">
-          Sign in to check eligibility
+        <Link
+          href={`/auth/login?next=${encodeURIComponent(`/products/${slug}`)}`}
+          className="mt-4 inline-flex rounded-full bg-[#1e1710] px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4eee4] transition-colors hover:bg-[#2b1e14]"
+        >
+          Sign In
         </Link>
       </section>
     );
   }
 
   return (
-    <section className="mt-8 rounded-2xl border border-[#8b6f47]/30 bg-[#15120f]/80 p-6" id="write-review">
-      <h3 className="text-xl font-semibold text-[#f1ddbe]">Leave a Review</h3>
+    <section className="mt-10 rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-6 sm:p-8" id="write-review">
+      <h3 className="font-display text-[24px] uppercase tracking-[0.04em] text-[#302115]">Leave a Review</h3>
 
-      {error ? (
-        <p className="mt-3 rounded-lg border border-[#a94442]/50 bg-[#2b1414]/70 px-3 py-2 text-sm text-[#f4c2c2]">{error}</p>
-      ) : null}
+      {error && (
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#a94442]/25 bg-[#a94442]/8 px-4 py-3">
+          <svg className="h-5 w-5 shrink-0 text-[#a94442]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p className="text-[12px] text-[#a94442]">{error}</p>
+        </div>
+      )}
 
-      {success ? (
-        <p className="mt-3 rounded-lg border border-[#416a35]/50 bg-[#1a2b17]/70 px-3 py-2 text-sm text-[#cde5bf]">{success}</p>
-      ) : null}
+      {success && (
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#4a7c3f]/25 bg-[#4a7c3f]/8 px-4 py-3">
+          <svg className="h-5 w-5 shrink-0 text-[#4a7c3f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <p className="text-[12px] text-[#302115]">{success}</p>
+        </div>
+      )}
 
-      {!canSubmit && eligibility ? (
-        <div className="mt-4 text-sm text-[#c7b69d]">
+      {!canSubmit && eligibility && (
+        <div className="mt-4 rounded-xl border border-[#d9c8ad] bg-[#f5e7d2]/40 px-4 py-3 text-[13px] text-[#6c5641]">
           {eligibility.has_pending_review ? (
-            <p>Your latest review is pending approval.</p>
+            <p>Your review is pending approval. Thank you for your feedback!</p>
           ) : eligibility.has_approved_review ? (
-            <p>You have already submitted a review for your delivered purchase.</p>
+            <p>You have already submitted a review for this product. Thanks!</p>
           ) : (
-            <p>Reviews unlock only after your order is marked delivered.</p>
+            <p>Reviews unlock after your order is marked as delivered.</p>
           )}
         </div>
-      ) : null}
+      )}
 
-      {canSubmit && eligibility ? (
-        <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
-          {eligibility.eligible_order_items.length > 1 ? (
+      {canSubmit && eligibility && (
+        <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+          {/* Order selector */}
+          {eligibility.eligible_order_items.length > 1 && (
             <div>
-              <label className="mb-1 block text-sm text-[#e8ddcb]" htmlFor="orderItemId">Delivered purchase</label>
+              <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]" htmlFor="orderItemId">
+                Delivered Purchase
+              </label>
               <select
                 id="orderItemId"
                 value={orderItemId || ""}
                 onChange={(e) => setOrderItemId(Number(e.target.value) || undefined)}
-                className="w-full rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
+                className="w-full rounded-xl border border-[#d9c8ad] bg-[#fffefb] px-4 py-3 text-[13px] text-[#302115] outline-none focus:border-[#a67126] focus:shadow-[0_0_0_3px_rgba(166,113,38,0.08)]"
                 required
               >
                 <option value="">Select order</option>
@@ -163,38 +174,58 @@ export default function ReviewSubmissionCard({ slug }: { slug: string }) {
                 ))}
               </select>
             </div>
-          ) : null}
+          )}
 
+          {/* Star rating picker */}
           <div>
-            <label className="mb-1 block text-sm text-[#e8ddcb]" htmlFor="rating">Rating</label>
-            <select
-              id="rating"
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value) || 5)}
-              className="w-full rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
-            >
-              <option value={5}>5 - Excellent</option>
-              <option value={4}>4 - Very Good</option>
-              <option value={3}>3 - Good</option>
-              <option value={2}>2 - Fair</option>
-              <option value={1}>1 - Poor</option>
-            </select>
+            <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">
+              Rating
+            </label>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(null)}
+                  className="p-0.5 transition-transform hover:scale-110"
+                >
+                  <svg
+                    className={`h-7 w-7 transition-colors ${star <= displayRating ? "text-[#d4943b]" : "text-[#d9c8ad]"}`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </button>
+              ))}
+              <span className="ml-2 self-center text-[12px] text-[#6c5641]">
+                {rating === 5 ? "Excellent" : rating === 4 ? "Very Good" : rating === 3 ? "Good" : rating === 2 ? "Fair" : "Poor"}
+              </span>
+            </div>
           </div>
 
+          {/* Title */}
           <div>
-            <label className="mb-1 block text-sm text-[#e8ddcb]" htmlFor="title">Title (optional)</label>
+            <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]" htmlFor="title">
+              Title <span className="font-normal normal-case tracking-normal text-[#b5a08a]">(optional)</span>
+            </label>
             <input
               id="title"
               value={title}
               maxLength={120}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
-              placeholder="Short headline"
+              className="w-full rounded-xl border border-[#d9c8ad] bg-[#fffefb] px-4 py-3 text-[13px] text-[#302115] outline-none transition-colors placeholder:text-[#b5a08a] focus:border-[#a67126] focus:shadow-[0_0_0_3px_rgba(166,113,38,0.08)]"
+              placeholder="Short headline for your review"
             />
           </div>
 
+          {/* Comment */}
           <div>
-            <label className="mb-1 block text-sm text-[#e8ddcb]" htmlFor="comment">Review</label>
+            <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]" htmlFor="comment">
+              Your Review
+            </label>
             <textarea
               id="comment"
               value={comment}
@@ -202,21 +233,22 @@ export default function ReviewSubmissionCard({ slug }: { slug: string }) {
               maxLength={1500}
               required
               onChange={(e) => setComment(e.target.value)}
-              rows={5}
-              className="w-full rounded-lg border border-[#8b6f47]/45 bg-[#1a1510] px-3 py-2 text-sm outline-none focus:border-[#b59a73]"
-              placeholder="Share your experience with this product"
+              rows={4}
+              className="w-full rounded-xl border border-[#d9c8ad] bg-[#fffefb] px-4 py-3 text-[13px] leading-[1.7] text-[#302115] outline-none transition-colors placeholder:text-[#b5a08a] focus:border-[#a67126] focus:shadow-[0_0_0_3px_rgba(166,113,38,0.08)]"
+              placeholder="Share your experience with this product..."
             />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-[#8b6f47] px-4 py-2 text-sm font-semibold text-[#1a130d] transition hover:bg-[#a1845d] disabled:cursor-not-allowed disabled:opacity-70"
+            className="group relative inline-flex min-h-[48px] items-center justify-center overflow-hidden rounded-full bg-[#a67126] px-8 py-[13px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:shadow-[0_4px_20px_rgba(166,113,38,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
           >
+            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             {submitting ? "Submitting..." : "Submit Review"}
           </button>
         </form>
-      ) : null}
+      )}
     </section>
   );
 }

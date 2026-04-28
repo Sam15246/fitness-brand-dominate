@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import AdminShell from "@/components/admin/AdminShell";
-import RoleBadge from "@/components/admin/RoleBadge";
 import { createAdminAffiliateProfile, deleteAdminUser, listAdminUsers, updateAdminUser, type AdminUser } from "@/lib/api";
 
 export default function AdminUsersPage() {
@@ -207,6 +206,21 @@ export default function AdminUsersPage() {
         </div>
       ) : null}
     </AdminShell>
+  );
+}
+
+const ROLE_STYLES: Record<string, string> = {
+  superadmin: "bg-[#6b5bcd]/15 text-[#c4bef0]",
+  admin: "bg-[#c89e65]/15 text-[#c89e65]",
+  user: "bg-[#8b6f47]/10 text-[#d8c19a]/60",
+};
+
+function RoleBadge({ role }: { role: string }) {
+  const style = ROLE_STYLES[role] || ROLE_STYLES.user;
+  return (
+    <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${style}`}>
+      {role}
+    </span>
   );
 }
 

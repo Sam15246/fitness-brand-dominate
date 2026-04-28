@@ -6,6 +6,15 @@ import Link from 'next/link';
 import { getUserProfile, updateUserProfile } from '@/lib/api';
 import type { UserProfile } from '@/lib/api';
 
+const NAV_ITEMS = [
+  { label: 'Orders', href: '/account/orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+  { label: 'Addresses', href: '/account/addresses', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
+  { label: 'Profile', href: '/account/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', active: true },
+];
+
+const inputClasses =
+  'w-full rounded-xl border border-[#d9c8ad] bg-[#fffefb] px-4 py-3.5 text-[13px] text-[#302115] outline-none transition-all placeholder:text-[#b5a08a] focus:border-[#a67126] focus:shadow-[0_0_0_3px_rgba(166,113,38,0.08)]';
+
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -52,17 +61,12 @@ export default function ProfilePage() {
           }
         }
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     };
 
     loadProfile();
-
-    return () => {
-      // cleanup
-    };
+    return () => {};
   }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +84,6 @@ export default function ProfilePage() {
     setSuccess(null);
 
     try {
-      // Validate
       if (!formData.name || formData.name.length < 2) {
         setError('Name must be at least 2 characters');
         setSaving(false);
@@ -116,136 +119,178 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-amber-600"></div>
-          <p className="mt-4 text-sm text-gray-600">Loading profile...</p>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex items-center gap-3">
+          <svg className="h-5 w-5 animate-spin text-[#a67126]" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-[13px] text-[#6c5641]">Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Navigation */}
-        <div className="mb-8">
-          <Link href="/account/orders" className="text-sm font-medium text-amber-600 hover:text-amber-700">
-            ← Back to My Orders
-          </Link>
-        </div>
+    <div className="min-h-screen bg-[#fff8ec]">
+      <div className="border-b border-[#d9c8ad]/40">
+        <div className="mx-auto max-w-[900px] px-5 py-6 sm:px-8 sm:py-8">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">My Account</p>
+          <h1 className="mt-2 font-display text-[clamp(28px,5vw,40px)] uppercase leading-none tracking-[0.04em] text-[#302115]">
+            Profile Settings
+          </h1>
+          <p className="mt-2 text-[13px] text-[#6c5641]">Manage your personal information and preferences</p>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-          <p className="mt-2 text-sm text-gray-600">Manage your personal information and preferences</p>
+          {/* Navigation tabs */}
+          <div className="mt-6 flex gap-2 overflow-x-auto">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition-all ${
+                  item.active
+                    ? 'border-[#a67126] bg-[#a67126]/10 text-[#a67126]'
+                    : 'border-[#d9c8ad] bg-[#fffefb] text-[#6c5641] hover:border-[#a67126]/40 hover:text-[#302115]'
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                </svg>
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
+      </div>
 
+      <div className="mx-auto max-w-[900px] px-5 py-6 sm:px-8 sm:py-8">
         {/* Messages */}
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-800">
-            <p className="font-medium">Error</p>
-            <p className="mt-1">{error}</p>
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#a94442]/25 bg-[#a94442]/8 px-4 py-3">
+            <svg className="h-5 w-5 shrink-0 text-[#a94442]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="text-[12px] text-[#a94442]">{error}</p>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 rounded-lg bg-green-50 p-4 text-sm text-green-800">
-            <p className="font-medium">Success</p>
-            <p className="mt-1">{success}</p>
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#4a7c3f]/25 bg-[#4a7c3f]/8 px-4 py-3">
+            <svg className="h-5 w-5 shrink-0 text-[#4a7c3f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <p className="text-[12px] text-[#302115]">{success}</p>
           </div>
         )}
 
-        {/* Main Form */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <div className="mb-6 pb-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
-            <p className="mt-1 text-sm text-gray-600">Account email: {profile?.email}</p>
+        {/* Profile card */}
+        <div className="rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-5 sm:p-6">
+          {/* Avatar + email header */}
+          <div className="flex items-center gap-4 border-b border-[#d9c8ad]/50 pb-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#a67126]/10 text-[18px] font-bold text-[#a67126]">
+              {(profile?.name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+            </div>
+            <div>
+              <p className="text-[15px] font-semibold text-[#302115]">{profile?.name || 'User'}</p>
+              <p className="mt-0.5 text-[12px] text-[#9a7147]">{profile?.email}</p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            {/* Name */}
-            <div className="mb-6">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                minLength={2}
-                placeholder="Your name"
-                className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">Used for order confirmations and shipping</p>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              {/* Name */}
+              <div>
+                <label htmlFor="name" className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <svg className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#b5a08a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    minLength={2}
+                    placeholder="Your name"
+                    className={`${inputClasses} pl-11`}
+                  />
+                </div>
+                <p className="mt-1.5 text-[10px] text-[#b5a08a]">Used for order confirmations and shipping</p>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label htmlFor="phone" className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <svg className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#b5a08a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="10-digit mobile number"
+                    className={`${inputClasses} pl-11`}
+                  />
+                </div>
+                <p className="mt-1.5 text-[10px] text-[#b5a08a]">For order updates and customer support</p>
+              </div>
+
+              {/* Display Name */}
+              <div className="sm:col-span-2">
+                <label htmlFor="full_name" className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">
+                  Display Name <span className="font-normal normal-case tracking-normal text-[#b5a08a]">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="full_name"
+                  name="full_name"
+                  value={formData.full_name}
+                  onChange={handleInputChange}
+                  placeholder="How you want to be addressed"
+                  className={inputClasses}
+                />
+              </div>
             </div>
 
-            {/* Phone */}
-            <div className="mb-6">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="10-digit mobile number"
-                className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">For order updates and customer support</p>
-            </div>
-
-            {/* Full Name */}
-            <div className="mb-6">
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
-                Display Name (Optional)
-              </label>
-              <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleInputChange}
-                placeholder="Your display name"
-                className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-              />
-            </div>
-
-            {/* Email Preferences */}
-            <div className="mb-6 border-t border-gray-200 pt-6">
-              <h3 className="text-base font-medium text-gray-900 mb-4">Communication Preferences</h3>
-
-              <div className="flex items-center">
+            {/* Communication preferences */}
+            <div className="border-t border-[#d9c8ad]/50 pt-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a67126]">Communication Preferences</p>
+              <label className="mt-4 flex items-start gap-3">
                 <input
                   type="checkbox"
                   id="email_marketing_opt_in"
                   name="email_marketing_opt_in"
                   checked={formData.email_marketing_opt_in}
                   onChange={handleInputChange}
-                  className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-600"
+                  className="mt-0.5 h-4 w-4 rounded border-[#d9c8ad] bg-[#fffefb] text-[#a67126] focus:ring-[#a67126]/20"
                 />
-                <label htmlFor="email_marketing_opt_in" className="ml-3 text-sm text-gray-700">
-                  <span className="font-medium">Receive promotions and product updates</span>
-                  <p className="text-gray-600 mt-1">
+                <div>
+                  <span className="text-[13px] font-medium text-[#302115]">Receive promotions and product updates</span>
+                  <p className="mt-0.5 text-[11px] text-[#6c5641]">
                     Get notified about exclusive offers, new products, and fitness tips
                   </p>
-                </label>
-              </div>
+                </div>
+              </label>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex gap-4">
+            {/* Submit buttons */}
+            <div className="flex flex-col gap-3 border-t border-[#d9c8ad]/50 pt-5 sm:flex-row">
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 rounded-lg bg-amber-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                className="group relative flex-1 overflow-hidden rounded-full bg-[#a67126] px-6 py-[14px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:shadow-[0_4px_20px_rgba(166,113,38,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                <span className="relative">{saving ? 'Saving...' : 'Save Changes'}</span>
               </button>
               <button
                 type="button"
@@ -259,7 +304,7 @@ export default function ProfilePage() {
                     });
                   }
                 }}
-                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="flex-1 rounded-full border border-[#d9c8ad] px-6 py-[14px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#6c5641] transition-all hover:border-[#a67126]/40 hover:text-[#302115]"
               >
                 Cancel
               </button>
@@ -267,13 +312,19 @@ export default function ProfilePage() {
           </form>
         </div>
 
-        {/* Addresses Section */}
-        <div className="mt-8">
+        {/* Addresses link */}
+        <div className="mt-6">
           <Link
             href="/account/addresses"
-            className="inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="group inline-flex items-center gap-2 rounded-full border border-[#d9c8ad] bg-[#fffefb] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#6c5641] transition-all hover:border-[#a67126] hover:text-[#302115]"
           >
-            Manage Saved Addresses →
+            <svg className="h-4 w-4 text-[#a67126]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Manage Saved Addresses
+            <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </Link>
         </div>
       </div>
