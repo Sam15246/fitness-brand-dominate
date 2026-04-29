@@ -5,6 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import AppImage from "@/components/ui/AppImage";
 import { clearCart, getCart, removeCartItem, type CartData, updateCartItem } from "@/lib/api";
+import {
+  getLocalCart,
+  updateLocalCartItem,
+  removeLocalCartItem,
+  clearLocalCart,
+} from "@/lib/local-cart";
 
 function CartSkeleton() {
   return (
@@ -31,6 +37,7 @@ export default function CartPage() {
   const [pendingProductId, setPendingProductId] = useState<number | null>(null);
   const [clearing, setClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usingLocal, setUsingLocal] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -39,8 +46,13 @@ export default function CartPage() {
       try {
         const value = await getCart();
         if (active) setCart(value);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : "Unable to load cart");
+      } catch {
+        // Backend unreachable — fall back to localStorage cart
+        if (active) {
+          const local = getLocalCart();
+          setCart(local);
+          setUsingLocal(true);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -59,8 +71,13 @@ export default function CartPage() {
     setPendingProductId(productId);
     setError(null);
     try {
-      const updated = await updateCartItem(productId, quantity);
-      setCart(updated);
+      if (usingLocal) {
+        const updated = updateLocalCartItem(productId, quantity);
+        setCart(updated);
+      } else {
+        const updated = await updateCartItem(productId, quantity);
+        setCart(updated);
+      }
       window.dispatchEvent(new Event("cart-updated"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to update quantity");
@@ -73,8 +90,13 @@ export default function CartPage() {
     setPendingProductId(productId);
     setError(null);
     try {
-      const updated = await removeCartItem(productId);
-      setCart(updated);
+      if (usingLocal) {
+        const updated = removeLocalCartItem(productId);
+        setCart(updated);
+      } else {
+        const updated = await removeCartItem(productId);
+        setCart(updated);
+      }
       window.dispatchEvent(new Event("cart-updated"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to remove item");
@@ -87,8 +109,13 @@ export default function CartPage() {
     setClearing(true);
     setError(null);
     try {
-      const updated = await clearCart();
-      setCart(updated);
+      if (usingLocal) {
+        const updated = clearLocalCart();
+        setCart(updated);
+      } else {
+        const updated = await clearCart();
+        setCart(updated);
+      }
       window.dispatchEvent(new Event("cart-updated"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to clear cart");

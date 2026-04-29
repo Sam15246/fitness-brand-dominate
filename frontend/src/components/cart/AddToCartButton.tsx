@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { addToCart, type ProductVariant } from "@/lib/api";
+import { addLocalCartItem } from "@/lib/local-cart";
 
 type AddToCartButtonProps = {
   productId: number;
@@ -74,8 +75,15 @@ export default function AddToCartButton({
       const cart = await addItemToCart(quantity);
       setAddedCount(cart.count);
       window.dispatchEvent(new Event("cart-updated"));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to add item to cart");
+    } catch {
+      // Backend unreachable — fall back to localStorage cart
+      try {
+        const localCart = addLocalCartItem(productId, quantity, selectedVariantId);
+        setAddedCount(localCart.count);
+        window.dispatchEvent(new Event("cart-updated"));
+      } catch (localErr) {
+        setError(localErr instanceof Error ? localErr.message : "Unable to add item to cart");
+      }
     } finally {
       setIsPending(false);
     }
@@ -93,8 +101,15 @@ export default function AddToCartButton({
       await addItemToCart(quantity);
       window.dispatchEvent(new Event("cart-updated"));
       router.push("/checkout");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to start checkout");
+    } catch {
+      // Backend unreachable — fall back to localStorage cart
+      try {
+        addLocalCartItem(productId, quantity, selectedVariantId);
+        window.dispatchEvent(new Event("cart-updated"));
+        router.push("/checkout");
+      } catch (localErr) {
+        setError(localErr instanceof Error ? localErr.message : "Unable to start checkout");
+      }
     } finally {
       setIsBuyingNow(false);
     }

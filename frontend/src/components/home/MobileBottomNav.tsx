@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { getCart, getCurrentUser, type CurrentUser } from "@/lib/api";
+import { getLocalCart } from "@/lib/local-cart";
 
 type Tab = {
   label: string;
@@ -68,7 +69,11 @@ export default function MobileBottomNav() {
 
   useEffect(() => {
     function refresh() {
-      getCart().then((c) => setCartCount(c.count)).catch(() => setCartCount(0));
+      getCart()
+        .then((c) => setCartCount(c.count))
+        .catch(() => {
+          setCartCount(getLocalCart().count);
+        });
     }
     refresh();
     window.addEventListener("cart-updated", refresh);

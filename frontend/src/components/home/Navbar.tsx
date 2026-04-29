@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import AppImage from "@/components/ui/AppImage";
 import UserMenu from "@/components/home/UserMenu";
 import { getCart } from "@/lib/api";
+import { getLocalCart } from "@/lib/local-cart";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/products" },
@@ -34,7 +35,10 @@ export default function Navbar() {
     function refresh() {
       getCart()
         .then((cart) => setCartCount(cart.count))
-        .catch(() => setCartCount(0));
+        .catch(() => {
+          // Backend unreachable — read from localStorage
+          setCartCount(getLocalCart().count);
+        });
     }
     refresh();
     window.addEventListener("cart-updated", refresh);

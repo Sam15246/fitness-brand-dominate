@@ -13,6 +13,7 @@ import {
   type CheckoutPreview,
   type UserAddress,
 } from "@/lib/api";
+import { getLocalCheckoutPreview, clearLocalCart } from "@/lib/local-cart";
 
 type CheckoutFormState = {
   customer_name: string;
@@ -112,6 +113,7 @@ export default function CheckoutClient() {
   const [setDefaultAddress, setSetDefaultAddress] = useState(false);
   const [addressLabel, setAddressLabel] = useState("Home");
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [usingLocal, setUsingLocal] = useState(false);
 
   const phoneDigits = form.phone_number.replace(/\D/g, "");
   const pincodeDigits = form.pincode.replace(/\D/g, "");
@@ -153,7 +155,14 @@ export default function CheckoutClient() {
             setForm((prev) => ({ ...prev, coupon_code: couponFromQuery }));
           }
         } else {
-          setError(previewValue.reason instanceof Error ? previewValue.reason.message : "Unable to load checkout preview");
+          // Backend unreachable — fall back to localStorage cart
+          const localPreview = getLocalCheckoutPreview();
+          if (localPreview.cart.items.length > 0) {
+            setPreview(localPreview);
+            setUsingLocal(true);
+          } else {
+            setError("Your cart is empty.");
+          }
         }
 
         if (userResult.status === "fulfilled") {
@@ -253,6 +262,38 @@ export default function CheckoutClient() {
 
     setSubmitting(true);
 
+    // Build WhatsApp URL for both fallback and local mode
+    const waPayload = {
+      customer: {
+        name: form.customer_name,
+        phone: form.phone_number,
+        email: form.email,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+      },
+      items: preview!.cart.items.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+      })),
+      total: preview!.cart.total,
+      discount: preview!.discount,
+      coupon_code: form.coupon_code.trim() || undefined,
+    };
+
+    if (usingLocal) {
+      // Backend is down — go straight to WhatsApp
+      const waUrl = buildWhatsAppUrl(waPayload);
+      clearLocalCart();
+      window.dispatchEvent(new Event("cart-updated"));
+      window.open(waUrl, "_blank");
+      router.push(`/order/confirmation?wa=${encodeURIComponent(waUrl)}&email=${encodeURIComponent(form.email)}&fallback=true`);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const result = await placeOrder({
         customer_name: form.customer_name,
@@ -273,26 +314,7 @@ export default function CheckoutClient() {
       const confirmationUrl = `/order/confirmation?order=${encodeURIComponent(result.order.order_number)}&wa=${encodeURIComponent(result.whatsapp_url)}&email=${encodeURIComponent(form.email)}`;
       router.push(confirmationUrl);
     } catch {
-      const waUrl = buildWhatsAppUrl({
-        customer: {
-          name: form.customer_name,
-          phone: form.phone_number,
-          email: form.email,
-          address: form.address,
-          city: form.city,
-          state: form.state,
-          pincode: form.pincode,
-        },
-        items: preview!.cart.items.map((item) => ({
-          name: item.product.name,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-        })),
-        total: preview!.cart.total,
-        discount: preview!.discount,
-        coupon_code: form.coupon_code.trim() || undefined,
-      });
-
+      const waUrl = buildWhatsAppUrl(waPayload);
       window.open(waUrl, "_blank");
       router.push(`/order/confirmation?wa=${encodeURIComponent(waUrl)}&email=${encodeURIComponent(form.email)}&fallback=true`);
     } finally {
