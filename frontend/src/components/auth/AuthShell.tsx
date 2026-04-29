@@ -11,7 +11,7 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-svh bg-[#fff8ec]">
+    <div className="flex min-h-svh overflow-x-hidden bg-[#fff8ec]">
       {/* Left brand panel — hidden on mobile */}
       <div className="relative hidden w-[48%] overflow-hidden bg-[#0d0b09] lg:block">
         {/* Radial glow */}
@@ -85,7 +85,7 @@ export function AuthShell({
       </div>
 
       {/* Right form panel */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile logo bar */}
         <div className="flex items-center justify-between border-b border-[#d9c8ad]/40 px-5 py-4 lg:hidden">
           <Link href="/" className="group inline-flex items-center gap-2.5">
@@ -105,8 +105,8 @@ export function AuthShell({
         </div>
 
         {/* Form area — vertically centered on desktop, top-aligned on mobile */}
-        <div className="flex flex-1 items-start justify-center px-5 py-6 sm:px-8 sm:py-8 lg:items-center lg:py-10">
-          <div className="w-full max-w-[420px]">
+        <div className="flex min-w-0 flex-1 items-start justify-center overflow-hidden px-5 py-6 sm:px-8 sm:py-8 lg:items-center lg:py-10">
+          <div className="w-full min-w-0 max-w-[420px]">
             {/* Header */}
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">
               DOMINATE Account
