@@ -33,7 +33,7 @@ export default function UserMenu() {
 
   if (loading) {
     return (
-      <div className="h-9 w-9 animate-pulse rounded-full bg-[#a67126]/20" />
+      <div className="h-10 w-10 animate-pulse rounded-full bg-[#a67126]/20" />
     );
   }
 
@@ -61,7 +61,7 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#a67126] text-[11px] font-bold tracking-wider text-[#f4eee4] transition-colors hover:bg-[#b97e2e]"
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-[#a67126] text-[11px] font-bold tracking-wider text-[#f4eee4] transition-colors hover:bg-[#b97e2e]"
         aria-label="Account menu"
         aria-expanded={open}
       >
@@ -69,7 +69,7 @@ export default function UserMenu() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-xl border border-[#dcc9ab] bg-[#fffaf2] shadow-[0_12px_40px_rgba(146,104,56,0.15)]">
+        <div className="absolute right-0 top-12 z-50 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-[#dcc9ab] bg-[#fffaf2] shadow-[0_12px_40px_rgba(146,104,56,0.15)]">
           {/* User info */}
           <div className="border-b border-[#e8d5b8] px-4 py-3">
             <p className="text-sm font-semibold text-[#3b2513]">{user.name || "User"}</p>
@@ -117,7 +117,7 @@ export default function UserMenu() {
                 router.push("/");
                 router.refresh();
               }}
-              className="w-full px-4 py-2 text-left text-sm text-[#a94442] transition-colors hover:bg-[#fff0eb]"
+              className="w-full px-4 py-3 text-left text-sm text-[#a94442] transition-colors hover:bg-[#fff0eb]"
             >
               Logout
             </button>
@@ -133,7 +133,7 @@ function MenuLink({ href, label, onClick }: { href: string; label: string; onCli
     <Link
       href={href}
       onClick={onClick}
-      className="block px-4 py-2 text-sm text-[#4f3825] transition-colors hover:bg-[#f7e6c8]"
+      className="block px-4 py-3 text-sm text-[#4f3825] transition-colors hover:bg-[#f7e6c8]"
     >
       {label}
     </Link>

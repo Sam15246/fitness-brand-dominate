@@ -43,7 +43,7 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
   }, [value]);
 
   return (
-    <div ref={ref} className="font-display text-[44px] leading-none tracking-[0.02em] text-[#d4943b] md:text-[52px]">
+    <div ref={ref} className="font-display text-[36px] leading-none tracking-[0.02em] text-[#d4943b] sm:text-[44px] md:text-[52px]">
       {display}{suffix}
     </div>
   );
@@ -106,7 +106,7 @@ export default function WhyDominate() {
             {STATS.map((card) => (
               <div
                 key={card.label}
-                className="group rounded-[18px] border border-[#a67126]/14 bg-white/[0.025] p-[22px] transition-colors hover:border-[#a67126]/30 hover:bg-[#a67126]/[0.06]"
+                className="group rounded-[18px] border border-[#a67126]/14 bg-white/[0.025] p-4 transition-colors hover:border-[#a67126]/30 hover:bg-[#a67126]/[0.06] sm:p-[22px]"
               >
                 <AnimatedNumber value={card.value} suffix={card.suffix} />
                 <p className="mb-1.5 mt-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#f4eee4]">{card.label}</p>
@@ -115,7 +115,7 @@ export default function WhyDominate() {
             ))}
 
             {/* Wide card */}
-            <div className="col-span-2 rounded-[18px] border border-[#a67126]/26 bg-[#a67126]/8 p-[22px] transition-colors hover:bg-[#a67126]/12">
+            <div className="col-span-2 rounded-[18px] border border-[#a67126]/26 bg-[#a67126]/8 p-4 transition-colors hover:bg-[#a67126]/12 sm:p-[22px]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#a67126]/16">
                   <svg className="h-5 w-5 text-[#d4943b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

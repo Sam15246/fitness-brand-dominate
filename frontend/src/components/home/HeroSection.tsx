@@ -31,7 +31,7 @@ export default function HeroSection() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-14 pt-20 sm:px-8 sm:pb-20 sm:pt-24 lg:px-10 lg:pb-24 lg:pt-[120px]">
+      <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-24 pt-20 sm:px-8 sm:pb-20 sm:pt-24 md:pb-24 lg:px-10 lg:pt-[120px]">
         {/* Badge — fade in */}
         <div className="mb-6 inline-flex animate-[fadeInUp_0.6s_ease-out_0.2s_both] items-center gap-[10px] rounded-full border border-[#a67126]/30 bg-[#a67126]/16 px-4 py-[7px] text-[9.5px] font-bold uppercase tracking-[0.22em] text-[#d4943b]">
           <span className="h-[5px] w-[5px] shrink-0 animate-pulse rounded-full bg-[#d4943b]" aria-hidden="true" />

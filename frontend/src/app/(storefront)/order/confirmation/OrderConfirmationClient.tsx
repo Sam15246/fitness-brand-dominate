@@ -50,10 +50,10 @@ export default function OrderConfirmationClient() {
     : "/order/status";
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
-      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-8 text-center shadow-[0_8px_24px_rgba(146,104,56,0.08)]">
-        <p className="text-sm uppercase tracking-[0.28em] text-[#9a7147]">Order Placed</p>
-        <h1 className="text-brand-display mt-2 text-5xl uppercase tracking-[0.05em] text-[#3b2513]">Thank You</h1>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 pb-24 text-[#302115] sm:px-6 sm:py-8 md:pb-8">
+      <div className="mx-auto w-full max-w-3xl rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-5 text-center shadow-[0_8px_24px_rgba(146,104,56,0.08)] sm:p-8">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-[#9a7147] sm:text-sm">Order Placed</p>
+        <h1 className="text-brand-display mt-2 text-[clamp(36px,8vw,48px)] uppercase tracking-[0.05em] text-[#3b2513]">Thank You</h1>
 
         {orderNumber ? (
           <p className="mt-4 text-base text-[#6f5640]">

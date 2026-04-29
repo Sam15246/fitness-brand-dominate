@@ -39,7 +39,7 @@ export default function OrderStatusClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 text-[#302115] sm:px-6 sm:py-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#fff6e8_0%,#f7efdf_40%,#efe4cf_100%)] px-4 py-6 pb-24 text-[#302115] sm:px-6 sm:py-8 md:pb-8">
       <div className="mx-auto w-full max-w-4xl">
         <div className="rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-6 shadow-[0_8px_24px_rgba(146,104,56,0.08)]">
           <p className="text-sm uppercase tracking-[0.28em] text-[#9a7147]">Order Tracking</p>
@@ -50,19 +50,19 @@ export default function OrderStatusClient() {
               placeholder="Order number"
               value={orderNumber}
               onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
-              className="rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
+              className="rounded-xl border border-[#c7ac84] bg-[#fffefb] px-4 py-3.5 text-[13px] text-[#302115] outline-none transition-all focus:border-[#8f673f] focus:shadow-[0_0_0_3px_rgba(166,113,38,0.08)]"
             />
             <input
               placeholder="Order email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-lg border border-[#c7ac84] bg-[#fffefb] px-3 py-2 text-sm text-[#302115] outline-none focus:border-[#8f673f]"
+              className="rounded-xl border border-[#c7ac84] bg-[#fffefb] px-4 py-3.5 text-[13px] text-[#302115] outline-none transition-all focus:border-[#8f673f] focus:shadow-[0_0_0_3px_rgba(166,113,38,0.08)]"
             />
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-[#c89e65] px-5 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#1d150e] hover:bg-[#ddb684] disabled:opacity-60"
+              className="min-h-[48px] rounded-xl bg-[#c89e65] px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#1d150e] transition-colors hover:bg-[#ddb684] disabled:opacity-60"
             >
               {loading ? "Checking..." : "Track"}
             </button>
@@ -75,10 +75,11 @@ export default function OrderStatusClient() {
 
         {order ? (
           <div className="mt-6 rounded-2xl border border-[#d9c8ad] bg-[#fff8ec] p-6 shadow-[0_8px_24px_rgba(146,104,56,0.08)]">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <h2 className="text-lg font-semibold text-[#4f341f]">{order.order_number}</h2>
-              <div className="text-sm text-[#6f5640]">
-                Status: <span className="font-semibold text-[#4f341f]">{order.status}</span> | Shipping: <span className="font-semibold text-[#4f341f]">{order.shipping_status}</span>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-[#6f5640]">
+                <span>Status: <span className="font-semibold text-[#4f341f]">{order.status}</span></span>
+                <span>Shipping: <span className="font-semibold text-[#4f341f]">{order.shipping_status}</span></span>
               </div>
             </div>
 

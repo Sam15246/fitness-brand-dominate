@@ -96,7 +96,7 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
             <button
               type="button"
               onClick={() => goTo(activeIndex - 1)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#fffefb]/90 text-[#302115] opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-[#fffefb] group-hover:opacity-100"
+              className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#fffefb]/90 text-[#302115] shadow-lg backdrop-blur-sm transition-all hover:bg-[#fffefb] sm:left-3 sm:opacity-0 sm:group-hover:opacity-100"
               aria-label="Previous image"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -106,7 +106,7 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
             <button
               type="button"
               onClick={() => goTo(activeIndex + 1)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#fffefb]/90 text-[#302115] opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-[#fffefb] group-hover:opacity-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#fffefb]/90 text-[#302115] shadow-lg backdrop-blur-sm transition-all hover:bg-[#fffefb] sm:right-3 sm:opacity-0 sm:group-hover:opacity-100"
               aria-label="Next image"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -136,7 +136,7 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
 
       {/* Thumbnails */}
       {validImages.length > 1 && (
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-5 sm:gap-2">
           {validImages.map((image, i) => (
             <button
               key={image.id}

@@ -79,7 +79,7 @@ export default function Testimonials() {
           {doubled.map((review, i) => (
             <article
               key={`${review.name}-${i}`}
-              className="w-[320px] shrink-0 rounded-[20px] border border-[#d9c8ad] bg-[#fff8ec] p-7 shadow-[0_4px_16px_rgba(146,104,56,0.05)] transition-shadow hover:shadow-[0_8px_32px_rgba(146,104,56,0.12)] md:w-[360px]"
+              className="w-[280px] shrink-0 rounded-[20px] border border-[#d9c8ad] bg-[#fff8ec] p-5 shadow-[0_4px_16px_rgba(146,104,56,0.05)] transition-shadow hover:shadow-[0_8px_32px_rgba(146,104,56,0.12)] sm:w-[320px] sm:p-7 md:w-[360px]"
             >
               <Stars count={review.rating} />
               <blockquote className="mb-[22px] min-h-[60px] text-[14px] leading-[1.78] text-[#302115]">

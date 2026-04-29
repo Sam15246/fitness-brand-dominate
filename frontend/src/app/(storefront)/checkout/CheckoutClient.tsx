@@ -355,7 +355,7 @@ export default function CheckoutClient() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1240px] px-5 py-6 pb-28 sm:px-8 sm:py-8 sm:pb-8 lg:px-10">
+      <div className="mx-auto max-w-[1240px] px-5 py-6 pb-40 sm:px-8 sm:py-8 sm:pb-8 lg:px-10">
         {/* Error */}
         {error && (
           <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#a94442]/25 bg-[#a94442]/8 px-4 py-3">
@@ -736,7 +736,7 @@ export default function CheckoutClient() {
 
         {/* Mobile sticky CTA */}
         {!loadingPreview && preview && (
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#d9c8ad]/60 bg-[#fffefb]/95 px-5 py-3.5 backdrop-blur-md lg:hidden" style={{ paddingBottom: "max(0.875rem, env(safe-area-inset-bottom))" }}>
+          <div className="fixed inset-x-0 bottom-[68px] z-30 border-t border-[#d9c8ad]/60 bg-[#fffefb]/95 px-5 py-3 backdrop-blur-md sm:bottom-0 lg:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
             <div className="mx-auto flex w-full max-w-[1240px] items-center justify-between gap-4">
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#9a7147]">Payable</p>
