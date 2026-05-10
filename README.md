@@ -95,7 +95,7 @@ Editable policies are stored in the database and rendered dynamically:
 
 Admin UI: /admin/policies
 
-## Deployment (Render)
+## Deployment (Railway)
 
 ### Required files
 - `Procfile`
@@ -104,34 +104,49 @@ Admin UI: /admin/policies
 ### Environment variables
 - `FLASK_ENV=production`
 - `SECRET_KEY=<random hex>`
-- `DATABASE_URL=<Render PostgreSQL URL>`
-- `FLASK_APP=run.py`
+- `DATABASE_URL=<Railway PostgreSQL URL>`
+- `FLASK_APP=wsgi.py`
+- `FRONTEND_BASE_URL=<your frontend URL>`
+- `CORS_ORIGINS=<your frontend URL>`
+- `API_ERROR_STRATEGY=hybrid`
 
 ### Build + Start
 Build command:
 ```
-pip install -r requirements.txt && flask db upgrade
+pip install -r requirements.txt && python -m flask --app wsgi db upgrade
 ```
 Start command:
 ```
-gunicorn -w 4 -b 0.0.0.0:$PORT "wsgi:app"
+gunicorn -w 4 -k gevent -b 0.0.0.0:$PORT "wsgi:app"
 ```
 
 ### Post-deploy tasks
 ```
 python -c "from app.scripts.init_policies import init_policies; init_policies()"
+python -c "from app.scripts.seed_categories import seed_categories; seed_categories(silent=True)"
+python -c "from app.scripts.create_superadmin import create_superadmin; create_superadmin(silent=True)"
+python -c "from app.scripts.add_sample_products import add_sample_products; add_sample_products(silent=True)"
 ```
 
 ## Common Troubleshooting
 
-**Pillow build fails on Render**
+**Pillow build fails on Railway**
 - Ensure `runtime.txt` pins Python 3.11.x.
+- Make sure the Railway service uses the repository root as the build context.
 
 **Database connection errors**
-- Double-check `DATABASE_URL` in Render Environment.
+- Double-check `DATABASE_URL` in Railway Variables.
 
 **Missing policies**
 - Run the policy init command above.
+
+### Railway setup checklist
+1. Create a Railway project from this GitHub repository.
+2. Add a Railway PostgreSQL service and link it to the backend service.
+3. Set the variables above in the backend service.
+4. Use the start command above or keep the `Procfile` as the source of truth.
+5. Run the post-deploy commands once after the first deploy.
+6. If you store uploaded images, move `STORAGE_BACKEND` away from `local` before relying on Railway for production.
 
 ## License
 All rights reserved. Internal use only.

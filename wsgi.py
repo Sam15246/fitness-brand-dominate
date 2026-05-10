@@ -2,10 +2,10 @@
 WSGI entry point for production deployment with Gunicorn.
 
 Gunicorn command:
-  gunicorn --workers 4 --worker-class sync --timeout 60 wsgi:app
+    gunicorn --workers 4 --worker-class gevent --worker-connections 1000 --timeout 60 wsgi:app
 
 This file is used by:
-- Render.com deployment
+- Railway deployment
 - Traditional VPS hosting
 - Docker containers
 
