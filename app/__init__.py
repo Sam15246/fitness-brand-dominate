@@ -95,9 +95,12 @@ def create_app(config=None):
 
     app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
     
-    # Create tables if they don't exist
-    with app.app_context():
-        db.create_all()
+    # Create tables automatically only for local SQLite development.
+    # Production should use Flask-Migrate instead of implicit schema creation.
+    database_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if database_uri.startswith('sqlite'):
+        with app.app_context():
+            db.create_all()
     
     def _frontend_base_url() -> str:
         return (app.config.get('FRONTEND_BASE_URL') or 'http://localhost:3000').rstrip('/')
