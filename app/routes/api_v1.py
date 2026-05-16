@@ -399,6 +399,10 @@ def _resolve_coupon(cart_total, coupon_code):
 
     coupon = CouponCode.query.filter_by(code=code).first()
     if not coupon:
+        # If code matches an affiliate's code, treat it as an affiliate referral (no coupon)
+        affiliate = AffiliateProfile.query.filter_by(affiliate_code=code).first()
+        if affiliate:
+            return None, 0, None
         return None, 0, api_error('Invalid coupon code', status=404, code='coupon_not_found')
 
     is_valid, reason = coupon.can_apply_to_order(cart_total)
