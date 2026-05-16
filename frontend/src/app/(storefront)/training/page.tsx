@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import Footer from "@/components/home/Footer";
-import Navbar from "@/components/home/Navbar";
 import TrainingWaitlistForm from "@/components/training/TrainingWaitlistForm";
 
 const TRAINING_FEATURES = [
@@ -37,10 +35,7 @@ export const metadata: Metadata = {
 
 export default function TrainingPage() {
   return (
-    <>
-      <Navbar />
-
-      <main className="bg-[#0d0b09]">
+    <main className="bg-[#0d0b09]">
         <section className="relative overflow-hidden bg-[#0d0b09] pb-16 pt-16 md:pb-24 md:pt-20">
           <div
             className="pointer-events-none absolute inset-0"
@@ -143,8 +138,5 @@ export default function TrainingPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-    </>
   );
 }
