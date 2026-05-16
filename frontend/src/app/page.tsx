@@ -4,6 +4,8 @@ import AnnouncementBar from "@/components/home/AnnouncementBar";
 import CTAStrip from "@/components/home/CTAStrip";
 import FAQSection from "@/components/home/FAQSection";
 import Footer from "@/components/home/Footer";
+import CommunitySection from "@/components/home/CommunitySection";
+import GymPartnersSection from "@/components/home/GymPartnersSection";
 import HeroSection from "@/components/home/HeroSection";
 import HowItWorks from "@/components/home/HowItWorks";
 import MobileBottomNav from "@/components/home/MobileBottomNav";
@@ -41,6 +43,12 @@ export default function HomePage() {
 
         <div className="h-16 bg-gradient-to-b from-[#1e1710] to-[#f5e7d2]" aria-hidden="true" />
         <Testimonials />
+
+        <div className="h-9 bg-gradient-to-b from-[#f5e7d2] to-[#0d0b09]" aria-hidden="true" />
+        <CommunitySection />
+
+        <div className="h-9 bg-gradient-to-b from-[#0d0b09] to-[#1e1710]" aria-hidden="true" />
+        <GymPartnersSection />
 
         <div className="h-9 bg-gradient-to-b from-[#f5e7d2] to-[#fff8ec]" aria-hidden="true" />
         <FAQSection />
