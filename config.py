@@ -62,7 +62,9 @@ class Config:
     INSTAGRAM_URL = os.getenv('INSTAGRAM_URL', 'https://www.instagram.com/dominate.cali')
 
     # CORS
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    # Support both www and non-www domains, strip whitespace from comma-separated list
+    _cors_raw = os.getenv('CORS_ORIGINS', 'http://localhost:3000')
+    CORS_ORIGINS = [origin.strip() for origin in _cors_raw.split(',')]
 
     # Rate Limiting
     RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'memory://')
