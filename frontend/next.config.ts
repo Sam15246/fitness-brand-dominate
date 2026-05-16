@@ -1,14 +1,10 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const r2PublicHost = (process.env.NEXT_PUBLIC_R2_PUBLIC_HOST || "")
   .replace(/^https?:\/\//, "")
   .replace(/\/.*/, "");
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: path.join(__dirname),
-  },
   images: {
     remotePatterns: [
       {
