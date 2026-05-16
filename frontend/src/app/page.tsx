@@ -32,6 +32,9 @@ export default function HomePage() {
         <HeroSection />
         <TrustStrip />
 
+        <div className="h-10 bg-gradient-to-b from-[#1e1710] to-[#1e1710]" aria-hidden="true" />
+        <GymPartnersSection />
+
         <div className="h-16 bg-gradient-to-b from-[#1e1710] to-[#fff8ec]" aria-hidden="true" />
         <ProductsSection />
 
@@ -46,9 +49,6 @@ export default function HomePage() {
 
         <div className="h-9 bg-gradient-to-b from-[#f5e7d2] to-[#0d0b09]" aria-hidden="true" />
         <CommunitySection />
-
-        <div className="h-9 bg-gradient-to-b from-[#0d0b09] to-[#1e1710]" aria-hidden="true" />
-        <GymPartnersSection />
 
         <div className="h-9 bg-gradient-to-b from-[#f5e7d2] to-[#fff8ec]" aria-hidden="true" />
         <FAQSection />

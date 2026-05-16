@@ -74,6 +74,9 @@ export default function GymPartnersSection() {
             <p className="mt-4 max-w-[540px] text-[13.5px] leading-[1.85] text-[#f4eee4]/48 md:text-[14px]">
               Partner with DOMINATE and bring premium calisthenics & fitness essentials to your members.
             </p>
+            <p className="mt-3 inline-flex rounded-full border border-[#a67126]/22 bg-[#a67126]/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#d4943b]">
+              Priority focus: gym partnerships
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-3 animate-[fadeInUp_0.7s_ease-out_0.15s_both]">
@@ -82,13 +85,13 @@ export default function GymPartnersSection() {
               className="group relative inline-flex min-h-[52px] items-center justify-center overflow-hidden rounded-full border border-[#c89e65]/45 bg-[#a67126] px-8 py-[15px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(166,113,38,0.3)]"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              Partner With Us
+              Partner With DOMINATE
             </Link>
             <Link
               href="/training"
               className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-8 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/72 transition-all hover:border-[#a67126]/60 hover:bg-[#a67126]/14 hover:text-[#f4eee4]"
             >
-              Become a DOMINATE Gym
+              DOMINATE Gym (Coming Soon)
             </Link>
           </div>
         </div>

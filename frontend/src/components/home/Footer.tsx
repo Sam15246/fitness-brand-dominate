@@ -23,6 +23,7 @@ const COLS = [
     title: "Company",
     links: [
       { label: "About", href: "/about" },
+      { label: "Gym Partnerships", href: "/#gym-partners" },
       { label: "DOMINATE Gym", href: "/training" },
       { label: "Privacy Policy", href: "/privacy" },
       { label: "Terms", href: "/terms" },

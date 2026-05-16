@@ -10,7 +10,7 @@ import { getLocalCart } from "@/lib/local-cart";
 
 const NAV_LINKS = [
   { label: "Shop", href: "/products" },
-  { label: "DOMINATE GYM", href: "/training" },
+  { label: "For Gyms", href: "/#gym-partners" },
   { label: "How It Works", href: "/#how" },
   { label: "About", href: "/#why" },
   { label: "FAQ", href: "/#faq" },
