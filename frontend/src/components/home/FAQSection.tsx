@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+const freeShippingThreshold = process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD_RUPEES || '799'
+
 const FAQS = [
   {
     q: "How long does one bottle of liquid chalk last?",
@@ -17,7 +19,7 @@ const FAQS = [
   },
   {
     q: "What is your shipping and return policy?",
-    a: "Shipping runs across India. Free shipping above Rs. 799. Contact support for return requests within policy window.",
+    a: `Shipping runs across India. Free shipping above Rs. ${freeShippingThreshold}. Contact support for return requests within policy window.`,
   },
   {
     q: "Can I track my order after placing it?",

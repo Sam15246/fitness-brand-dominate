@@ -16,8 +16,8 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from app import create_app, db
-from app.models import User, UserRole
+from app import create_app
+from app.models import db, User, UserRole
 
 
 def create_superadmin(silent=False):

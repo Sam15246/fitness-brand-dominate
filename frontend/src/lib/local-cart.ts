@@ -25,6 +25,7 @@ const FALLBACK_CATALOG: Record<number, ProductCard> = {
     in_stock: true,
     is_coming_soon: false,
     stock_quantity: 50,
+    available_quantity: 50,
     average_rating: 0,
     review_count: 0,
     primary_image: {
@@ -51,6 +52,7 @@ const FALLBACK_CATALOG: Record<number, ProductCard> = {
     in_stock: false,
     is_coming_soon: true,
     stock_quantity: 0,
+    available_quantity: 0,
     average_rating: 0,
     review_count: 0,
     primary_image: {

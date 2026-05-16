@@ -41,7 +41,7 @@ def register_api_v1_cart_routes(
                 return api_error('Variant not found or inactive', status=404, code='variant_not_found')
         else:
             variant = get_or_create_default_variant(product)
-        available_stock = variant.stock_quantity if variant else product.stock_quantity
+        available_stock = variant.get_available_quantity() if variant else product.get_available_quantity()
         if available_stock < 1:
             return api_error('Product is out of stock', status=409, code='out_of_stock')
 
@@ -89,7 +89,7 @@ def register_api_v1_cart_routes(
             return api_error('Product not found', status=404, code='not_found')
 
         variant = get_or_create_default_variant(product)
-        available_stock = variant.stock_quantity if variant else product.stock_quantity
+        available_stock = variant.get_available_quantity() if variant else product.get_available_quantity()
 
         if quantity == 0:
             if current_user.is_authenticated:
@@ -128,7 +128,8 @@ def register_api_v1_cart_routes(
             db.session.commit()
         else:
             cart = get_session_cart()
-            cart[str(product.id)] = next_qty
+            cart_key = f"{product.id}:{variant.id}" if variant else str(product.id)
+            cart[cart_key] = next_qty
             session['cart'] = cart
             session.modified = True
 
@@ -141,7 +142,10 @@ def register_api_v1_cart_routes(
             db.session.commit()
         else:
             cart = get_session_cart()
-            cart.pop(str(product_id), None)
+            # Remove any entries for this product (including variant-specific keys)
+            keys_to_remove = [k for k in cart.keys() if k == str(product_id) or k.startswith(f"{product_id}:")]
+            for k in keys_to_remove:
+                cart.pop(k, None)
             session['cart'] = cart
             session.modified = True
 

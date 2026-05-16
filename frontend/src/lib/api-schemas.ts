@@ -16,6 +16,7 @@ const productVariantSchema = z.object({
   price_override: z.number().nullable(),
   effective_price: z.number(),
   stock_quantity: z.number(),
+  available_quantity: z.number().optional(),
   weight_grams: z.number().nullable(),
   is_active: z.boolean(),
 });
@@ -45,6 +46,7 @@ export const productCardSchema = z.object({
   in_stock: z.boolean(),
   is_coming_soon: z.boolean(),
   stock_quantity: z.number(),
+  available_quantity: z.number().optional(),
   average_rating: z.number(),
   review_count: z.number(),
   primary_image: productImageSchema.nullable(),

@@ -26,6 +26,7 @@ const FALLBACK_PRODUCTS: Record<string, ProductDetail> = {
     in_stock: true,
     is_coming_soon: false,
     stock_quantity: 50,
+    available_quantity: 50,
     average_rating: 0,
     review_count: 0,
     primary_image: { id: 0, path: "", url: "/liquid-chalk-dominate200ml.png", thumbnail_url: "/liquid-chalk-dominate200ml.png", is_primary: true, display_order: 0 },
@@ -48,6 +49,7 @@ const FALLBACK_PRODUCTS: Record<string, ProductDetail> = {
     in_stock: false,
     is_coming_soon: true,
     stock_quantity: 0,
+    available_quantity: 0,
     average_rating: 0,
     review_count: 0,
     primary_image: { id: 0, path: "", url: "/dominate-parallettes-standard.png", thumbnail_url: "/dominate-parallettes-standard.png", is_primary: true, display_order: 0 },
@@ -227,14 +229,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </div>
               </div>
             ) : (
-              <AddToCartButton
+                <AddToCartButton
                 productId={product.id}
                 basePrice={product.price}
                 basePriceDisplay={product.price_display}
                 originalPrice={product.price_original}
                 discountPercentage={product.discount_percentage}
                 defaultQuantity={1}
-                maxQuantity={product.stock_quantity}
+                maxQuantity={product.available_quantity ?? product.stock_quantity}
                 showBuyNow
                 variants={product.variants}
               />

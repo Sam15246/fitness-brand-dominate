@@ -41,6 +41,7 @@ def _serialize_product_variant(variant):
         'price_override': variant.price_override,
         'effective_price': variant.get_effective_price(),
         'stock_quantity': variant.stock_quantity,
+        'available_quantity': variant.get_available_quantity(),
         'weight_grams': variant.get_effective_weight_grams(),
         'is_active': bool(variant.is_active),
     }
@@ -62,6 +63,7 @@ def _serialize_product_card(product):
         'in_stock': product.is_in_stock(),
         'is_coming_soon': bool(getattr(product, 'is_coming_soon', False)),
         'stock_quantity': product.stock_quantity,
+        'available_quantity': product.get_available_quantity(),
         'average_rating': product.get_average_rating(),
         'review_count': product.get_review_count(),
         'primary_image': _serialize_product_image(primary_image) if primary_image else None,
@@ -227,7 +229,7 @@ def _merge_session_cart_into_db(user):
                 variant = _get_or_create_default_variant(product)
         else:
             variant = _get_or_create_default_variant(product)
-        available_stock = variant.stock_quantity if variant else product.stock_quantity
+        available_stock = variant.get_available_quantity() if variant else product.get_available_quantity()
         if available_stock < 1:
             continue
 
@@ -405,6 +407,9 @@ def _resolve_coupon(cart_total, coupon_code):
             return None, 0, None
         return None, 0, api_error('Invalid coupon code', status=404, code='coupon_not_found')
 
+    # Pass current user context so per-user limits can be enforced
+    from flask_login import current_user
+    user_id = current_user.id if current_user.is_authenticated else None
     is_valid, reason = coupon.can_apply_to_order(cart_total)
     if not is_valid:
         return None, 0, api_error(f'Coupon code unavailable: {reason}', status=409, code='coupon_unavailable')

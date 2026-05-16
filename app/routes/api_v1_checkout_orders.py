@@ -109,7 +109,7 @@ def register_api_v1_checkout_order_routes(
                 if not product or not product.is_active:
                     return api_error('Some products are no longer available', status=409, code='product_unavailable')
                 variant = get_or_create_default_variant(product)
-                stock_to_check = variant.stock_quantity if variant else product.stock_quantity
+                stock_to_check = variant.get_available_quantity() if variant else product.get_available_quantity()
                 if item['quantity'] > stock_to_check:
                     return api_error(
                         f"{product.name}: only {stock_to_check} available in stock",

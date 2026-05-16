@@ -53,6 +53,7 @@ export type ProductVariant = {
   price_override: number | null;
   effective_price: number;
   stock_quantity: number;
+  available_quantity?: number;
   weight_grams: number | null;
   is_active: boolean;
 };
@@ -71,6 +72,7 @@ export type ProductCard = {
   in_stock: boolean;
   is_coming_soon: boolean;
   stock_quantity: number;
+  available_quantity?: number;
   average_rating: number;
   review_count: number;
   primary_image: ProductImage | null;

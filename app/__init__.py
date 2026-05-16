@@ -6,7 +6,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_mail import Mail
 from config import get_config
-from app.models import db, User
+from app.models import db
 
 # Initialize Flask-Mail (configured in create_app)
 mail = Mail()
@@ -56,7 +56,9 @@ def create_app(config=None):
         app.logger.error(f"Email configuration failed: {str(e)}")
         app.logger.warning("App will start but email features will be disabled.")
     
-    # Initialize extensions
+    # Import models and initialize extensions (deferred to avoid import-time DB use)
+    from app.models import db, User
+
     db.init_app(app)
     Migrate(app, db)
     mail.init_app(app)  # Initialize Flask-Mail
@@ -100,6 +102,9 @@ def create_app(config=None):
     database_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     if database_uri.startswith('sqlite'):
         with app.app_context():
+            # In testing, ensure schema matches models by recreating tables
+            if app.config.get('TESTING'):
+                db.drop_all()
             db.create_all()
     
     def _frontend_base_url() -> str:
@@ -169,3 +174,32 @@ def create_app(config=None):
         return response
     
     return app
+
+
+def __getattr__(name: str):
+    if name == 'db':
+        return db
+    if name == 'mail':
+        return mail
+    if name == 'limiter':
+        return limiter
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __getattr__(name: str):
+    """Lazily expose commonly-imported package attributes without importing
+    database models at module import time.
+
+    This allows `from app import db` to work in scripts/tests without
+    triggering `app.models` during package import (which may run DB
+    queries at import time).
+    """
+    if name == 'db':
+        from app.models import db as _db
+
+        return _db
+    if name == 'mail':
+        return mail
+    if name == 'limiter':
+        return limiter
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 export default function AnnouncementBar() {
+  const threshold = process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD_RUPEES || '799'
   return (
     <div className="relative overflow-hidden bg-[#171411]">
       {/* Subtle shimmer effect */}
@@ -14,7 +15,7 @@ export default function AnnouncementBar() {
           <svg className="h-3 w-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          Free Shipping Above Rs. 799
+          Free Shipping Above Rs. {threshold}
         </span>
         <span className="hidden opacity-20 sm:inline">&bull;</span>
         <Link href="/products" className="group flex items-center gap-1 border-b border-[#d4943b]/30 pb-px transition-all hover:border-[#d4943b]/60">

@@ -37,13 +37,13 @@ export default function AddToCartButton({
   const [addedCount, setAddedCount] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(defaultQuantity);
 
-  const activeVariants = variants.filter((v) => v.is_active && v.stock_quantity > 0);
+  const activeVariants = variants.filter((v) => v.is_active && (v.available_quantity ?? v.stock_quantity) > 0);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
     activeVariants.length === 1 ? activeVariants[0].id : null,
   );
 
   const selectedVariant = activeVariants.find((v) => v.id === selectedVariantId) ?? null;
-  const effectiveMax = selectedVariant ? selectedVariant.stock_quantity : maxQuantity;
+  const effectiveMax = selectedVariant ? (selectedVariant.available_quantity ?? selectedVariant.stock_quantity) : maxQuantity;
   const needsVariantSelection = activeVariants.length > 1 && !selectedVariantId;
 
   function formatPrice(paise: number) {
@@ -169,9 +169,9 @@ export default function AddToCartButton({
                   <span className={`mt-0.5 block text-[12px] ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
                     {formatPrice(v.effective_price)}
                   </span>
-                  {v.stock_quantity <= 3 && (
+                  {(v.available_quantity ?? v.stock_quantity) <= 3 && (
                     <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-[#b87a3d]">
-                      Only {v.stock_quantity} left
+                      Only {v.available_quantity ?? v.stock_quantity} left
                     </span>
                   )}
                   {isSelected && (

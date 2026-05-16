@@ -687,6 +687,20 @@ class Product(db.Model):
     
     # Inventory Management
     stock_quantity = db.Column(db.Integer, nullable=False, default=0, index=True)
+
+    def get_reserved_quantity(self):
+        """Return quantity currently present in cart items for this product (logged-in users)."""
+        from app.models import CartItem
+        reserved = db.session.query(db.func.coalesce(db.func.sum(CartItem.quantity), 0)).filter(
+            CartItem.product_id == self.id
+        ).scalar() or 0
+        return int(reserved)
+
+    def get_available_quantity(self):
+        """Compute available quantity = stock_quantity - reserved_in_carts."""
+        reserved = self.get_reserved_quantity()
+        avail = self.stock_quantity - reserved
+        return avail if avail >= 0 else 0
     
     # Shipping Information (required for shipping cost calculation)
     weight_grams = db.Column(db.Integer, nullable=False)  # Weight in grams
@@ -925,6 +939,20 @@ class ProductVariant(db.Model):
         """Get variant weight, inheriting parent product weight when override is unset."""
         return self.weight_grams if self.weight_grams is not None else self.product.weight_grams
 
+    def get_reserved_quantity(self):
+        """Return reserved quantity in carts for this variant."""
+        from app.models import CartItem
+        reserved = db.session.query(db.func.coalesce(db.func.sum(CartItem.quantity), 0)).filter(
+            CartItem.variant_id == self.id
+        ).scalar() or 0
+        return int(reserved)
+
+    def get_available_quantity(self):
+        """Compute available quantity for this variant (stock - reserved)."""
+        reserved = self.get_reserved_quantity()
+        avail = self.stock_quantity - reserved
+        return avail if avail >= 0 else 0
+
     def __repr__(self):
         return f'<ProductVariant {self.sku} (Product {self.product_id})>'
 
@@ -1039,6 +1067,7 @@ class CouponCode(db.Model):
     __table_args__ = (
         CheckConstraint('(discount_percent IS NOT NULL OR discount_amount_fixed IS NOT NULL)', 
                        name='ck_coupon_has_discount'),
+        CheckConstraint('per_user_limit IS NULL OR per_user_limit > 0', name='ck_coupon_per_user_limit_positive'),
         CheckConstraint('discount_percent IS NULL OR (discount_percent >= 0 AND discount_percent <= 100)', 
                        name='ck_coupon_percent_valid'),
         CheckConstraint('discount_amount_fixed IS NULL OR discount_amount_fixed >= 0', 
@@ -1074,6 +1103,8 @@ class CouponCode(db.Model):
     # Usage Limits
     max_uses = db.Column(db.Integer, nullable=True)  # NULL = unlimited
     current_uses = db.Column(db.Integer, nullable=False, default=0)
+    # Optional per-user redemption limit (NULL = unlimited)
+    per_user_limit = db.Column(db.Integer, nullable=True)
     
     # Minimum order value to apply coupon (in paise)
     min_order_value = db.Column(db.Integer, nullable=False, default=0)
@@ -1130,7 +1161,25 @@ class CouponCode(db.Model):
         
         if order_subtotal < self.min_order_value:
             return False, f'Order must be at least ₹{self.min_order_value / 100:.2f}'
-        
+        # Per-user limit check: if provided, and a user_id is supplied in kwargs,
+        # count previous orders by the user that used this coupon (excluding cancelled orders).
+        # Note: callers may pass `user_id` in kwargs for user-specific checks.
+        from flask_login import current_user
+        try:
+            user_id = current_user.id if current_user and current_user.is_authenticated else None
+        except Exception:
+            user_id = None
+
+        if self.per_user_limit and user_id:
+            from app.models import Order
+            used_count = Order.query.filter(
+                Order.user_id == user_id,
+                Order.coupon_id == self.id,
+                Order.status != OrderStatus.CANCELLED.value,
+            ).count()
+            if used_count >= self.per_user_limit:
+                return False, 'Coupon redemption limit reached for this user'
+
         return True, 'Valid'
     
     def calculate_discount(self, order_subtotal):

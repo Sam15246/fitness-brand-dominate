@@ -66,6 +66,10 @@ class Config:
     _cors_raw = os.getenv('CORS_ORIGINS', 'http://localhost:3000')
     CORS_ORIGINS = [origin.strip() for origin in _cors_raw.split(',')]
 
+    # Free shipping threshold (stored in paise to avoid floating points)
+    # Backend authoritative value. Frontend should be set with matching
+    # `NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD_RUPEES` for display/build-time usage.
+    FREE_SHIPPING_THRESHOLD_PAISA = int(os.getenv('FREE_SHIPPING_THRESHOLD_PAISA', '149900'))
     # Rate Limiting
     RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'memory://')
     RATELIMIT_DEFAULT = '200/hour'
@@ -257,8 +261,12 @@ class TestingConfig(Config):
     DEBUG = True
     TESTING = True
     
-    # In-memory SQLite for tests
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    # File-based SQLite for tests (safer than in-memory across multiple
+    # connections). Uses instance/test.db inside the project.
+    db_path = Path(__file__).resolve().parent / 'instance'
+    db_path.mkdir(parents=True, exist_ok=True)
+    sqlite_path = (db_path / 'test.db').as_posix()
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{sqlite_path}'
     
     # Disable CSRF for tests
     WTF_CSRF_ENABLED = False

@@ -17,8 +17,8 @@ Categories structure:
     TRAINING BUNDLES
 """
 
-from app import create_app, db
-from app.models import ProductCategory
+from app import create_app
+from app.models import db, ProductCategory
 from datetime import datetime
 
 
