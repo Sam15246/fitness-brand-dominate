@@ -45,7 +45,15 @@ export default function AdminOrdersPage() {
   }, [page, query, status]);
 
   return (
-    <AdminShell title="Orders" subtitle="Monitor and process customer orders.">
+    <AdminShell
+      title="Orders"
+      subtitle="Monitor and process customer orders."
+      actions={
+        <Link href="/admin/orders/new" className="rounded-full bg-[#c89e65] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0d0b09] transition hover:bg-[#ddb684]">
+          + New Order
+        </Link>
+      }
+    >
       <div className="mb-4 grid gap-3 md:grid-cols-3">
         <input
           value={query}

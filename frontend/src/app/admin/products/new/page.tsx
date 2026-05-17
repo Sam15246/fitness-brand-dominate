@@ -21,12 +21,15 @@ export default function AdminProductCreatePage() {
     setCreatedId(null);
 
     try {
+      const priceRupees = Number(form.get("price") || 0);
+      const stockQuantity = Number(form.get("stock_quantity") || 0);
+      const weightGrams = Number(form.get("weight_grams") || 0);
       const product = await createAdminProduct({
         name: String(form.get("name") || "").trim(),
         description: String(form.get("description") || "").trim(),
-        price: Number(form.get("price") || 0),
-        stock_quantity: Number(form.get("stock_quantity") || 0),
-        weight_grams: Number(form.get("weight_grams") || 0),
+        price: Math.round(priceRupees * 100),
+        stock_quantity: stockQuantity,
+        weight_grams: weightGrams,
         dimensions: String(form.get("dimensions") || "").trim(),
         image_url: String(form.get("image_url") || "").trim(),
         is_active: form.get("is_active") === "on",
@@ -57,7 +60,7 @@ export default function AdminProductCreatePage() {
           <textarea id="description" name="description" rows={4} required className="w-full rounded-lg border border-[#8b6f47]/40 bg-[#120f0c] px-3 py-2 text-sm text-[#f4eee4] outline-none focus:border-[#b59a73]" />
         </div>
         <div className="grid gap-3 md:grid-cols-3">
-          <Field label="Price (paise)" name="price" required />
+          <Field label="Price (₹)" name="price" required />
           <Field label="Stock" name="stock_quantity" required />
           <Field label="Weight (grams)" name="weight_grams" required />
         </div>

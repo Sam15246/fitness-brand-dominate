@@ -62,12 +62,15 @@ export default function AdminProductEditPage() {
     setSuccess(null);
 
     try {
+      const priceRupees = Number(form.get("price") || 0);
+      const priceOriginalRupees = String(form.get("price_original") || "").trim();
+      const priceDiscountedRupees = String(form.get("price_discounted") || "").trim();
       const updated = await updateAdminProduct(product.id, {
         name: String(form.get("name") || "").trim(),
         description: String(form.get("description") || "").trim(),
-        price: Number(form.get("price") || 0),
-        stock_quantity: Number(form.get("stock_quantity") || 0),
-        weight_grams: Number(form.get("weight_grams") || 0),
+        price: Math.round(priceRupees * 100),
+        price_original: priceOriginalRupees ? Math.round(Number(priceOriginalRupees) * 100) : null,
+        price_discounted: priceDiscountedRupees ? Math.round(Number(priceDiscountedRupees) * 100) : null,
         dimensions: String(form.get("dimensions") || "").trim(),
         image_url: String(form.get("image_url") || "").trim(),
         is_active: form.get("is_active") === "on",
@@ -102,9 +105,14 @@ export default function AdminProductEditPage() {
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              <Field label="Price (paise)" name="price" defaultValue={String(product.price)} />
+              <Field label="Price (₹)" name="price" defaultValue={String(product.price / 100)} />
               <Field label="Stock" name="stock_quantity" defaultValue={String(product.stock_quantity)} />
               <Field label="Weight (grams)" name="weight_grams" defaultValue={String(product.weight_grams)} />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Original Price (₹)" name="price_original" defaultValue={product.price_original != null ? String(product.price_original / 100) : ""} />
+              <Field label="Discounted Price (₹)" name="price_discounted" defaultValue={product.price_discounted != null ? String(product.price_discounted / 100) : ""} />
             </div>
 
             <Field label="Dimensions" name="dimensions" defaultValue={product.dimensions || ""} />

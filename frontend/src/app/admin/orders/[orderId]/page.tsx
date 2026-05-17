@@ -197,6 +197,7 @@ export default function AdminOrderDetailPage() {
               {order.items.map((item) => (
                 <div key={item.id} className="rounded-lg border border-[#8b6f47]/20 bg-[#120f0c] px-3 py-2 text-sm text-[#d8c19a]">
                   <p className="font-medium text-[#f2dfc0]">{item.product_name}</p>
+                  {item.variant_label ? <p className="text-xs text-[#8b6f47]">Variant: {item.variant_label}</p> : null}
                   <p>Qty {item.quantity} x {item.unit_price_display} = {item.subtotal_display}</p>
                 </div>
               ))}

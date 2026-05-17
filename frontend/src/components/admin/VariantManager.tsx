@@ -43,7 +43,30 @@ export default function VariantManager({ productId }: VariantManagerProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   useEffect(() => {
-    loadVariants();
+    let active = true;
+
+    async function loadInitialVariants() {
+      setLoading(true);
+      try {
+        const data = await listAdminVariants(productId);
+        if (active) {
+          setVariants(data);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : "Failed to load variants");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadInitialVariants();
+    return () => {
+      active = false;
+    };
   }, [productId]);
 
   async function loadVariants() {
@@ -64,7 +87,7 @@ export default function VariantManager({ productId }: VariantManagerProps) {
       sku: v.sku,
       optionKey: entries[0]?.[0] || "size",
       optionValue: entries[0]?.[1] || "",
-      price_override: v.price_override != null ? String(v.price_override) : "",
+      price_override: v.price_override != null ? String(v.price_override / 100) : "",
       stock_quantity: String(v.stock_quantity),
       is_active: v.is_active,
     });
@@ -99,7 +122,7 @@ export default function VariantManager({ productId }: VariantManagerProps) {
     const payload = {
       sku: form.sku.trim(),
       option_values,
-      price_override: form.price_override ? Number(form.price_override) : null,
+      price_override: form.price_override ? Math.round(Number(form.price_override) * 100) : null,
       stock_quantity: Number(form.stock_quantity) || 0,
       is_active: form.is_active,
     };
@@ -180,7 +203,7 @@ export default function VariantManager({ productId }: VariantManagerProps) {
                 type="text"
                 value={form.sku}
                 onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                placeholder="e.g. LC-100GM"
+                placeholder="Leave blank to auto-generate"
                 className="w-full rounded-lg border border-[#8b6f47]/30 bg-[#0d0b09] px-3 py-2 text-sm text-[#f2dfc0] outline-none focus:border-[#c89e65]"
               />
             </div>
@@ -213,16 +236,16 @@ export default function VariantManager({ productId }: VariantManagerProps) {
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <label className="mb-1 block text-[10px] uppercase tracking-wider text-[#8b6f47]">Price (paise)</label>
+              <label className="mb-1 block text-[10px] uppercase tracking-wider text-[#8b6f47]">Price (₹)</label>
               <input
                 type="number"
                 value={form.price_override}
                 onChange={(e) => setForm({ ...form, price_override: e.target.value })}
-                placeholder="e.g. 15000 = ₹150"
+                placeholder="e.g. 150"
                 className="w-full rounded-lg border border-[#8b6f47]/30 bg-[#0d0b09] px-3 py-2 text-sm text-[#f2dfc0] outline-none focus:border-[#c89e65]"
               />
               {form.price_override ? (
-                <p className="mt-0.5 text-[10px] text-[#8b6f47]">= ₹{(Number(form.price_override) / 100).toFixed(2)}</p>
+                <p className="mt-0.5 text-[10px] text-[#8b6f47]">Stored as ₹{Number(form.price_override).toFixed(2)}</p>
               ) : null}
             </div>
             <div>

@@ -430,11 +430,14 @@ def _clear_cart_internal():
 
 def _serialize_order_item(item):
     product = item.product
+    variant = item.variant
     return {
         'id': item.id,
         'product_id': item.product_id,
         'product_name': product.name if product else 'Product',
         'product_slug': product.slug if product else None,
+        'variant_id': item.variant_id,
+        'variant_label': _variant_label(variant),
         'quantity': item.quantity,
         'unit_price': item.unit_price,
         'unit_price_display': f'₹{item.unit_price / 100:.2f}',

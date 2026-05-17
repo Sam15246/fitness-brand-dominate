@@ -271,7 +271,8 @@ def register_api_v1_checkout_order_routes(
         normalized = (order_number or '').strip().upper()
         order = (
             Order.query.options(
-                selectinload(Order.items).selectinload(OrderItem.product)
+                selectinload(Order.items).selectinload(OrderItem.product),
+                selectinload(Order.items).selectinload(OrderItem.variant),
             )
             .filter_by(order_number=normalized)
             .first()
@@ -302,7 +303,8 @@ def register_api_v1_checkout_order_routes(
 
         query = (
             Order.query.options(
-                selectinload(Order.items).selectinload(OrderItem.product)
+                selectinload(Order.items).selectinload(OrderItem.product),
+                selectinload(Order.items).selectinload(OrderItem.variant),
             )
             .filter_by(user_id=current_user.id)
             .order_by(Order.created_at.desc())

@@ -157,6 +157,8 @@ export type OrderLineSummary = {
   product_id: number;
   product_name: string;
   product_slug: string | null;
+  variant_id?: number | null;
+  variant_label?: string | null;
   quantity: number;
   unit_price: number;
   unit_price_display: string;
@@ -821,6 +823,30 @@ export async function cancelAdminOrder(orderId: number, reason?: string): Promis
   const response = await apiPost<{ order: OrderSummary }>(`/admin/orders/${orderId}/cancel`, {
     reason,
   });
+  return response.data.order;
+}
+
+export type AdminOrderItemInput = {
+  product_id: number;
+  variant_id?: number | null;
+  quantity: number;
+  unit_price?: number | null;
+};
+
+export type AdminOrderCreatePayload = {
+  customer_name: string;
+  phone_number: string;
+  email: string;
+  city: string;
+  state: string;
+  pincode: string;
+  address: string;
+  confirm_now?: boolean;
+  items: AdminOrderItemInput[];
+};
+
+export async function createAdminOrder(payload: AdminOrderCreatePayload): Promise<OrderSummary> {
+  const response = await apiPost<{ order: OrderSummary }>("/admin/orders", payload);
   return response.data.order;
 }
 

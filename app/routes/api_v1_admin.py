@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 
 from flask import current_app, request
 from flask_login import current_user
@@ -6,9 +7,37 @@ from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 
 from app.business_logic import AffiliateManager, OrderManager
-from app.models import AffiliateProfile, CartItem, CommissionStatus, CouponCode, Order, OrderItem, OrderStatus, PolicyPage, Product, ProductImage, ProductVariant, Review, User, UserRole, db
+from app.models import AffiliateProfile, CartItem, CommissionStatus, CouponCode, Order, OrderItem, OrderStatus, PolicyPage, Product, ProductImage, ProductVariant, Review, ShippingStatus, User, UserRole, db
 from app.routes.api_v1_common import api_error, api_success
 from app.storage import get_storage
+
+
+def _normalize_sku_fragment(value):
+    text = re.sub(r'[^A-Za-z0-9]+', '-', str(value or '').strip().upper())
+    return re.sub(r'-+', '-', text).strip('-')
+
+
+def _generate_variant_sku(product, option_values):
+    base_candidates = [getattr(product, 'sku', None), getattr(product, 'slug', None), product.name, f'PRD-{product.id}']
+    base = next((fragment for fragment in (_normalize_sku_fragment(value) for value in base_candidates) if fragment), f'PRD-{product.id}')
+
+    option_fragments = []
+    for key, value in (option_values or {}).items():
+        fragment = _normalize_sku_fragment(value) or _normalize_sku_fragment(key)
+        if fragment:
+            option_fragments.append(fragment)
+
+    sku_root = '-'.join([base] + option_fragments[:3]).strip('-') or f'PRD-{product.id}'
+    sku_root = sku_root[:92].strip('-') or f'PRD-{product.id}'
+
+    sku = sku_root
+    suffix = 2
+    while ProductVariant.query.filter_by(sku=sku).first():
+        suffix_text = f'-{suffix}'
+        sku = f"{sku_root[: max(1, 100 - len(suffix_text))].rstrip('-')}{suffix_text}"
+        suffix += 1
+
+    return sku
 
 
 def register_api_v1_admin_routes(
@@ -68,7 +97,10 @@ def register_api_v1_admin_routes(
         status_filter = (request.args.get('status') or 'all').strip().lower()
         q = (request.args.get('q') or '').strip()
 
-        query = Order.query.options(selectinload(Order.items).selectinload(OrderItem.product))
+        query = Order.query.options(
+            selectinload(Order.items).selectinload(OrderItem.product),
+            selectinload(Order.items).selectinload(OrderItem.variant),
+        )
 
         if status_filter != 'all':
             query = query.filter(Order.status == status_filter)
@@ -98,6 +130,133 @@ def register_api_v1_admin_routes(
             },
         )
 
+    @api_v1_bp.post('/admin/orders')
+    def admin_create_order():
+        auth_error = require_admin()
+        if auth_error:
+            return auth_error
+
+        payload = request.get_json(silent=True) or {}
+
+        customer_name = (payload.get('customer_name') or '').strip()
+        phone_number = (payload.get('phone_number') or '').strip()
+        email = (payload.get('email') or '').strip().lower()
+        city = (payload.get('city') or '').strip()
+        state = (payload.get('state') or '').strip()
+        pincode = (payload.get('pincode') or '').strip()
+        address = (payload.get('address') or '').strip()
+        confirm_now = parse_bool(payload.get('confirm_now'), True)
+
+        required_fields = {
+            'customer_name': customer_name,
+            'phone_number': phone_number,
+            'email': email,
+            'city': city,
+            'state': state,
+            'pincode': pincode,
+            'address': address,
+        }
+        missing_fields = [field for field, value in required_fields.items() if not value]
+        if missing_fields:
+            return api_error(f"Missing required fields: {', '.join(missing_fields)}", status=400, code='validation_error')
+
+        if len(customer_name) < 3:
+            return api_error('Customer name must be at least 3 characters', status=400, code='validation_error')
+        if len(phone_number) != 10 or not phone_number.isdigit():
+            return api_error('Phone number must be a valid 10-digit number', status=400, code='validation_error')
+        if '@' not in email:
+            return api_error('Email must be valid', status=400, code='validation_error')
+        if len(pincode) != 6 or not pincode.isdigit():
+            return api_error('Pincode must be a valid 6-digit number', status=400, code='validation_error')
+
+        items_payload = payload.get('items') or []
+        if not isinstance(items_payload, list) or not items_payload:
+            return api_error('At least one order item is required', status=400, code='validation_error')
+
+        normalized_items = []
+
+        for index, raw_item in enumerate(items_payload, 1):
+            if not isinstance(raw_item, dict):
+                return api_error(f'Item #{index} is invalid', status=400, code='validation_error')
+
+            product_id = parse_int(raw_item.get('product_id'), 0)
+            variant_id = parse_int(raw_item.get('variant_id'), 0)
+            quantity = max(parse_int(raw_item.get('quantity'), 0), 0)
+            unit_price = parse_int(raw_item.get('unit_price'), None)
+
+            if product_id <= 0:
+                return api_error(f'Item #{index}: valid product is required', status=400, code='validation_error')
+            if quantity <= 0:
+                return api_error(f'Item #{index}: quantity must be greater than 0', status=400, code='validation_error')
+
+            product = db.session.get(Product, product_id)
+            if not product or not product.is_active:
+                return api_error(f'Item #{index}: product not found or inactive', status=404, code='not_found')
+
+            variant = None
+            if variant_id > 0:
+                variant = ProductVariant.query.filter_by(id=variant_id, product_id=product.id).first()
+                if not variant or not variant.is_active:
+                    return api_error(f'Item #{index}: variant not found or inactive', status=404, code='not_found')
+            else:
+                variant = _get_or_create_default_variant(product)
+
+            available_stock = variant.get_available_quantity() if variant else product.get_available_quantity()
+            if quantity > available_stock:
+                return api_error(
+                    f'Item #{index}: only {available_stock} available for {product.name}',
+                    status=409,
+                    code='insufficient_stock',
+                )
+
+            resolved_unit_price = unit_price if unit_price and unit_price > 0 else _resolve_unit_price(product, variant)
+            if resolved_unit_price <= 0:
+                return api_error(f'Item #{index}: unit price must be greater than 0', status=400, code='validation_error')
+
+            normalized_items.append((product, variant, quantity, resolved_unit_price))
+
+        order = Order(
+            order_number=_generate_order_number(),
+            user_id=None,
+            currency_code='INR',
+            guest_name=customer_name,
+            guest_phone=phone_number,
+            guest_email=email,
+            city=city,
+            state=state,
+            pincode=pincode,
+            address=address,
+            status=OrderStatus.PENDING.value,
+            shipping_status=ShippingStatus.PENDING.value,
+        )
+
+        db.session.add(order)
+        db.session.flush()
+
+        for product, variant, quantity, resolved_unit_price in normalized_items:
+            db.session.add(
+                OrderItem(
+                    order_id=order.id,
+                    product_id=product.id,
+                    variant_id=variant.id if variant else None,
+                    variant_snapshot=variant.option_values if variant else None,
+                    quantity=quantity,
+                    unit_price=resolved_unit_price,
+                )
+            )
+
+        db.session.flush()
+
+        if confirm_now:
+            if not order.confirm_order():
+                db.session.rollback()
+                return api_error('Unable to confirm manual order', status=409, code='insufficient_stock')
+        else:
+            db.session.commit()
+
+        db.session.refresh(order)
+        return api_success(data={'order': serialize_order(order)}, status=201)
+
     @api_v1_bp.get('/admin/orders/<int:order_id>')
     def admin_get_order(order_id):
         auth_error = require_admin()
@@ -106,7 +265,8 @@ def register_api_v1_admin_routes(
 
         order = (
             Order.query.options(
-                selectinload(Order.items).selectinload(OrderItem.product)
+                selectinload(Order.items).selectinload(OrderItem.product),
+                selectinload(Order.items).selectinload(OrderItem.variant),
             )
             .filter_by(id=order_id)
             .first()
@@ -1319,7 +1479,9 @@ def register_api_v1_admin_routes(
         stock_quantity = parse_int(payload.get('stock_quantity'), 0)
         is_active = parse_bool(payload.get('is_active'), True)
 
-        if not sku or len(sku) < 2:
+        if not sku:
+            sku = _generate_variant_sku(product, option_values)
+        elif len(sku) < 2:
             return api_error('SKU must be at least 2 characters', status=400, code='validation_error')
 
         existing = ProductVariant.query.filter_by(sku=sku).first()
@@ -1353,7 +1515,9 @@ def register_api_v1_admin_routes(
 
         if 'sku' in payload:
             sku = (payload['sku'] or '').strip()
-            if len(sku) < 2:
+            if not sku:
+                sku = variant.sku
+            elif len(sku) < 2:
                 return api_error('SKU must be at least 2 characters', status=400, code='validation_error')
             existing = ProductVariant.query.filter(ProductVariant.sku == sku, ProductVariant.id != variant_id).first()
             if existing:
