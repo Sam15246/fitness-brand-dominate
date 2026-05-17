@@ -155,7 +155,16 @@ export default function AdminProductEditPage() {
                 thumbnail_url: img.thumbnail_url || '',
                 display_order: img.display_order
               }))} 
-              onImagesChange={setImages} 
+              onImagesChange={(uploadedImages) => {
+                setImages(uploadedImages.map(img => ({
+                  id: img.id,
+                  path: img.url,
+                  url: img.url,
+                  thumbnail_url: img.thumbnailUrl,
+                  is_primary: false,
+                  display_order: img.displayOrder
+                })));
+              }}
             />
           </div>
 
