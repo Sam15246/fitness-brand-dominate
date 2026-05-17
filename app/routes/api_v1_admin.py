@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.business_logic import AffiliateManager, OrderManager
 from app.models import AffiliateProfile, CartItem, CommissionStatus, CouponCode, Order, OrderItem, OrderStatus, PolicyPage, Product, ProductImage, ProductVariant, Review, ShippingStatus, User, UserRole, db
+from app.routes.api_v1 import _get_or_create_default_variant
 from app.routes.api_v1_common import api_error, api_success
 from app.storage import get_storage
 
@@ -1115,6 +1116,8 @@ def register_api_v1_admin_routes(
         payload = request.get_json(silent=True) or {}
 
         file_obj = request.files.get('file') if request.files else None
+        image_data = payload.get('image_data') if isinstance(payload, dict) else None
+        
         if file_obj:
             payload = request.form or {}
             storage = get_storage()
@@ -1124,6 +1127,32 @@ def register_api_v1_admin_routes(
 
             image_path = (upload_result.get('url') or '').strip()
             storage_path = (upload_result.get('storage_path') or '').strip() or None
+        elif image_data:
+            # Handle base64 image data from client
+            import base64
+            from io import BytesIO
+            try:
+                if image_data.startswith('data:'):
+                    header, data = image_data.split(',', 1)
+                    mime_type = header.split(':')[1].split(';')[0] if ':' in header else 'image/jpeg'
+                else:
+                    data = image_data
+                    mime_type = 'image/jpeg'
+                
+                image_bytes = base64.b64decode(data)
+                file_obj = BytesIO(image_bytes)
+                file_obj.name = f'product_{product_id}_{int(datetime.now().timestamp())}.jpg'
+                
+                storage = get_storage()
+                upload_result = storage.upload(file_obj, None)
+                if not upload_result.get('success'):
+                    return api_error(upload_result.get('error') or 'Image upload failed', status=400, code='validation_error')
+
+                image_path = (upload_result.get('url') or '').strip()
+                storage_path = (upload_result.get('storage_path') or '').strip() or None
+            except Exception as e:
+                current_app.logger.error(f'Base64 image decode error: {e}')
+                return api_error('Invalid image data', status=400, code='validation_error')
         else:
             image_path = (payload.get('image_path') or '').strip()
             storage_path = (payload.get('storage_path') or '').strip() or None
@@ -1151,7 +1180,7 @@ def register_api_v1_admin_routes(
             image.is_primary = True
 
         db.session.commit()
-        return api_success(data={'image': serialize_product_image(image)}, status=201)
+        return api_success(data=serialize_product_image(image), status=201)
 
     @api_v1_bp.put('/admin/products/<int:product_id>/images/<int:image_id>')
     def admin_update_product_image(product_id, image_id):
@@ -1217,6 +1246,26 @@ def register_api_v1_admin_routes(
 
         db.session.commit()
         return api_success(data={'deleted': True})
+
+    @api_v1_bp.patch('/admin/products/<int:product_id>/images/<int:image_id>/reorder')
+    def admin_reorder_product_image(product_id, image_id):
+        auth_error = require_admin()
+        if auth_error:
+            return auth_error
+
+        image = ProductImage.query.filter_by(id=image_id, product_id=product_id).first()
+        if not image:
+            return api_error('Image not found', status=404, code='not_found')
+
+        payload = request.get_json(silent=True) or {}
+        new_order = parse_int(payload.get('display_order'), image.display_order)
+        
+        if new_order < 0:
+            new_order = 0
+
+        image.display_order = new_order
+        db.session.commit()
+        return api_success(data=serialize_product_image(image))
 
     @api_v1_bp.post('/admin/reviews')
     def admin_create_review():
