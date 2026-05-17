@@ -1143,7 +1143,8 @@ def register_api_v1_admin_routes(
                 
                 image_bytes = base64.b64decode(data)
                 file_obj = BytesIO(image_bytes)
-                file_obj.name = f'product_{product_id}_{int(datetime.now().timestamp())}.jpg'
+                # storage/image validation expects a filename attribute
+                file_obj.filename = f'product_{product_id}_{int(datetime.now().timestamp())}.jpg'
                 
                 storage = get_storage()
                 upload_result = storage.upload(file_obj, None)
@@ -1178,9 +1179,7 @@ def register_api_v1_admin_routes(
         if is_primary:
             ProductImage.query.filter_by(product_id=product_id, is_primary=True).update({'is_primary': False}, synchronize_session=False)
             image.is_primary = True
-                            # Add filename attribute for storage/validation to work
-                            filename = f'product_{product_id}_{int(datetime.now().timestamp())}.jpg'
-                            file_obj.filename = filename
+        elif ProductImage.query.filter_by(product_id=product_id, is_primary=True).count() == 0:
             image.is_primary = True
 
         db.session.commit()
