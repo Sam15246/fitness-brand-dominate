@@ -65,6 +65,7 @@ export type ProductCard = {
   description: string;
   price: number;
   price_display: string;
+  listing_price_display?: string;
   price_original: number | null;
   price_discounted: number | null;
   is_discount_active: boolean;

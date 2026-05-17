@@ -39,6 +39,7 @@ export const productCardSchema = z.object({
   description: z.string(),
   price: z.number(),
   price_display: z.string(),
+  listing_price_display: z.string().optional(),
   price_original: z.number().nullable(),
   price_discounted: z.number().nullable(),
   is_discount_active: z.boolean(),

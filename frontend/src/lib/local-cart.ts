@@ -18,6 +18,7 @@ const FALLBACK_CATALOG: Record<number, ProductCard> = {
       "Premium liquid chalk made with edible-grade Magnesium Carbonate. Strong grip, zero slip.",
     price: 15000,
     price_display: "\u20B9150",
+    listing_price_display: "From ₹250.00",
     price_original: null,
     price_discounted: null,
     is_discount_active: false,

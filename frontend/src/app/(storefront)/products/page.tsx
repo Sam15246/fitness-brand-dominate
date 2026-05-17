@@ -14,6 +14,7 @@ const FALLBACK_PRODUCTS: ProductCard[] = [
     description: "Premium liquid chalk made with edible-grade Magnesium Carbonate. Strong grip, zero slip — available in 100gm and 200gm bottles.",
     price: 15000,
     price_display: "\u20B9150",
+    listing_price_display: "From ₹250.00",
     price_original: null,
     price_discounted: null,
     is_discount_active: false,
@@ -226,7 +227,7 @@ export default async function ProductsPage({
                 <div className="mt-4 flex items-center justify-between border-t border-[#d9c8ad]/50 pt-4">
                   <div>
                     <span className="font-display text-[22px] tracking-[0.02em] text-[#302115]">
-                      {product.price_display}
+                      {product.listing_price_display || product.price_display}
                     </span>
                     {product.price_original && product.is_discount_active && (
                       <span className="ml-2 text-[11px] text-[#9a7147] line-through">

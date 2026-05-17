@@ -33,6 +33,17 @@ def _serialize_product_image(image):
     }
 
 
+def _get_listing_price_display(product):
+    active_variants = [variant for variant in getattr(product, 'variants', []) if variant.is_active]
+    if not active_variants:
+        return product.get_price_display()
+
+    lowest_price = min(variant.get_effective_price() for variant in active_variants)
+    if len(active_variants) > 1:
+        return f'From ₹{lowest_price / 100:.2f}'
+    return f'₹{lowest_price / 100:.2f}'
+
+
 def _serialize_product_variant(variant):
     return {
         'id': variant.id,
@@ -56,6 +67,7 @@ def _serialize_product_card(product):
         'description': product.description,
         'price': product.price,
         'price_display': product.get_price_display(),
+        'listing_price_display': _get_listing_price_display(product),
         'price_original': product.price_original,
         'price_discounted': product.price_discounted,
         'is_discount_active': bool(product.is_discount_active),

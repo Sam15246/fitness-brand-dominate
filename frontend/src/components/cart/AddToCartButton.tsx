@@ -45,6 +45,9 @@ export default function AddToCartButton({
   const selectedVariant = activeVariants.find((v) => v.id === selectedVariantId) ?? null;
   const effectiveMax = selectedVariant ? (selectedVariant.available_quantity ?? selectedVariant.stock_quantity) : maxQuantity;
   const needsVariantSelection = activeVariants.length > 1 && !selectedVariantId;
+  const lowestVariantPrice = activeVariants.length > 0
+    ? Math.min(...activeVariants.map((variant) => variant.effective_price))
+    : basePrice;
 
   function formatPrice(paise: number) {
     return `\u20B9${(paise / 100).toFixed(0)}`;
@@ -118,7 +121,9 @@ export default function AddToCartButton({
   // Compute displayed price based on selected variant
   const displayPrice = selectedVariant
     ? formatPrice(selectedVariant.effective_price)
-    : basePriceDisplay;
+    : activeVariants.length > 1
+      ? `From ${formatPrice(lowestVariantPrice)}`
+      : basePriceDisplay;
   const showOriginal = !selectedVariant && discountPercentage > 0 && originalPrice;
 
   return (

@@ -9,6 +9,7 @@ type HomeCard = {
   name: string;
   desc: string;
   price_display: string;
+  listing_price_display?: string;
   image: string;
   cta: string;
 };
@@ -20,6 +21,7 @@ const FALLBACK_PRODUCTS: HomeCard[] = [
     name: "Liquid Chalk",
     desc: "Premium liquid chalk for cleaner grip and better control during intense training.",
     price_display: "Rs. 300",
+    listing_price_display: "From ₹250.00",
     image: "/liquid-chalk-dominate200ml.png",
     cta: "Shop Now",
   },
@@ -148,7 +150,7 @@ export default async function ProductsSection() {
                 <p className="mb-6 flex-1 text-[13px] leading-[1.75] text-[#6c5641]">{card.desc}</p>
 
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <span className="font-display text-[28px] tracking-[0.03em] text-[#302115]">{card.price_display}</span>
+                  <span className="font-display text-[28px] tracking-[0.03em] text-[#302115]">{card.listing_price_display || card.price_display}</span>
                   <span className="inline-flex items-center gap-2 rounded-full border border-[#a67126]/22 bg-[#1e1710] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4eee4] transition-all duration-300 group-hover:bg-[#a67126] group-hover:shadow-[0_4px_16px_rgba(166,113,38,0.3)]">
                     {card.cta}
                     <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
