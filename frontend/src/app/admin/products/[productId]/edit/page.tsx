@@ -147,7 +147,16 @@ export default function AdminProductEditPage() {
 
           {/* Image Upload Manager */}
           <div className="mt-6">
-            <ImageUploadManager productId={productId} initialImages={images} onImagesChange={setImages} />
+            <ImageUploadManager 
+              productId={productId} 
+              initialImages={images.map(img => ({
+                id: img.id,
+                url: img.url || '',
+                thumbnail_url: img.thumbnail_url || '',
+                display_order: img.display_order
+              }))} 
+              onImagesChange={setImages} 
+            />
           </div>
 
           {/* Variant Management */}
