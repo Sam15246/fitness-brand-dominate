@@ -49,9 +49,14 @@ export default function AdminOrdersPage() {
       title="Orders"
       subtitle="Monitor and process customer orders."
       actions={
-        <Link href="/admin/orders/new" className="rounded-full bg-[#c89e65] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0d0b09] transition hover:bg-[#ddb684]">
-          + New Order
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/orders/import" className="rounded-full border border-[#8b6f47]/40 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#d8c19a] transition hover:bg-[#8b6f47]/15">
+            Bulk Import
+          </Link>
+          <Link href="/admin/orders/new" className="rounded-full bg-[#c89e65] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#0d0b09] transition hover:bg-[#ddb684]">
+            + New Order
+          </Link>
+        </div>
       }
     >
       <div className="mb-4 grid gap-3 md:grid-cols-3">

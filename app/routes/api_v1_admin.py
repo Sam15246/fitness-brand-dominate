@@ -1,15 +1,63 @@
-from datetime import datetime
 import re
+from datetime import datetime
 
 from flask import current_app, request
 from flask_login import current_user
 from sqlalchemy import or_
+from sqlalchemy import inspect as sa_inspect, select
 from sqlalchemy.orm import selectinload
 
 from app.business_logic import AffiliateManager, OrderManager
 from app.models import AffiliateProfile, CartItem, CommissionStatus, CouponCode, Order, OrderItem, OrderStatus, PolicyPage, Product, ProductImage, ProductVariant, Review, ShippingStatus, User, UserRole, db
 from app.routes.api_v1_common import api_error, api_success
 from app.storage import get_storage
+
+
+def _coupon_code_table_columns():
+    inspector = sa_inspect(db.engine)
+    return {column['name'] for column in inspector.get_columns('coupon_codes')}
+
+
+def _serialize_coupon_mapping(row, has_per_user_limit):
+    discount_percent = row.get('discount_percent')
+    discount_amount_fixed = row.get('discount_amount_fixed')
+    if discount_amount_fixed is not None:
+        discount_display = f'₹{discount_amount_fixed / 100:.2f}'
+    elif discount_percent is not None:
+        discount_display = f'{discount_percent}%'
+    else:
+        discount_display = '—'
+
+    return {
+        'id': row.get('id'),
+        'code': row.get('code'),
+        'coupon_type': row.get('coupon_type'),
+        'discount_display': discount_display,
+        'is_active': bool(row.get('is_active')),
+        'current_uses': row.get('current_uses') or 0,
+        'max_uses': row.get('max_uses'),
+        'per_user_limit': row.get('per_user_limit') if has_per_user_limit else None,
+        'expires_at': row.get('expires_at').isoformat() + 'Z' if row.get('expires_at') else None,
+        'created_at': row.get('created_at').isoformat() + 'Z' if row.get('created_at') else None,
+    }
+
+
+def _serialize_coupon_row(row):
+    if isinstance(row, CouponCode):
+        return _serialize_admin_coupon(row)
+
+    return {
+        'id': row.id,
+        'code': row.code,
+        'coupon_type': row.coupon_type,
+        'discount_display': row.get_discount_display() if hasattr(row, 'get_discount_display') else '',
+        'is_active': bool(getattr(row, 'is_active', False)),
+        'current_uses': getattr(row, 'current_uses', 0),
+        'max_uses': getattr(row, 'max_uses', None),
+        'per_user_limit': getattr(row, 'per_user_limit', None),
+        'expires_at': row.expires_at.isoformat() + 'Z' if getattr(row, 'expires_at', None) else None,
+        'created_at': row.created_at.isoformat() + 'Z' if getattr(row, 'created_at', None) else None,
+    }
 
 
 def _normalize_sku_fragment(value):
@@ -759,9 +807,45 @@ def register_api_v1_admin_routes(
         if q:
             query = query.filter(CouponCode.code.ilike(f'%{q}%'))
 
-        paginated = query.order_by(CouponCode.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+        columns = _coupon_code_table_columns()
+        if 'per_user_limit' in columns:
+            paginated = query.order_by(CouponCode.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+            items = [serialize_admin_coupon(coupon) for coupon in paginated.items]
+        else:
+            selected_columns = [
+                CouponCode.id,
+                CouponCode.code,
+                CouponCode.discount_percent,
+                CouponCode.discount_amount_fixed,
+                CouponCode.coupon_type,
+                CouponCode.affiliate_id,
+                CouponCode.max_uses,
+                CouponCode.current_uses,
+                CouponCode.min_order_value,
+                CouponCode.max_discount,
+                CouponCode.is_active,
+                CouponCode.expires_at,
+                CouponCode.created_at,
+                CouponCode.created_by_user_id,
+                CouponCode.updated_at,
+            ]
+            rows = (
+                db.session.execute(
+                    select(*selected_columns)
+                    .select_from(CouponCode.__table__)
+                    .order_by(CouponCode.created_at.desc())
+                    .limit(per_page)
+                    .offset((page - 1) * per_page)
+                )
+                .mappings()
+                .all()
+            )
+            total_items = db.session.execute(select(db.func.count()).select_from(CouponCode.__table__)).scalar() or 0
+            items = [_serialize_coupon_mapping(row, False) for row in rows]
+            paginated = type('Pagination', (), {'items': items, 'total': total_items, 'pages': max(1, (total_items + per_page - 1) // per_page)})()
+
         return api_success(
-            data={'items': [serialize_admin_coupon(coupon) for coupon in paginated.items]},
+            data={'items': items},
             meta={
                 'pagination': {
                     'current_page': page,
