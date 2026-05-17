@@ -1178,7 +1178,9 @@ def register_api_v1_admin_routes(
         if is_primary:
             ProductImage.query.filter_by(product_id=product_id, is_primary=True).update({'is_primary': False}, synchronize_session=False)
             image.is_primary = True
-        elif ProductImage.query.filter_by(product_id=product_id, is_primary=True).count() == 0:
+                            # Add filename attribute for storage/validation to work
+                            filename = f'product_{product_id}_{int(datetime.now().timestamp())}.jpg'
+                            file_obj.filename = filename
             image.is_primary = True
 
         db.session.commit()
