@@ -9,7 +9,6 @@ from sqlalchemy.orm import selectinload
 
 from app.business_logic import AffiliateManager, OrderManager
 from app.models import AffiliateProfile, CartItem, CommissionStatus, CouponCode, Order, OrderItem, OrderStatus, PolicyPage, Product, ProductImage, ProductVariant, Review, ShippingStatus, User, UserRole, db
-from app.routes.api_v1 import _get_or_create_default_variant
 from app.routes.api_v1_common import api_error, api_success
 from app.storage import get_storage
 
@@ -184,6 +183,9 @@ def register_api_v1_admin_routes(
         auth_error = require_admin()
         if auth_error:
             return auth_error
+
+        # Import here to avoid circular dependency
+        from app.routes.api_v1 import _get_or_create_default_variant
 
         payload = request.get_json(silent=True) or {}
 
@@ -1391,12 +1393,24 @@ def register_api_v1_admin_routes(
         if discount_percent is None and discount_amount_fixed is None:
             return api_error('Provide discount_percent or discount_amount_fixed', status=400, code='validation_error')
 
+        coupon_type = (payload.get('coupon_type') or 'promotional').strip().lower()
+        affiliate_id = parse_int(payload.get('affiliate_id'), 0) or None
+        
+        # Validate affiliate exists if coupon_type is affiliate and affiliate_id is provided
+        if coupon_type == 'affiliate' and affiliate_id and affiliate_id > 0:
+            affiliate = AffiliateProfile.query.filter_by(user_id=affiliate_id).first()
+            if not affiliate:
+                return api_error('Affiliate not found for specified user', status=404, code='not_found')
+        elif coupon_type == 'affiliate' and (not affiliate_id or affiliate_id <= 0):
+            return api_error('affiliate_id is required for affiliate coupon type', status=400, code='validation_error')
+
         try:
             coupon = CouponCode(
                 code=code,
                 discount_percent=parse_int(discount_percent, 0) if discount_percent is not None else None,
                 discount_amount_fixed=parse_int(discount_amount_fixed, 0) if discount_amount_fixed is not None else None,
-                coupon_type=(payload.get('coupon_type') or 'promotional').strip().lower(),
+                coupon_type=coupon_type,
+                affiliate_id=affiliate_id,
                 max_uses=parse_int(payload.get('max_uses'), 0) or None,
                 min_order_value=max(0, parse_int(payload.get('min_order_value'), 0)),
                 max_discount=parse_int(payload.get('max_discount'), 0) or None,
@@ -1458,6 +1472,15 @@ def register_api_v1_admin_routes(
                 coupon.max_discount = parse_int(payload.get('max_discount'), 0) or None
             if 'is_active' in payload:
                 coupon.is_active = bool(payload.get('is_active'))
+            if 'affiliate_id' in payload:
+                affiliate_id = parse_int(payload.get('affiliate_id'), 0) or None
+                if affiliate_id and affiliate_id > 0:
+                    affiliate = AffiliateProfile.query.filter_by(user_id=affiliate_id).first()
+                    if not affiliate:
+                        return api_error('Affiliate not found for specified user', status=404, code='not_found')
+                elif coupon.coupon_type == 'affiliate' and (not affiliate_id or affiliate_id <= 0):
+                    return api_error('affiliate_id is required for affiliate coupon type', status=400, code='validation_error')
+                coupon.affiliate_id = affiliate_id
 
             db.session.commit()
             return api_success(data={'coupon': serialize_admin_coupon(coupon)})

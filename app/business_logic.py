@@ -13,7 +13,7 @@ This module prevents business logic bloat in routes and models.
 """
 
 from datetime import datetime
-from app.models import db, User, Product, Order, AffiliateProfile, OrderStatus, ShippingStatus, CommissionStatus, Payment, InventoryLog, PaymentStatus, InventoryChangeType
+from app.models import db, User, Product, Order, AffiliateProfile, OrderStatus, ShippingStatus, CommissionStatus, Payment, InventoryLog, PaymentStatus, InventoryChangeType, CouponCode
 
 
 class StockManager:
@@ -289,7 +289,7 @@ class AffiliateManager:
     @staticmethod
     def create_affiliate_profile(user_id, commission_percent=10.0):
         """
-        Create affiliate profile for a user.
+        Create affiliate profile for a user and auto-create affiliate coupon.
         
         Args:
             user_id: User ID
@@ -320,9 +320,33 @@ class AffiliateManager:
         )
         
         db.session.add(profile)
-        db.session.commit()
+        db.session.flush()  # Flush to get the profile ID without committing yet
         
-        return profile, f'Affiliate profile created with code: {affiliate_code}'
+        # Auto-create affiliate coupon with 5% discount
+        try:
+            coupon = CouponCode(
+                code=affiliate_code,
+                coupon_type='affiliate',
+                affiliate_id=user_id,
+                discount_percent=5,
+                is_active=True,
+                created_by_user_id=user_id
+            )
+            db.session.add(coupon)
+            db.session.commit()
+            return profile, f'Affiliate profile created with code: {affiliate_code}'
+        except Exception as e:
+            db.session.rollback()
+            # Fallback: commit just the profile if coupon creation fails
+            profile = AffiliateProfile(
+                user_id=user_id,
+                affiliate_code=affiliate_code,
+                commission_percent=commission_percent,
+                is_active=True
+            )
+            db.session.add(profile)
+            db.session.commit()
+            return profile, f'Affiliate profile created with code: {affiliate_code} (coupon creation failed: {str(e)})'
 
 
 class OrderManager:

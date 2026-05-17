@@ -94,8 +94,6 @@ export default function ImageUploadManager({ productId, initialImages, onImagesC
       if (validFiles.length === 0) return;
 
       setUploading(true);
-      const newImages: UploadedImage[] = [];
-      const maxExistingOrder = Math.max(0, ...images.map((img) => img.displayOrder));
 
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
@@ -112,26 +110,34 @@ export default function ImageUploadManager({ productId, initialImages, onImagesC
             try {
               setUploadProgress((prev) => ({ ...prev, [tempId]: 50 }));
 
-                const response = await fetch(`/api/v1/admin/products/${productId}/images`, {
+              const response = await fetch(
+                `/api/v1/admin/products/${productId}/images`,
+                {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ image_data: base64 }),
-                });
-
-                if (!response.ok) {
-                  throw new Error("Upload failed");
                 }
+              );
 
-                const responseData = await response.json();
-                const imageData = responseData.data;
-                const newImg: UploadedImage = {
-                  id: imageData.id,
-                  url: imageData.url || imageData.path,
-                  thumbnailUrl: imageData.thumbnail_url,
-                  displayOrder: imageData.display_order,
-              setImages((prev) => [...prev, newImg]);
-              newImages.push(newImg);
-              onImagesChange?.([...images, ...newImages]);
+              if (!response.ok) {
+                throw new Error("Upload failed");
+              }
+
+              const responseData = await response.json();
+              const imageData = responseData.data;
+              const newImg: UploadedImage = {
+                id: imageData.id,
+                url: imageData.url || imageData.path,
+                thumbnailUrl: imageData.thumbnail_url,
+                displayOrder: imageData.display_order,
+                isNew: true,
+              };
+
+              setImages((prev) => {
+                const updated = [...prev, newImg];
+                onImagesChange?.(updated);
+                return updated;
+              });
 
               setUploadProgress((prev) => ({ ...prev, [tempId]: 100 }));
               setTimeout(() => {
@@ -160,7 +166,7 @@ export default function ImageUploadManager({ productId, initialImages, onImagesC
         fileInputRef.current.value = "";
       }
     },
-    [productId, images, onImagesChange],
+    [productId, onImagesChange],
   );
 
   const handleDragEnter = (e: React.DragEvent) => {

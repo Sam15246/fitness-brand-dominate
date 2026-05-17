@@ -543,6 +543,8 @@ def _serialize_admin_coupon(coupon):
         'id': coupon.id,
         'code': coupon.code,
         'coupon_type': coupon.coupon_type,
+        'affiliate_id': coupon.affiliate_id,
+        'affiliate_name': coupon.affiliate.name if coupon.affiliate else None,
         'discount_display': coupon.get_discount_display(),
         'is_active': bool(coupon.is_active),
         'current_uses': coupon.current_uses,
