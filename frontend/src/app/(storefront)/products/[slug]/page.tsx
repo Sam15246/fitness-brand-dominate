@@ -123,7 +123,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     <div className="min-h-screen bg-[#fff8ec]">
       {/* Breadcrumb */}
       <div className="border-b border-[#d9c8ad]/40 bg-[#fff8ec]">
-        <div className="mx-auto flex max-w-[1240px] items-center gap-2 px-5 py-4 text-[11px] text-[#9a7147] sm:px-8 lg:px-10">
+        <div className="mx-auto flex max-w-[1240px] items-center gap-2 px-4 py-3 text-[10px] sm:text-[11px] text-[#9a7147] sm:px-8 lg:px-10 lg:py-4">
           <Link href="/" className="transition-colors hover:text-[#6c5641]">Home</Link>
           <svg className="h-3 w-3 text-[#d9c8ad]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -137,7 +137,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {/* Main product section */}
-      <div className="mx-auto max-w-[1240px] px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
+      <div className="mx-auto max-w-[1240px] px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-12">
         {usingFallback && (
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-[#a67126]/20 bg-[#a67126]/5 p-4">
             <svg className="h-5 w-5 shrink-0 text-[#a67126]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -148,7 +148,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </p>
           </div>
         )}
-        <section className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-12">
+        <section className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_1fr] lg:gap-12">
           {/* Gallery */}
           <ImageGallery images={product.images} productName={product.name} />
 
@@ -177,22 +177,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Name */}
-            <h1 className="mt-4 font-display text-[clamp(32px,5vw,52px)] uppercase leading-[0.95] tracking-[0.03em] text-[#302115]">
+            <h1 className="mt-4 font-display text-[28px] sm:text-[36px] lg:text-[48px] uppercase leading-[0.95] tracking-[0.03em] text-[#302115]">
               {product.name}
             </h1>
 
             {/* Rating */}
-            <div className="mt-3">
+            <div className="mt-2 sm:mt-3">
               <StarRating rating={product.average_rating} count={product.review_count} />
             </div>
 
             {/* Description */}
-            <p className="mt-5 max-w-[480px] text-[14px] leading-[1.8] text-[#6c5641]">
+            <p className="mt-3 sm:mt-5 max-w-[480px] text-[13px] sm:text-[14px] leading-[1.8] text-[#6c5641]">
               {product.description}
             </p>
 
             {/* Divider */}
-            <div className="my-6 h-px bg-[#d9c8ad]/50" />
+            <div className="my-4 sm:my-6 h-px bg-[#d9c8ad]/50" />
 
             {/* Price + Add to cart */}
             {product.is_coming_soon ? (
@@ -261,35 +261,35 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </section>
 
         {/* Reviews section */}
-        <section className="mt-14 border-t border-[#d9c8ad]/50 pt-10" id="reviews">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+        <section className="mt-10 sm:mt-14 border-t border-[#d9c8ad]/50 pt-6 sm:pt-10" id="reviews">
+          <div className="flex flex-col sm:flex-wrap sm:items-end sm:justify-between gap-4 sm:gap-6">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">Customer Reviews</p>
-              <h2 className="mt-2 font-display text-[clamp(28px,4vw,40px)] uppercase tracking-[0.04em] text-[#302115]">
+              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">Customer Reviews</p>
+              <h2 className="mt-2 font-display text-[24px] sm:text-[32px] lg:text-[40px] uppercase tracking-[0.04em] text-[#302115]">
                 What Athletes Say
               </h2>
             </div>
             {product.review_count > 0 && (
-              <div className="flex items-center gap-3">
-                <span className="font-display text-[32px] text-[#302115]">{product.average_rating.toFixed(1)}</span>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="font-display text-[24px] sm:text-[32px] text-[#302115]">{product.average_rating.toFixed(1)}</span>
                 <div>
                   <StarRating rating={product.average_rating} count={product.review_count} />
-                  <p className="mt-0.5 text-[11px] text-[#6c5641]">Based on {product.review_count} {product.review_count === 1 ? "review" : "reviews"}</p>
+                  <p className="mt-0.5 text-[10px] sm:text-[11px] text-[#6c5641]">Based on {product.review_count} {product.review_count === 1 ? "review" : "reviews"}</p>
                 </div>
               </div>
             )}
           </div>
 
           {product.reviews.length === 0 ? (
-            <div className="mt-8 rounded-2xl border border-[#d9c8ad] bg-[#fffefb] py-12 text-center">
-              <p className="text-[14px] text-[#6c5641]">No reviews yet. Be the first to share your experience.</p>
+            <div className="mt-6 sm:mt-8 rounded-xl sm:rounded-2xl border border-[#d9c8ad] bg-[#fffefb] py-8 sm:py-12 text-center">
+              <p className="text-[13px] sm:text-[14px] text-[#6c5641]">No reviews yet. Be the first to share your experience.</p>
             </div>
           ) : (
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="mt-6 sm:mt-8 grid gap-3 sm:gap-4 md:grid-cols-2">
               {product.reviews.map((review) => (
                 <article
                   key={review.id}
-                  className="rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-6 transition-shadow hover:shadow-[0_4px_16px_rgba(146,104,56,0.08)]"
+                  className="rounded-lg sm:rounded-2xl border border-[#d9c8ad] bg-[#fffefb] p-4 sm:p-6 transition-shadow hover:shadow-[0_4px_16px_rgba(146,104,56,0.08)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">

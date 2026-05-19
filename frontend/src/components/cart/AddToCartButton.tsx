@@ -127,10 +127,10 @@ export default function AddToCartButton({
   const showOriginal = !selectedVariant && discountPercentage > 0 && originalPrice;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
       {/* Reactive price */}
-      <div className="flex items-baseline gap-3">
-        <span className="font-display text-[36px] tracking-[0.02em] text-[#302115]">
+      <div className="flex items-baseline gap-2 sm:gap-3">
+        <span className="font-display text-[28px] sm:text-[32px] lg:text-[36px] tracking-[0.02em] text-[#302115]">
           {displayPrice}
         </span>
         {showOriginal && (
@@ -148,8 +148,8 @@ export default function AddToCartButton({
       {/* Variant selector */}
       {activeVariants.length > 1 && (
         <div>
-          <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Select Option</p>
-          <div className="flex flex-wrap gap-2.5">
+          <p className="mb-2 text-[9px] sm:mb-2.5 sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Select Option</p>
+          <div className="flex flex-wrap gap-2 sm:gap-2.5">
             {activeVariants.map((v) => {
               const isSelected = selectedVariantId === v.id;
               return (
@@ -162,20 +162,20 @@ export default function AddToCartButton({
                     setAddedCount(null);
                     setQuantity(1);
                   }}
-                  className={`relative rounded-xl border-2 px-5 py-3 text-left transition-all duration-200 ${
+                  className={`relative rounded-lg sm:rounded-xl border-2 px-3 py-2 sm:px-5 sm:py-3 text-left transition-all duration-200 ${
                     isSelected
                       ? "border-[#a67126] bg-[#a67126]/8 shadow-[0_0_0_2px_rgba(166,113,38,0.15)]"
                       : "border-[#d9c8ad] bg-[#fffefb] hover:border-[#c4a87a]"
                   }`}
                 >
-                  <span className={`block text-[13px] font-semibold ${isSelected ? "text-[#302115]" : "text-[#4f3825]"}`}>
+                  <span className={`block text-[12px] sm:text-[13px] font-semibold ${isSelected ? "text-[#302115]" : "text-[#4f3825]"}`}>
                     {variantLabel(v)}
                   </span>
-                  <span className={`mt-0.5 block text-[12px] ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
+                  <span className={`mt-0.5 block text-[11px] sm:text-[12px] ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
                     {formatPrice(v.effective_price)}
                   </span>
                   {(v.available_quantity ?? v.stock_quantity) <= 3 && (
-                    <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-[#b87a3d]">
+                    <span className="mt-1 block text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#b87a3d]">
                       Only {v.available_quantity ?? v.stock_quantity} left
                     </span>
                   )}
@@ -195,7 +195,7 @@ export default function AddToCartButton({
 
       {/* Quantity stepper */}
       <div>
-        <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Quantity</p>
+        <p className="mb-2 text-[9px] sm:mb-2.5 sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Quantity</p>
         <div className="inline-flex items-center rounded-xl border border-[#d9c8ad] bg-[#fffefb]">
           <button
             type="button"

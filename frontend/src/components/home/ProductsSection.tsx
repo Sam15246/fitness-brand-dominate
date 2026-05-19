@@ -95,12 +95,12 @@ export default async function ProductsSection() {
   ];
 
   return (
-    <section id="products" className="bg-[#fff8ec] py-[72px] md:py-24">
+    <section id="products" className="bg-[#fff8ec] py-12 sm:py-16 md:py-24">
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8 lg:px-10">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-[52px]">
+        <div className="mb-6 sm:mb-10 md:mb-14 flex flex-col sm:flex-row sm:flex-wrap sm:items-end sm:justify-between gap-3 sm:gap-4 md:gap-6">
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">The Collection</p>
-            <h2 className="font-display text-[clamp(32px,6vw,52px)] uppercase leading-none tracking-[0.04em] text-[#302115]">
+            <p className="mb-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">The Collection</p>
+            <h2 className="font-display text-[28px] sm:text-[40px] lg:text-[52px] uppercase leading-none tracking-[0.04em] text-[#302115]">
               Built to Perform
             </h2>
           </div>
@@ -115,7 +115,7 @@ export default async function ProductsSection() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-7">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:gap-6 lg:gap-7">
           {cards.map((card) => (
             <Link
               key={card.name}
@@ -140,17 +140,17 @@ export default async function ProductsSection() {
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col p-6 md:p-8 md:pb-9">
-                <span className="mb-3 inline-block self-start rounded-full border border-[#a67126]/18 bg-[#a67126]/8 px-3 py-[5px] text-[9px] font-bold uppercase tracking-[0.2em] text-[#a67126]">
+              <div className="flex flex-1 flex-col p-4 sm:p-5 md:p-8 md:pb-9">
+                <span className="mb-2 sm:mb-3 inline-block self-start rounded-full border border-[#a67126]/18 bg-[#a67126]/8 px-2.5 py-[4px] text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] text-[#a67126]">
                   {card.tag}
                 </span>
-                <h3 className="mb-2.5 font-display text-[clamp(28px,5vw,38px)] uppercase leading-none tracking-[0.03em] text-[#302115]">
+                <h3 className="mb-2 sm:mb-2.5 font-display text-[22px] sm:text-[28px] md:text-[38px] uppercase leading-none tracking-[0.03em] text-[#302115]">
                   {card.name}
                 </h3>
-                <p className="mb-6 flex-1 text-[13px] leading-[1.75] text-[#6c5641]">{card.desc}</p>
+                <p className="mb-4 sm:mb-6 flex-1 text-[12px] sm:text-[13px] leading-[1.6] sm:leading-[1.75] text-[#6c5641]">{card.desc}</p>
 
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <span className="font-display text-[28px] tracking-[0.03em] text-[#302115]">{card.listing_price_display || card.price_display}</span>
+                <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+                  <span className="font-display text-[22px] sm:text-[28px] tracking-[0.03em] text-[#302115]">{card.listing_price_display || card.price_display}</span>
                   <span className="inline-flex items-center gap-2 rounded-full border border-[#a67126]/22 bg-[#1e1710] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4eee4] transition-all duration-300 group-hover:bg-[#a67126] group-hover:shadow-[0_4px_16px_rgba(166,113,38,0.3)]">
                     {card.cta}
                     <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

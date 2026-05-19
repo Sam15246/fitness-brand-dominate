@@ -98,18 +98,18 @@ export default async function ProductsPage({
   return (
     <div className="min-h-screen bg-[#fff8ec]">
       {/* Hero header */}
-      <div className="border-b border-[#d9c8ad]/60 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,#f5e7d2_0%,#fff8ec_70%)]">
-        <div className="mx-auto max-w-[1240px] px-5 pb-8 pt-10 sm:px-8 lg:px-10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">The Collection</p>
-          <h1 className="mt-2 font-display text-[clamp(36px,7vw,56px)] uppercase leading-none tracking-[0.04em] text-[#302115]">
+      <div className="border-b border-[#d9c8ad]/60 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,#f5e7d2_0%,#fff8ec_70%)] py-0">
+        <div className="mx-auto max-w-[1240px] px-4 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-10 lg:px-10">
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">The Collection</p>
+          <h1 className="mt-2 font-display text-[28px] sm:text-[40px] lg:text-[52px] uppercase leading-none tracking-[0.04em] text-[#302115]">
             Our Products
           </h1>
-          <p className="mt-3 max-w-[420px] text-[13px] leading-[1.75] text-[#6c5641]">
+          <p className="mt-2 sm:mt-3 max-w-[420px] text-[12px] sm:text-[13px] leading-[1.6] sm:leading-[1.75] text-[#6c5641]">
             Premium grip tools and bodyweight equipment — built for real training.
           </p>
 
           {/* Search + count */}
-          <div className="mt-6 flex flex-wrap items-center gap-4">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 sm:gap-4">
             <form className="flex gap-2" action="/products" method="get">
               <div className="relative">
                 <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a67126]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -143,7 +143,7 @@ export default async function ProductsPage({
       </div>
 
       {/* Product grid */}
-      <div className="mx-auto max-w-[1240px] px-5 py-10 sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-[1240px] px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
         {usingFallback && (
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-[#a67126]/20 bg-[#a67126]/5 p-5">
             <svg className="h-5 w-5 shrink-0 text-[#a67126]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -155,12 +155,12 @@ export default async function ProductsPage({
           </div>
         )}
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
           {items.map((product) => (
             <Link
               key={product.id}
               href={`/products/${product.slug}`}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#fffefb] shadow-[0_4px_16px_rgba(146,104,56,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-[#c4a87a] hover:shadow-[0_16px_48px_rgba(146,104,56,0.12)]"
+              className="group flex flex-col overflow-hidden rounded-lg sm:rounded-2xl border border-[#d9c8ad] bg-[#fffefb] shadow-[0_2px_8px_rgba(146,104,56,0.05)] sm:shadow-[0_4px_16px_rgba(146,104,56,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-[#c4a87a] hover:shadow-[0_16px_48px_rgba(146,104,56,0.12)]"
             >
               {/* Image */}
               <div className="relative aspect-[4/3] overflow-hidden bg-[#f5ebdb]">
@@ -210,23 +210,23 @@ export default async function ProductsPage({
               </div>
 
               {/* Content */}
-              <div className="flex flex-1 flex-col p-5">
-                <h2 className="text-[15px] font-semibold text-[#302115] transition-colors group-hover:text-[#a67126]">
+              <div className="flex flex-1 flex-col p-3 sm:p-5">
+                <h2 className="text-[13px] sm:text-[15px] font-semibold text-[#302115] transition-colors group-hover:text-[#a67126] line-clamp-2">
                   {product.name}
                 </h2>
-                <p className="mt-1.5 line-clamp-2 flex-1 text-[12px] leading-[1.7] text-[#6c5641]">
+                <p className="mt-1 line-clamp-2 flex-1 text-[11px] sm:text-[12px] leading-[1.5] sm:leading-[1.7] text-[#6c5641]">
                   {product.description}
                 </p>
 
                 {/* Rating */}
-                <div className="mt-3">
+                <div className="mt-2 sm:mt-3">
                   <StarRating rating={product.average_rating} count={product.review_count} />
                 </div>
 
                 {/* Price + CTA */}
-                <div className="mt-4 flex items-center justify-between border-t border-[#d9c8ad]/50 pt-4">
+                <div className="mt-2 sm:mt-4 flex items-center justify-between border-t border-[#d9c8ad]/50 pt-2 sm:pt-4">
                   <div>
-                    <span className="font-display text-[22px] tracking-[0.02em] text-[#302115]">
+                    <span className="font-display text-[18px] sm:text-[22px] tracking-[0.02em] text-[#302115]">
                       {product.listing_price_display || product.price_display}
                     </span>
                     {product.price_original && product.is_discount_active && (
@@ -235,7 +235,7 @@ export default async function ProductsPage({
                       </span>
                     )}
                   </div>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d9c8ad] text-[#a67126] transition-all duration-200 group-hover:border-[#a67126] group-hover:bg-[#a67126] group-hover:text-[#f4eee4]">
+                  <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-[#d9c8ad] text-[#a67126] transition-all duration-200 group-hover:border-[#a67126] group-hover:bg-[#a67126] group-hover:text-[#f4eee4]">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
