@@ -148,7 +148,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </p>
           </div>
         )}
-        <section className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_1fr] lg:gap-12">
+        <section className="grid gap-3 sm:gap-6 lg:grid-cols-[1fr_1fr] lg:gap-12">
           {/* Gallery */}
           <ImageGallery images={product.images} productName={product.name} />
 
@@ -177,7 +177,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Name */}
-            <h1 className="mt-4 font-display text-[28px] sm:text-[36px] lg:text-[48px] uppercase leading-[0.95] tracking-[0.03em] text-[#302115]">
+            <h1 className="mt-3 font-display text-[24px] sm:text-[36px] lg:text-[48px] uppercase leading-[0.95] tracking-[0.03em] text-[#302115]">
               {product.name}
             </h1>
 
@@ -187,12 +187,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Description */}
-            <p className="mt-3 sm:mt-5 max-w-[480px] text-[13px] sm:text-[14px] leading-[1.8] text-[#6c5641]">
+            <p className="mt-2 sm:mt-4 max-w-[480px] text-[12px] sm:text-[14px] leading-[1.65] sm:leading-[1.8] text-[#6c5641]">
               {product.description}
             </p>
 
             {/* Divider */}
-            <div className="my-4 sm:my-6 h-px bg-[#d9c8ad]/50" />
+            <div className="my-3 sm:my-6 h-px bg-[#d9c8ad]/50" />
 
             {/* Price + Add to cart */}
             {product.is_coming_soon ? (
@@ -243,7 +243,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
 
             {/* Trust badges */}
-            <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
+            <div className="mt-5 flex flex-wrap gap-2.5 sm:gap-4">
               <TrustBadge
                 icon="M13 10V3L4 14h7v7l9-11h-7z"
                 text="Fast Dispatch"

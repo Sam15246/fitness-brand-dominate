@@ -127,10 +127,10 @@ export default function AddToCartButton({
   const showOriginal = !selectedVariant && discountPercentage > 0 && originalPrice;
 
   return (
-    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+    <div className="space-y-2.5 sm:space-y-4 lg:space-y-5">
       {/* Reactive price */}
       <div className="flex items-baseline gap-2 sm:gap-3">
-        <span className="font-display text-[28px] sm:text-[32px] lg:text-[36px] tracking-[0.02em] text-[#302115]">
+        <span className="font-display text-[24px] sm:text-[30px] lg:text-[36px] tracking-[0.02em] text-[#302115]">
           {displayPrice}
         </span>
         {showOriginal && (
@@ -148,8 +148,8 @@ export default function AddToCartButton({
       {/* Variant selector */}
       {activeVariants.length > 1 && (
         <div>
-          <p className="mb-2 text-[9px] sm:mb-2.5 sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Select Option</p>
-          <div className="flex flex-wrap gap-2 sm:gap-2.5">
+          <p className="mb-1.5 text-[8px] sm:mb-2.5 sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Select Option</p>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2.5">
             {activeVariants.map((v) => {
               const isSelected = selectedVariantId === v.id;
               return (
@@ -162,20 +162,20 @@ export default function AddToCartButton({
                     setAddedCount(null);
                     setQuantity(1);
                   }}
-                  className={`relative rounded-lg sm:rounded-xl border-2 px-3 py-2 sm:px-5 sm:py-3 text-left transition-all duration-200 ${
+                  className={`relative rounded-lg sm:rounded-xl border-2 px-2.5 py-2 sm:px-5 sm:py-3 text-left transition-all duration-200 ${
                     isSelected
                       ? "border-[#a67126] bg-[#a67126]/8 shadow-[0_0_0_2px_rgba(166,113,38,0.15)]"
                       : "border-[#d9c8ad] bg-[#fffefb] hover:border-[#c4a87a]"
                   }`}
                 >
-                  <span className={`block text-[12px] sm:text-[13px] font-semibold ${isSelected ? "text-[#302115]" : "text-[#4f3825]"}`}>
+                  <span className={`block text-[11px] sm:text-[13px] font-semibold ${isSelected ? "text-[#302115]" : "text-[#4f3825]"}`}>
                     {variantLabel(v)}
                   </span>
-                  <span className={`mt-0.5 block text-[11px] sm:text-[12px] ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
+                  <span className={`mt-0.5 block text-[10px] sm:text-[12px] ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
                     {formatPrice(v.effective_price)}
                   </span>
                   {(v.available_quantity ?? v.stock_quantity) <= 3 && (
-                    <span className="mt-1 block text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#b87a3d]">
+                    <span className="mt-1 block text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#b87a3d]">
                       Only {v.available_quantity ?? v.stock_quantity} left
                     </span>
                   )}
@@ -195,24 +195,24 @@ export default function AddToCartButton({
 
       {/* Quantity stepper */}
       <div>
-        <p className="mb-2 text-[9px] sm:mb-2.5 sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Quantity</p>
+        <p className="mb-1.5 text-[8px] sm:mb-2.5 sm:text-[10px] font-bold uppercase tracking-[0.18em] text-[#9a7147]">Quantity</p>
         <div className="inline-flex items-center rounded-xl border border-[#d9c8ad] bg-[#fffefb]">
           <button
             type="button"
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
             disabled={quantity <= 1}
-            className="flex h-10 w-10 items-center justify-center text-[#6c5641] transition-colors hover:bg-[#f5e7d2] disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center text-[#6c5641] transition-colors hover:bg-[#f5e7d2] disabled:opacity-30"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" d="M20 12H4" />
             </svg>
           </button>
-          <span className="w-10 text-center text-[14px] font-semibold text-[#302115]">{quantity}</span>
+          <span className="w-10 text-center text-[13px] font-semibold text-[#302115]">{quantity}</span>
           <button
             type="button"
             onClick={() => setQuantity(Math.min(effectiveMax, quantity + 1))}
             disabled={quantity >= effectiveMax}
-            className="flex h-10 w-10 items-center justify-center text-[#6c5641] transition-colors hover:bg-[#f5e7d2] disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center text-[#6c5641] transition-colors hover:bg-[#f5e7d2] disabled:opacity-30"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" d="M12 4v16m8-8H4" />
@@ -222,12 +222,12 @@ export default function AddToCartButton({
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <button
           type="button"
           onClick={handleAddToCart}
           disabled={isPending}
-          className="group relative inline-flex min-h-[52px] flex-1 items-center justify-center overflow-hidden rounded-full bg-[#1e1710] px-8 py-[15px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:bg-[#2b1e14] hover:shadow-[0_4px_20px_rgba(30,23,16,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="group relative inline-flex min-h-[48px] w-full flex-1 items-center justify-center overflow-hidden rounded-full bg-[#1e1710] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:bg-[#2b1e14] hover:shadow-[0_4px_20px_rgba(30,23,16,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
           {isPending ? (
@@ -253,7 +253,7 @@ export default function AddToCartButton({
             type="button"
             onClick={handleBuyNow}
             disabled={isBuyingNow}
-            className="group relative inline-flex min-h-[52px] flex-1 items-center justify-center overflow-hidden rounded-full border-2 border-[#a67126] bg-[#a67126] px-8 py-[15px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:shadow-[0_4px_20px_rgba(166,113,38,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="group relative inline-flex min-h-[48px] w-full flex-1 items-center justify-center overflow-hidden rounded-full border-2 border-[#a67126] bg-[#a67126] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:shadow-[0_4px_20px_rgba(166,113,38,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             {isBuyingNow ? (

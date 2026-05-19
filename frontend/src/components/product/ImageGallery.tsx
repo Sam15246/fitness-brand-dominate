@@ -43,7 +43,7 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
 
   if (validImages.length === 0) {
     return (
-      <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#f5ebdb]">
+      <div className="aspect-[16/10] overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#f5ebdb] sm:aspect-[4/3]">
         <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.2em] text-[#b5a08a]">
           No image available
         </div>
@@ -55,7 +55,7 @@ export default function ImageGallery({ images, productName }: { images: GalleryI
     <div className="space-y-3">
       {/* Main image with swipe */}
       <div
-        className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#f5ebdb] shadow-[0_8px_32px_rgba(146,104,56,0.1)]"
+        className="group relative aspect-[16/10] overflow-hidden rounded-2xl border border-[#d9c8ad] bg-[#f5ebdb] shadow-[0_8px_32px_rgba(146,104,56,0.1)] sm:aspect-[4/3]"
         onTouchStart={(e) => {
           touchStartX.current = e.touches[0].clientX;
           touchDeltaX.current = 0;
