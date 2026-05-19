@@ -923,8 +923,14 @@ class ProductVariant(db.Model):
     # Flexible attributes, e.g. {"size": "XL", "color": "Black"}
     option_values = db.Column(db.JSON, nullable=False, default=dict)
 
-    # Null means inherit from parent product pricing
+    # Variant-level pricing (all nullable - inherit from parent product if unset)
+    # price_override: Single price value (legacy, kept for backward compat)
+    # price_original: MRP/list price for this variant
+    # price_discounted: Discounted price for this variant
     price_override = db.Column(db.Integer, nullable=True)
+    price_original = db.Column(db.Integer, nullable=True)
+    price_discounted = db.Column(db.Integer, nullable=True)
+    is_discount_active = db.Column(db.Boolean, nullable=False, default=False)
 
     stock_quantity = db.Column(db.Integer, nullable=False, default=0, index=True)
     weight_grams = db.Column(db.Integer, nullable=True)
@@ -932,8 +938,44 @@ class ProductVariant(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     def get_effective_price(self):
-        """Get variant price, inheriting parent product price when override is unset."""
-        return self.price_override if self.price_override is not None else self.product.price
+        """
+        Get effective price for variant (considers all pricing strategies).
+        
+        PRIORITY (in order):
+        1. If is_discount_active and price_discounted set → use price_discounted
+        2. If price_override set → use price_override (legacy)
+        3. If product has discount active and price_discounted set → use product.price_discounted
+        4. Default → use product.price
+        """
+        # Variant-level discount takes priority
+        if self.is_discount_active and self.price_discounted is not None:
+            return self.price_discounted
+        
+        # Variant price override (legacy field)
+        if self.price_override is not None:
+            return self.price_override
+        
+        # Fall back to product-level discount
+        if self.product.is_discount_active and self.product.price_discounted is not None:
+            return self.product.price_discounted
+        
+        # Finally, product base price
+        return self.product.price
+
+    def get_effective_original_price(self):
+        """
+        Get effective MRP/original price for variant.
+        
+        PRIORITY:
+        1. If price_original set → use price_original
+        2. If product.price_original set → use product.price_original
+        3. Default → use get_effective_price() as fallback
+        """
+        if self.price_original is not None:
+            return self.price_original
+        if self.product.price_original is not None:
+            return self.product.price_original
+        return self.get_effective_price()
 
     def get_effective_weight_grams(self):
         """Get variant weight, inheriting parent product weight when override is unset."""
@@ -2154,6 +2196,8 @@ class ProductImage(db.Model):
     
     # Relationships
     product = db.relationship('Product', backref=db.backref('images', cascade='all, delete-orphan'))
+    # variants: Many-to-many relationship through ProductImageVariant
+    # An image can be assigned to multiple variants, or no variant (general image)
     
     def __repr__(self):
         return f'<ProductImage {self.id} (Product {self.product_id})>'
@@ -2220,6 +2264,59 @@ class ProductImage(db.Model):
             ProductImage: Primary image object or None
         """
         return cls.query.filter_by(product_id=product_id, is_primary=True).first()
+
+
+class ProductImageVariant(db.Model):
+    """
+    Many-to-many relationship between ProductImage and ProductVariant.
+    
+    DESIGN:
+    =======
+    - Allows one image to be assigned to multiple variants
+    - Allows one variant to be associated with multiple images
+    - Images can optionally have NO variants (general/product-level images)
+    
+    USE CASES:
+    ==========
+    1. Hero product photo: Assigned to all variants (S, M, L sizes)
+    2. Size-specific photos: Assigned only to that variant
+    3. General photos: Assigned to no variants, shown for all
+    
+    QUERY PATTERNS:
+    ===============
+    - Get images for a specific variant (including general images):
+      SELECT pi.* FROM product_images pi
+      LEFT JOIN product_image_variants piv ON pi.id = piv.product_image_id
+      WHERE pi.product_id = X 
+        AND (piv.product_variant_id = Y OR piv.product_image_id IS NULL)
+    
+    - Get all variants for an image:
+      SELECT pv.* FROM product_variants pv
+      JOIN product_image_variants piv ON pv.id = piv.product_variant_id
+      WHERE piv.product_image_id = Z
+    """
+    
+    __tablename__ = 'product_image_variants'
+    __table_args__ = (
+        db.UniqueConstraint('product_image_id', 'product_variant_id', 
+                          name='uq_product_image_variant'),
+        db.Index('idx_product_image_id', 'product_image_id'),
+        db.Index('idx_product_variant_id', 'product_variant_id'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_image_id = db.Column(db.Integer, db.ForeignKey('product_images.id'), 
+                                nullable=False)
+    product_variant_id = db.Column(db.Integer, db.ForeignKey('product_variants.id'), 
+                                  nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    product_image = db.relationship('ProductImage', backref='variant_links')
+    product_variant = db.relationship('ProductVariant', backref='image_links')
+    
+    def __repr__(self):
+        return f'<ProductImageVariant image_id={self.product_image_id} variant_id={self.product_variant_id}>'
 
 
 # FUTURE: Additional models for scalability

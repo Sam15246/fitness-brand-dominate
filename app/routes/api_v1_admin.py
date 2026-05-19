@@ -1182,8 +1182,27 @@ def register_api_v1_admin_routes(
         elif ProductImage.query.filter_by(product_id=product_id, is_primary=True).count() == 0:
             image.is_primary = True
 
+        # Handle variant linkage (NEW)
+        variant_ids = payload.get('variant_ids') if isinstance(payload, dict) else None
+        if variant_ids:
+            # variant_ids can be a list of IDs to link this image to
+            if isinstance(variant_ids, list):
+                from app.models import ProductImageVariant
+                # Remove existing links first (to handle updates)
+                ProductImageVariant.query.filter_by(product_image_id=image.id).delete(synchronize_session=False)
+                # Add new links (with validation that variants belong to this product)
+                for variant_id in variant_ids:
+                    variant = ProductVariant.query.filter_by(id=variant_id, product_id=product_id).first()
+                    if variant:
+                        link = ProductImageVariant(
+                            product_image_id=image.id,
+                            product_variant_id=variant_id
+                        )
+                        db.session.add(link)
+
         db.session.commit()
-        return api_success(data=serialize_product_image(image), status=201)
+        # Return object under `image` key to match other admin endpoints
+        return api_success(data={'image': serialize_product_image(image)}, status=201)
 
     @api_v1_bp.put('/admin/products/<int:product_id>/images/<int:image_id>')
     def admin_update_product_image(product_id, image_id):
@@ -1213,6 +1232,23 @@ def register_api_v1_admin_routes(
             ProductImage.query.filter_by(product_id=product_id, is_primary=True).update({'is_primary': False}, synchronize_session=False)
             image.is_primary = True
 
+        # Handle variant linkage (NEW)
+        if 'variant_ids' in payload:
+            variant_ids = payload.get('variant_ids')
+            from app.models import ProductImageVariant
+            if isinstance(variant_ids, list):
+                # Remove existing links
+                ProductImageVariant.query.filter_by(product_image_id=image.id).delete(synchronize_session=False)
+                # Add new links (with validation)
+                for variant_id in variant_ids:
+                    variant = ProductVariant.query.filter_by(id=variant_id, product_id=product_id).first()
+                    if variant:
+                        link = ProductImageVariant(
+                            product_image_id=image.id,
+                            product_variant_id=variant_id
+                        )
+                        db.session.add(link)
+
         db.session.commit()
         return api_success(data={'image': serialize_product_image(image)})
 
@@ -1227,6 +1263,10 @@ def register_api_v1_admin_routes(
             return api_error('Image not found', status=404, code='not_found')
 
         was_primary = bool(image.is_primary)
+
+        # Clean up variant linkage (NEW)
+        from app.models import ProductImageVariant
+        ProductImageVariant.query.filter_by(product_image_id=image.id).delete(synchronize_session=False)
 
         if image.storage_path:
             storage = get_storage()
@@ -1599,7 +1639,11 @@ def register_api_v1_admin_routes(
             'sku': v.sku,
             'option_values': v.option_values or {},
             'price_override': v.price_override,
+            'price_original': v.price_original,  # NEW: MRP for variant
+            'price_discounted': v.price_discounted,  # NEW: Discounted price for variant
+            'is_discount_active': bool(v.is_discount_active),  # NEW: Discount toggle
             'effective_price': v.get_effective_price(),
+            'effective_original_price': v.get_effective_original_price(),  # NEW
             'stock_quantity': v.stock_quantity,
             'weight_grams': v.get_effective_weight_grams(),
             'is_active': bool(v.is_active),
@@ -1633,6 +1677,9 @@ def register_api_v1_admin_routes(
         sku = (payload.get('sku') or '').strip()
         option_values = payload.get('option_values') or {}
         price_override = parse_int(payload.get('price_override'), None)
+        price_original = parse_int(payload.get('price_original'), None)  # NEW
+        price_discounted = parse_int(payload.get('price_discounted'), None)  # NEW
+        is_discount_active = parse_bool(payload.get('is_discount_active'), False)  # NEW
         stock_quantity = parse_int(payload.get('stock_quantity'), 0)
         is_active = parse_bool(payload.get('is_active'), True)
 
@@ -1650,6 +1697,9 @@ def register_api_v1_admin_routes(
             sku=sku,
             option_values=option_values,
             price_override=price_override,
+            price_original=price_original,  # NEW
+            price_discounted=price_discounted,  # NEW
+            is_discount_active=is_discount_active,  # NEW
             stock_quantity=max(stock_quantity, 0),
             is_active=is_active,
         )
@@ -1685,6 +1735,12 @@ def register_api_v1_admin_routes(
             variant.option_values = payload['option_values'] or {}
         if 'price_override' in payload:
             variant.price_override = parse_int(payload['price_override'], None)
+        if 'price_original' in payload:  # NEW
+            variant.price_original = parse_int(payload['price_original'], None)
+        if 'price_discounted' in payload:  # NEW
+            variant.price_discounted = parse_int(payload['price_discounted'], None)
+        if 'is_discount_active' in payload:  # NEW
+            variant.is_discount_active = parse_bool(payload['is_discount_active'], False)
         if 'stock_quantity' in payload:
             variant.stock_quantity = max(parse_int(payload['stock_quantity'], 0), 0)
         if 'is_active' in payload:

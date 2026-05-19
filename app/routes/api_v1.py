@@ -23,6 +23,10 @@ api_v1_bp = Blueprint('api_v1', __name__)
 
 
 def _serialize_product_image(image):
+    """Serialize ProductImage with variant linkage information."""
+    # Get variant IDs this image is linked to
+    variant_ids = [link.product_variant_id for link in (image.variant_links or [])]
+    
     return {
         'id': image.id,
         'path': image.image_path,
@@ -30,6 +34,7 @@ def _serialize_product_image(image):
         'thumbnail_url': resolve_image_thumbnail_url(image.image_path),
         'is_primary': bool(image.is_primary),
         'display_order': image.display_order,
+        'variant_ids': variant_ids,  # NEW: List of variant IDs this image is linked to
     }
 
 
@@ -50,7 +55,11 @@ def _serialize_product_variant(variant):
         'sku': variant.sku,
         'option_values': variant.option_values or {},
         'price_override': variant.price_override,
+        'price_original': variant.price_original,  # NEW: MRP for variant
+        'price_discounted': variant.price_discounted,  # NEW: Discounted price for variant
+        'is_discount_active': bool(variant.is_discount_active),  # NEW: Discount toggle
         'effective_price': variant.get_effective_price(),
+        'effective_original_price': variant.get_effective_original_price(),  # NEW
         'stock_quantity': variant.stock_quantity,
         'available_quantity': variant.get_available_quantity(),
         'weight_grams': variant.get_effective_weight_grams(),
