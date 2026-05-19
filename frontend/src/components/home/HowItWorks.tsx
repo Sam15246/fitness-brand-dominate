@@ -65,14 +65,14 @@ export default function HowItWorks() {
           </h2>
         </div>
 
-        <div className="mb-11 flex flex-wrap gap-2">
+        <div className="mb-8 flex flex-col gap-2 sm:flex-row">
           {TABS.map((entry) => (
             <button
               key={entry.id}
               onClick={() => setActive(entry.id as typeof active)}
               aria-selected={active === entry.id}
               className={[
-                "h-11 rounded-full border px-5 text-[10px] font-bold uppercase tracking-[0.15em] transition-colors",
+                "w-full h-12 rounded-full px-5 text-[13px] font-bold uppercase tracking-[0.12em] transition-colors",
                 active === entry.id
                   ? "border-transparent bg-[#1e1710] text-[#f4eee4]"
                   : "border-[#d9c8ad] bg-transparent text-[#6c5641] hover:border-[#a67126]/40",
@@ -83,23 +83,23 @@ export default function HowItWorks() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
-          <ol className="flex list-none flex-col gap-7 md:gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center lg:gap-16">
+          <ol className="flex list-none flex-col gap-6 md:gap-8">
             {tab.steps.map((step) => (
-              <li key={step.n} className="flex items-start gap-[18px]">
-                <span className="w-12 shrink-0 pt-0.5 font-display text-[40px] leading-none tracking-[0.02em] text-[#a67126]/22">
+              <li key={step.n} className="flex items-start gap-4">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#a67126] text-[18px] font-display font-bold leading-none text-[#1e1710]">
                   {step.n}
                 </span>
                 <div>
-                  <p className="mb-1.5 text-[13px] font-bold uppercase tracking-[0.1em] text-[#302115]">{step.title}</p>
-                  <p className="text-[13px] leading-[1.72] text-[#6c5641]">{step.body}</p>
+                  <p className="mb-1.5 text-[15px] font-bold uppercase tracking-[0.08em] text-[#302115]">{step.title}</p>
+                  <p className="text-[14px] leading-[1.7] text-[#6c5641]">{step.body}</p>
                 </div>
               </li>
             ))}
           </ol>
 
           <div className="overflow-hidden rounded-2xl shadow-[0_16px_50px_rgba(146,104,56,0.14)]">
-            <AppImage src={tab.img} alt={tab.label} width={800} height={600} sizes="(max-width: 1024px) 100vw, 50vw" className="aspect-[4/3] w-full object-cover" />
+            <AppImage key={tab.id} src={tab.img} alt={tab.label} width={800} height={600} sizes="(max-width: 1024px) 100vw, 50vw" className="aspect-[16/9] w-full object-cover transition-opacity duration-400" />
           </div>
         </div>
       </div>

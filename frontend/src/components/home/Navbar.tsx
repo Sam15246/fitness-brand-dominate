@@ -130,7 +130,6 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            <UserMenu />
             <button
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#a67126]/25 text-[#f4eee4]/70"
               onClick={() => setOpen(true)}
@@ -146,7 +145,12 @@ export default function Navbar() {
 
       {/* Mobile fullscreen overlay */}
       {open && (
-        <div className="fixed inset-0 z-[300] bg-[#090705]" role="dialog" aria-modal="true">
+        <div
+          className="fixed inset-0 z-[300] bg-[#090705]/95"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+        >
           {/* Decorative watermark */}
           <span
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none font-display text-[clamp(120px,30vw,200px)] uppercase tracking-[0.06em] text-[#a67126]/[0.04]"
@@ -155,7 +159,7 @@ export default function Navbar() {
             DOMINATE
           </span>
 
-          <div className="relative flex h-full flex-col">
+          <div className="relative flex h-full flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Close bar */}
             <div className="flex h-16 items-center justify-between px-5">
               <span className="font-display text-[22px] tracking-[0.1em] text-[#f4eee4]">Dominate</span>
@@ -171,19 +175,19 @@ export default function Navbar() {
             </div>
 
             {/* Nav links */}
-            <div className="flex flex-1 flex-col items-center justify-center gap-3">
+            <div className="flex flex-1 flex-col items-stretch justify-center gap-3 px-5">
               {NAV_LINKS.map((link, i) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="group flex items-center gap-4 py-2"
+                  className="group flex h-12 w-full items-center gap-4 rounded-md px-4"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <span className="text-[11px] font-bold tracking-[0.2em] text-[#a67126]/30 transition-colors group-hover:text-[#c89e65]">
                     0{i + 1}
                   </span>
-                  <span className="font-display text-[clamp(42px,12vw,64px)] uppercase leading-none tracking-[0.04em] text-[#f4eee4] transition-colors group-hover:text-[#d4943b]">
+                  <span className="font-display text-[20px] uppercase leading-none tracking-[0.04em] text-[#f4eee4] transition-colors group-hover:text-[#d4943b]">
                     {link.label}
                   </span>
                 </Link>

@@ -87,16 +87,25 @@ export default function GymPartnersSection() {
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
               Partner With DOMINATE
             </Link>
-            <Link
-              href="/training"
-              className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-8 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/72 transition-all hover:border-[#a67126]/60 hover:bg-[#a67126]/14 hover:text-[#f4eee4]"
-            >
+            <span className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-8 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/50">
               DOMINATE Gym (Coming Soon)
-            </Link>
+            </span>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        {/* Mobile: horizontal swipeable carousel for feature cards */}
+        <div className="md:hidden -mx-4 overflow-x-auto pb-4 pl-4 scroll-pl-4 snap-x snap-mandatory flex gap-4">
+          {PARTNER_POINTS.map((point, index) => (
+            <article key={point.title} data-snap className="snap-center min-w-[280px] shrink-0 rounded-[22px] border border-[#a67126]/12 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#a67126]/28 hover:bg-[#a67126]/[0.08]">
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#a67126]/12 text-[#d4943b] transition-colors group-hover:bg-[#a67126]/18">{point.icon}</div>
+              <h3 className="font-display text-[18px] uppercase tracking-[0.03em] text-[#f4eee4]">{point.title}</h3>
+              <p className="mt-2 text-[13px] leading-[1.6] text-[#f4eee4]/42">{point.body}</p>
+            </article>
+          ))}
+        </div>
+
+        {/* Desktop / tablet grid */}
+        <div className="hidden md:grid gap-4 md:grid-cols-2 xl:grid-cols-5"> 
           {PARTNER_POINTS.map((point, index) => (
             <article
               key={point.title}
@@ -112,22 +121,6 @@ export default function GymPartnersSection() {
           ))}
         </div>
 
-        <div className="mt-6 rounded-[28px] border border-[#a67126]/14 bg-[#090705]/70 p-5 backdrop-blur-sm md:mt-7 md:p-6">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <p className="text-[9.5px] font-bold uppercase tracking-[0.22em] text-[#d4943b]">Trusted by local gyms & athletes</p>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#f4eee4]/22">Placeholder logo strip</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {GYM_LOGOS.map((logo) => (
-              <div
-                key={logo}
-                className="flex min-h-[64px] items-center justify-center rounded-2xl border border-[#a67126]/10 bg-white/[0.02] px-3 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f4eee4]/30 transition-colors hover:border-[#a67126]/24 hover:text-[#f4eee4]/44"
-              >
-                {logo}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

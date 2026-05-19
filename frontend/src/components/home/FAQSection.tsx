@@ -54,7 +54,7 @@ export default function FAQSection() {
                 ].join(" ")}
               >
                 <button
-                  className="flex w-full items-center justify-between gap-3 px-5 py-5 text-left transition-colors sm:gap-4 sm:px-7 sm:py-6"
+                  className="flex w-full items-center justify-between gap-3 px-5 py-4 min-h-[48px] text-left transition-colors sm:gap-4 sm:px-7 sm:py-5"
                   aria-expanded={isOpen}
                   onClick={() => setOpen(isOpen ? null : index)}
                 >
@@ -94,6 +94,11 @@ export default function FAQSection() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <p className="text-[14px] font-semibold text-[#302115]">Still have questions?</p>
+          <a href="https://wa.me/917068462273" className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-[14px] font-bold text-white shadow-sm">Chat on WhatsApp</a>
         </div>
       </div>
     </section>

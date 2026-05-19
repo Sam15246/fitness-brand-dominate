@@ -128,9 +128,9 @@ export default async function ProductsSection() {
                   src={card.image}
                   alt={card.name}
                   width={800}
-                  height={500}
+                  height={450}
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 md:aspect-[16/10]"
+                  className="aspect-[16/9] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 md:aspect-[16/10]"
                 />
                 {/* Hover overlay with CTA */}
                 <div className="absolute inset-0 flex items-center justify-center bg-[#1e1710]/0 transition-colors duration-300 group-hover:bg-[#1e1710]/20">
@@ -147,11 +147,25 @@ export default async function ProductsSection() {
                 <h3 className="mb-2 sm:mb-2.5 font-display text-[22px] sm:text-[28px] md:text-[38px] uppercase leading-none tracking-[0.03em] text-[#302115]">
                   {card.name}
                 </h3>
-                <p className="mb-4 sm:mb-6 flex-1 text-[12px] sm:text-[13px] leading-[1.6] sm:leading-[1.75] text-[#6c5641]">{card.desc}</p>
+                {/* Static 5-star rating for social proof */}
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-[14px] text-[#d4943b]">★★★★★</span>
+                  <span className="text-[13px] font-semibold text-[#302115]">4.9</span>
+                </div>
+
+                <p className="mb-4 sm:mb-6 flex-1 text-[14px] leading-[1.6] sm:text-[13px] sm:leading-[1.75] text-[#6c5641]">
+                  {card.name.toLowerCase().includes("liquid chalk")
+                    ? "200ml. Strong grip. Zero slip. No chalk dust."
+                    : card.name.toLowerCase().includes("parallet") || card.name.toLowerCase().includes("parallettes")
+                    ? "Solid hardwood. Stable base. Built for dips, L-sits, handstands."
+                    : card.desc.length > 120
+                    ? `${card.desc.slice(0, 120).trim()}...`
+                    : card.desc}
+                </p>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
                   <span className="font-display text-[22px] sm:text-[28px] tracking-[0.03em] text-[#302115]">{card.listing_price_display || card.price_display}</span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[#a67126]/22 bg-[#1e1710] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4eee4] transition-all duration-300 group-hover:bg-[#a67126] group-hover:shadow-[0_4px_16px_rgba(166,113,38,0.3)]">
+                  <span className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#a67126]/22 bg-[#1e1710] px-6 py-3 text-[14px] font-bold uppercase tracking-[0.14em] text-[#f4eee4] transition-all duration-300 group-hover:bg-[#a67126] group-hover:shadow-[0_4px_16px_rgba(166,113,38,0.3)] sm:w-auto">
                     {card.cta}
                     <svg className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

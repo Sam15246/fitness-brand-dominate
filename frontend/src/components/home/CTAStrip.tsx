@@ -35,20 +35,16 @@ export default function CTAStrip() {
           Get your grip tools delivered fast. Explore our full catalog and start training with equipment that means business.
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="flex flex-col items-center gap-3">
           <Link
             href="/products"
-            className="group relative inline-flex min-h-[52px] items-center justify-center overflow-hidden rounded-full border border-[#c89e65]/45 bg-[#a67126] px-10 py-[15px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(166,113,38,0.35)]"
+            className="group relative inline-flex w-full max-w-[420px] min-h-[52px] items-center justify-center overflow-hidden rounded-full border border-[#c89e65]/45 bg-[#a67126] px-6 py-3 text-[15px] font-bold uppercase tracking-[0.12em] text-[#f4eee4] transition-all hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(166,113,38,0.35)]"
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             Shop Now
           </Link>
-          <Link
-            href="/order/status"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-10 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/70 transition-all hover:border-[#a67126]/60 hover:bg-[#a67126]/14 hover:text-[#f4eee4]"
-          >
-            Track My Order
-          </Link>
+
+          <Link href="/order/status" className="mt-2 text-[14px] text-[#f4eee4]/70 hover:text-[#f4eee4]">Track My Order</Link>
         </div>
       </div>
     </section>

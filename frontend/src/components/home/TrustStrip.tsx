@@ -40,24 +40,23 @@ const BADGES = [
 export default function TrustStrip() {
   return (
     <div className="border-t border-[#a67126]/10 bg-[#1e1710]">
-      <div className="mx-auto grid max-w-[1240px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-[1240px] grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {BADGES.map((badge, index) => (
           <div
             key={badge.title}
             className={[
-              "group flex items-start gap-3.5 px-5 py-4 transition-colors hover:bg-[#a67126]/[0.06] sm:py-[20px] md:px-[26px] md:py-[24px]",
-              index < BADGES.length - 1 ? "border-b border-[#a67126]/[0.08] sm:border-b-0" : "",
-              index % 2 === 0 ? "sm:border-r sm:border-[#a67126]/[0.08]" : "",
-              index < 2 ? "sm:border-b sm:border-[#a67126]/[0.08] lg:border-b-0" : "",
+              "group flex flex-col items-center text-center gap-3 px-5 py-6 transition-colors hover:bg-[#a67126]/[0.06] md:py-[20px] md:px-[26px]",
+              index < BADGES.length - 1 ? "border-b border-[#a67126]/[0.08] md:border-b-0" : "",
+              index % 2 === 0 ? "md:border-r md:border-[#a67126]/[0.08]" : "",
               index < BADGES.length - 1 ? "lg:border-r lg:border-[#a67126]/[0.08]" : "",
             ].join(" ")}
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#a67126]/10 text-[#d4943b] transition-colors group-hover:bg-[#a67126]/18">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#a67126]/10 text-[#d4943b] transition-colors group-hover:bg-[#a67126]/18">
               {badge.icon}
             </div>
             <div>
-              <p className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#f4eee4]">{badge.title}</p>
-              <p className="text-[11px] leading-[1.5] text-[#f4eee4]/36">{badge.detail}</p>
+              <p className="mb-1 text-[13px] font-bold uppercase tracking-[0.08em] text-[#f4eee4]">{badge.title}</p>
+              <p className="text-[14px] leading-[1.5] text-[#f4eee4]/36">{badge.detail}</p>
             </div>
           </div>
         ))}

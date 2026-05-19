@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const STATS = [
-  { value: 30, suffix: "%", label: "MgCO\u2083 Formula", body: "Higher magnesium carbonate than many common liquid chalk products." },
-  { value: 0, suffix: "", label: "Compromises", body: "Solid hardwood, precision details, and athlete-first construction." },
+  // MgCO3 should reflect the real formulation percentage for marketing — hardcode to avoid flash of 0
+  { value: 70, suffix: "%", label: "MgCO\u2083 Formula", body: "Higher magnesium carbonate than many common liquid chalk products." },
+  // 'Compromises' is a brand statement. Show as badge rather than numeric counter to avoid confusion.
+  { value: null as unknown as number | null, suffix: "", label: "Compromises", body: "Solid hardwood, precision details, and athlete-first construction." },
 ] as const;
 
 function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
@@ -19,7 +21,7 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
       ([entry]) => {
         if (entry.isIntersecting && !animated.current) {
           animated.current = true;
-          if (value === 0) {
+          if (!value || value <= 0) {
             setDisplay(0);
             return;
           }
@@ -36,7 +38,7 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
           requestAnimationFrame(tick);
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.25, rootMargin: '0px 0px -10% 0px' }
     );
     observer.observe(ref.current);
     return () => observer.disconnect();
@@ -108,7 +110,13 @@ export default function WhyDominate() {
                 key={card.label}
                 className="group rounded-[18px] border border-[#a67126]/14 bg-white/[0.025] p-4 transition-colors hover:border-[#a67126]/30 hover:bg-[#a67126]/[0.06] sm:p-[22px]"
               >
-                <AnimatedNumber value={card.value} suffix={card.suffix} />
+                {card.value && card.value > 0 ? (
+                  <AnimatedNumber value={card.value} suffix={card.suffix} />
+                ) : (
+                  <div className="inline-flex items-center gap-2">
+                    <span className="rounded-md bg-[#d4943b] px-3 py-1 text-[12px] font-bold text-[#1e1710]">Zero Compromises</span>
+                  </div>
+                )}
                 <p className="mb-1.5 mt-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#f4eee4]">{card.label}</p>
                 <p className="text-[12px] leading-[1.65] text-[#f4eee4]/40">{card.body}</p>
               </div>

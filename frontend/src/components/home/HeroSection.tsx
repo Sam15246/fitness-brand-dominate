@@ -14,7 +14,7 @@ export default function HeroSection() {
           priority
           loading="eager"
           sizes="100vw"
-          className="object-cover object-[center_40%] opacity-[0.28] brightness-75 contrast-110 md:opacity-[0.34]"
+          className="object-cover object-top sm:object-[center_40%] opacity-[0.28] brightness-75 contrast-110 md:opacity-[0.34]"
         />
       </div>
 
@@ -39,7 +39,7 @@ export default function HeroSection() {
         </div>
 
         {/* Headline — staggered lines */}
-        <h1 className="mb-5 font-display text-[clamp(60px,16vw,120px)] uppercase leading-[0.93] tracking-[0.01em] text-[#f4eee4] md:mb-6 md:text-[clamp(72px,9vw,120px)]">
+        <h1 className="mb-5 font-display text-[clamp(32px,8vw,56px)] uppercase leading-tight tracking-[0.01em] text-[#f4eee4] md:mb-6 md:text-[clamp(48px,7vw,96px)]">
           <span className="inline-block animate-[fadeInUp_0.7s_ease-out_0.3s_both]">Train</span>
           <br />
           <span className="inline-block animate-[fadeInUp_0.7s_ease-out_0.45s_both]">Anywhere.</span>
@@ -55,19 +55,17 @@ export default function HeroSection() {
         </p>
 
         {/* Buttons */}
-        <div className="flex animate-[fadeInUp_0.7s_ease-out_1.05s_both] flex-col flex-wrap gap-3 sm:flex-row">
+        <div className="flex animate-[fadeInUp_0.7s_ease-out_1.05s_both] flex-col gap-3 sm:flex-row sm:items-center">
           <Link
             href="/products"
-            className="group relative inline-flex min-h-[52px] items-center justify-center overflow-hidden rounded-full border border-[#c89e65]/45 bg-[#a67126] px-9 py-[15px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(166,113,38,0.3)]"
+            className="group relative inline-flex w-full min-h-[52px] items-center justify-center overflow-hidden rounded-full border border-[#c89e65]/45 bg-[#a67126] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-[#f4eee4] transition-all hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(166,113,38,0.3)]"
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             Shop Now
           </Link>
-          <Link
-            href="/#why"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-9 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/70 transition-all hover:border-[#a67126]/60 hover:bg-[#a67126]/14 hover:text-[#f4eee4]"
-          >
-            Our Story
+
+          <Link href="/#how" className="mt-1 text-[13px] font-semibold text-[#f4eee4]/70 underline-offset-4 hover:text-[#f4eee4] sm:mt-0 sm:ml-3">
+            How we build it ↓
           </Link>
         </div>
       </div>
