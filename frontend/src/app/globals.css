@@ -91,3 +91,90 @@ body {
     transform: translateX(-50%);
   }
 }
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Device-matrix tuning for common phone widths: 412, 390, 375, 360 */
+@media (max-width: 412px) {
+  /* Hero: optimize heading and text size */
+  #hero h1 {
+    font-size: clamp(48px, 11vw, 60px) !important;
+  }
+  #hero p {
+    font-size: 12.5px !important;
+  }
+
+  /* Products: headings */
+  #products h3 {
+    font-size: 20px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  #hero h1 {
+    font-size: clamp(40px, 10vw, 54px) !important;
+  }
+  #hero p {
+    font-size: 12px !important;
+  }
+
+  #products h3 {
+    font-size: 19px !important;
+  }
+}
+
+@media (max-width: 375px) {
+  #hero h1 {
+    font-size: clamp(36px, 9vw, 48px) !important;
+  }
+  #hero p {
+    font-size: 11.5px !important;
+  }
+
+  #products h3 {
+    font-size: 18px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  #hero h1 {
+    font-size: clamp(32px, 8.5vw, 44px) !important;
+  }
+  #hero p {
+    font-size: 11px !important;
+  }
+
+  #products h3 {
+    font-size: 17px !important;
+  }
+}

@@ -4,48 +4,45 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const STATS = [
-  // MgCO3 should reflect the real formulation percentage for marketing — hardcode to avoid flash of 0
-  { value: 70, suffix: "%", label: "MgCO\u2083 Formula", body: "Higher magnesium carbonate than many common liquid chalk products." },
-  // 'Compromises' is a brand statement. Show as badge rather than numeric counter to avoid confusion.
-  { value: null as unknown as number | null, suffix: "", label: "Compromises", body: "Solid hardwood, precision details, and athlete-first construction." },
+  { value: 70, suffix: "%", label: "MgCO\u2083 Formula", body: "High magnesium carbonate blend for stronger grip and less slip through hard sets." },
 ] as const;
 
-function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
+function AnimatedNumber({ value, suffix, start }: { value: number; suffix: string; start: boolean }) {
   const [display, setDisplay] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
   const animated = useRef(false);
 
   useEffect(() => {
-    if (!ref.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !animated.current) {
-          animated.current = true;
-          if (!value || value <= 0) {
-            setDisplay(0);
-            return;
-          }
-          const duration = 1200;
-          const start = performance.now();
-          function tick(now: number) {
-            const elapsed = now - start;
-            const progress = Math.min(elapsed / duration, 1);
-            // Ease out cubic
-            const eased = 1 - Math.pow(1 - progress, 3);
-            setDisplay(Math.round(eased * value));
-            if (progress < 1) requestAnimationFrame(tick);
-          }
-          requestAnimationFrame(tick);
-        }
-      },
-      { threshold: 0.25, rootMargin: '0px 0px -10% 0px' }
+    if (!start || animated.current) return;
+    animated.current = true;
+    const duration = 900;
+    const animationStart = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - animationStart;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.max(1, Math.round(eased * value)));
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        setDisplay(value);
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }, [start, value]);
+
+  if (!start) {
+    return (
+      <div className="invisible font-display text-[36px] leading-none tracking-[0.02em] text-[#d4943b] sm:text-[44px] md:text-[52px]">
+        {value}
+        {suffix}
+      </div>
     );
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [value]);
+  }
 
   return (
-    <div ref={ref} className="font-display text-[36px] leading-none tracking-[0.02em] text-[#d4943b] sm:text-[44px] md:text-[52px]">
+    <div className="font-display text-[36px] leading-none tracking-[0.02em] text-[#d4943b] sm:text-[44px] md:text-[52px]">
       {display}{suffix}
     </div>
   );
@@ -61,14 +58,14 @@ export default function WhyDominate() {
       ([entry]) => {
         if (entry.isIntersecting) setVisible(true);
       },
-      { threshold: 0.15 }
+      { threshold: 0.1, rootMargin: "0px 0px -12% 0px" }
     );
     observer.observe(sectionRef.current);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <section ref={sectionRef} id="why" className="relative overflow-hidden bg-[#1e1710] py-[72px] md:py-24">
+    <section ref={sectionRef} id="why" className="relative scroll-mt-28 overflow-hidden bg-[#1e1710] py-[72px] md:py-24">
       {/* Large watermark */}
       <span
         className="pointer-events-none absolute right-[-20px] top-1/2 -translate-y-1/2 select-none whitespace-nowrap font-display text-[clamp(100px,18vw,200px)] leading-none tracking-[0.04em] text-[#a67126]/[0.035]"
@@ -110,17 +107,21 @@ export default function WhyDominate() {
                 key={card.label}
                 className="group rounded-[18px] border border-[#a67126]/14 bg-white/[0.025] p-4 transition-colors hover:border-[#a67126]/30 hover:bg-[#a67126]/[0.06] sm:p-[22px]"
               >
-                {card.value && card.value > 0 ? (
-                  <AnimatedNumber value={card.value} suffix={card.suffix} />
-                ) : (
-                  <div className="inline-flex items-center gap-2">
-                    <span className="rounded-md bg-[#d4943b] px-3 py-1 text-[12px] font-bold text-[#1e1710]">Zero Compromises</span>
-                  </div>
-                )}
+                <AnimatedNumber value={card.value} suffix={card.suffix} start={visible} />
                 <p className="mb-1.5 mt-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#f4eee4]">{card.label}</p>
                 <p className="text-[12px] leading-[1.65] text-[#f4eee4]/40">{card.body}</p>
               </div>
             ))}
+
+            <div className="group rounded-[18px] border border-[#a67126]/18 bg-white/[0.03] p-4 sm:p-[22px]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#d4943b]/45 bg-[#a67126]/14 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#f4eee4]">
+                <svg className="h-3.5 w-3.5 text-[#d4943b]" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3-3a1 1 0 011.414-1.414l2.293 2.293 6.543-6.543a1 1 0 011.414 0z" />
+                </svg>
+                Zero Compromise Build
+              </span>
+              <p className="mt-3 text-[12px] leading-[1.65] text-[#f4eee4]/40">Athlete-first design, clean materials, and durable construction across every DOMINATE product.</p>
+            </div>
 
             {/* Wide card */}
             <div className="col-span-2 rounded-[18px] border border-[#a67126]/26 bg-[#a67126]/8 p-4 transition-colors hover:bg-[#a67126]/12 sm:p-[22px]">

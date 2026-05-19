@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
 const REVIEWS = [
   {
     quote: "The liquid chalk stays grippy through long sessions and does not cake up.",
@@ -53,60 +51,6 @@ function Stars({ count }: { count: number }) {
   );
 }
 
-function MobileCarousel({ reviews }: { reviews: typeof REVIEWS }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    function onScroll() {
-      const children = Array.from(container!.querySelectorAll("[data-snap]")) as HTMLElement[];
-      if (!children.length) return;
-      const center = container!.scrollLeft + container!.clientWidth / 2;
-      let nearest = 0;
-      let nearestDist = Infinity;
-      children.forEach((child, i) => {
-        const rect = child.offsetLeft + child.clientWidth / 2;
-        const dist = Math.abs(center - rect);
-        if (dist < nearestDist) {
-          nearest = i;
-          nearestDist = dist;
-        }
-      });
-      setActive(nearest % reviews.length);
-    }
-    container.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => container.removeEventListener("scroll", onScroll);
-  }, [reviews.length]);
-
-  return (
-    <div className="md:hidden">
-      <div ref={containerRef} className="-mx-4 scroll-pl-4 overflow-x-auto pb-4 pl-4 snap-x snap-mandatory flex gap-4 touch-auto">
-        {reviews.map((review, i) => (
-          <article key={review.name} data-snap className="snap-center min-w-[320px] shrink-0 rounded-[20px] border border-[#d9c8ad] bg-[#fff8ec] p-5 shadow-[0_4px_16px_rgba(146,104,56,0.05)]">
-            <Stars count={review.rating} />
-            <blockquote className="mb-[22px] min-h-[60px] text-[14px] leading-[1.78] text-[#302115]">&ldquo;{review.quote}&rdquo;</blockquote>
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#a67126]/12 text-[11px] font-bold text-[#a67126]">{review.name.split(" ").map((w) => w[0]).join("")}</div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#302115]">{review.name}</p>
-                <p className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-[#a67126]">{review.role}</p>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="mt-3 flex items-center justify-center gap-2">
-        <span className="text-[13px] font-semibold text-[#302115]">{active + 1}/{reviews.length}</span>
-      </div>
-    </div>
-  );
-}
-
 export default function Testimonials() {
   // Duplicate for infinite scroll illusion
   const doubled = [...REVIEWS, ...REVIEWS];
@@ -125,17 +69,13 @@ export default function Testimonials() {
         </div>
       </div>
 
-      {/* Responsive carousel: swipeable on mobile, marquee on desktop */}
-      <div className="relative">
+      {/* Marquee carousel — full width */}
+      <div className="group relative overflow-hidden">
         {/* Fade edges */}
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#f5e7d2] to-transparent md:w-24" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#f5e7d2] to-transparent md:w-24" />
 
-        {/* Mobile: scroll-snap carousel */}
-        <MobileCarousel reviews={REVIEWS} />
-
-        {/* Desktop: keep marquee for large screens */}
-        <div className="hidden md:flex animate-[marquee_40s_linear_infinite] gap-5 group-hover:[animation-play-state:paused]">
+        <div className="flex animate-[marquee_40s_linear_infinite] gap-5 group-hover:[animation-play-state:paused]">
           {doubled.map((review, i) => (
             <article
               key={`${review.name}-${i}`}
@@ -147,7 +87,7 @@ export default function Testimonials() {
               </blockquote>
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#a67126]/12 text-[11px] font-bold text-[#a67126]">
-                  {review.name.split(" ").map((w) => w[0]).join("")}
+                  {review.name.split(" ").map(w => w[0]).join("")}
                 </div>
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#302115]">{review.name}</p>

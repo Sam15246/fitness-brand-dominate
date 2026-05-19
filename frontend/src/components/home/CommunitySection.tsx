@@ -17,10 +17,6 @@ const COMMUNITY_CARDS = [
 ] as const;
 
 export default function CommunitySection() {
-  // Controlled via environment flag. Prevent showing placeholder content to real users.
-  // Set NEXT_PUBLIC_SHOW_COMMUNITY=true in .env to enable once real content is ready.
-  const SHOW_COMMUNITY = process.env.NEXT_PUBLIC_SHOW_COMMUNITY === "true";
-  if (!SHOW_COMMUNITY) return null;
   return (
     <section id="community" className="relative overflow-hidden bg-[#0d0b09] py-[72px] md:py-24">
       <div

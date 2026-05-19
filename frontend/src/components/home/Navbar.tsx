@@ -118,7 +118,7 @@ export default function Navbar() {
             {/* Mobile cart */}
             <Link
               href="/cart"
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-[#f4eee4]/60"
+              className="relative inline-flex h-12 w-12 items-center justify-center rounded-full text-[#f4eee4]/60"
               aria-label="Cart"
             >
               <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
@@ -131,7 +131,7 @@ export default function Navbar() {
               )}
             </Link>
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#a67126]/25 text-[#f4eee4]/70"
+              className="flex h-12 w-12 items-center justify-center rounded-lg border border-[#a67126]/25 text-[#f4eee4]/70"
               onClick={() => setOpen(true)}
               aria-label="Open menu"
             >
@@ -143,60 +143,46 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile fullscreen overlay */}
+      {/* Mobile drawer + backdrop */}
       {open && (
-        <div
-          className="fixed inset-0 z-[300] bg-[#090705]/95"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
-        >
-          {/* Decorative watermark */}
-          <span
-            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none font-display text-[clamp(120px,30vw,200px)] uppercase tracking-[0.06em] text-[#a67126]/[0.04]"
-            aria-hidden="true"
-          >
-            DOMINATE
-          </span>
+        <div className="fixed inset-0 z-[300]" role="dialog" aria-modal="true">
+          <button
+            className="absolute inset-0 bg-[#090705]/65 backdrop-blur-[1px]"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu backdrop"
+          />
 
-          <div className="relative flex h-full flex-col" onClick={(e) => e.stopPropagation()}>
-            {/* Close bar */}
-            <div className="flex h-16 items-center justify-between px-5">
-              <span className="font-display text-[22px] tracking-[0.1em] text-[#f4eee4]">Dominate</span>
-              <button
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#a67126]/25 text-[#f4eee4]/70"
-                onClick={() => setOpen(false)}
-                aria-label="Close menu"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Nav links */}
-            <div className="flex flex-1 flex-col items-stretch justify-center gap-3 px-5">
-              {NAV_LINKS.map((link, i) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
+          <div className="absolute right-0 top-0 h-full w-[min(86vw,360px)] animate-[slideInFromRight_220ms_ease-out] border-l border-[#a67126]/20 bg-[#0d0b09] shadow-[-12px_0_40px_rgba(0,0,0,0.4)]">
+            <div className="flex h-full flex-col">
+              <div className="flex h-16 items-center justify-between border-b border-[#a67126]/14 px-5 pt-[max(env(safe-area-inset-top,0px),0px)]">
+                <span className="font-display text-[22px] tracking-[0.1em] text-[#f4eee4]">Menu</span>
+                <button
+                  className="flex h-12 w-12 items-center justify-center rounded-lg border border-[#a67126]/25 text-[#f4eee4]/70"
                   onClick={() => setOpen(false)}
-                  className="group flex h-12 w-full items-center gap-4 rounded-md px-4"
-                  style={{ animationDelay: `${i * 60}ms` }}
+                  aria-label="Close menu"
                 >
-                  <span className="text-[11px] font-bold tracking-[0.2em] text-[#a67126]/30 transition-colors group-hover:text-[#c89e65]">
-                    0{i + 1}
-                  </span>
-                  <span className="font-display text-[20px] uppercase leading-none tracking-[0.04em] text-[#f4eee4] transition-colors group-hover:text-[#d4943b]">
-                    {link.label}
-                  </span>
-                </Link>
-              ))}
-            </div>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            {/* Bottom bar */}
-            <div className="flex items-center justify-between border-t border-[#a67126]/10 px-5 py-4">
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#f4eee4]/20">Train Anywhere. Dominate Everywhere.</span>
+              <div className="flex flex-1 flex-col px-5 py-4">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-12 items-center border-b border-[#a67126]/10 text-[14px] font-semibold uppercase tracking-[0.1em] text-[#f4eee4]"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="border-t border-[#a67126]/10 px-5 py-4">
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#f4eee4]/30">Train Anywhere. Dominate Everywhere.</p>
+              </div>
             </div>
           </div>
         </div>

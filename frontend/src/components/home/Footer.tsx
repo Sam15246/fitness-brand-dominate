@@ -57,18 +57,18 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#a67126]/10 bg-[#0d0b09] pb-[88px] pt-10 sm:pt-16">
+    <footer className="border-t border-[#a67126]/10 bg-[#0d0b09] pb-7 pt-10 sm:pt-16">
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8 lg:px-10">
         {/* Mobile: brand + socials compact, then link grid */}
         {/* Desktop: 4-col layout */}
         <div className="mb-10 sm:mb-14">
-          {/* Brand row — mobile/tablet only */}
+          {/* Brand row — always visible */}
           <div className="mb-8 flex items-center justify-between sm:mb-0 lg:hidden">
             <div>
               <Link href="/" className="inline-block">
                 <p className="font-display text-[28px] tracking-[0.08em] text-[#f4eee4] sm:text-[32px]">Dominate</p>
               </Link>
-              <p className="mt-1.5 max-w-[260px] text-[11px] leading-[1.7] text-[#f4eee4]/36 sm:text-[12px]">
+              <p className="mt-1.5 max-w-[220px] text-[11px] leading-[1.7] text-[#f4eee4]/36 sm:max-w-[260px] sm:text-[12px]">
                 D2C fitness gear from India for real athletes.
               </p>
             </div>
@@ -89,7 +89,7 @@ export default function Footer() {
           </div>
 
           {/* Link columns — 3-col on mobile, 4-col with brand on lg */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-12">
+          <div className="grid grid-cols-3 gap-6 sm:gap-8 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-12">
             {/* Brand column — desktop only */}
             <div className="hidden lg:block">
               <Link href="/" className="inline-block">

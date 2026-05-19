@@ -48,11 +48,9 @@ const PARTNER_POINTS = [
   },
 ] as const;
 
-const GYM_LOGOS = ["IRON HOUSE", "FLOW ACADEMY", "BAR STATE", "MOVE CLUB", "STRENGTH LAB"] as const;
-
 export default function GymPartnersSection() {
   return (
-    <section id="gym-partners" className="relative overflow-hidden bg-[#1e1710] py-[72px] md:py-24">
+    <section id="gym-partners" className="relative scroll-mt-28 overflow-hidden bg-[#1e1710] py-[72px] md:py-24">
       <div
         className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(circle at 18% 18%, rgba(166,113,38,0.18) 0%, transparent 28%), radial-gradient(circle at 82% 20%, rgba(212,148,59,0.12) 0%, transparent 24%), radial-gradient(circle at 50% 100%, rgba(255,255,255,0.04) 0%, transparent 48%)" }}
@@ -67,7 +65,7 @@ export default function GymPartnersSection() {
       <div className="relative z-10 mx-auto max-w-[1240px] px-5 sm:px-8 lg:px-10">
         <div className="mb-11 flex flex-col gap-5 md:mb-14 md:flex-row md:items-end md:justify-between">
           <div className="max-w-[640px] animate-[fadeInUp_0.7s_ease-out_both]">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#d4943b]">DOMINATE FOR GYMS</p>
+            <p className="mb-2 inline-flex rounded-full border border-[#d4943b]/35 bg-[#a67126]/12 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#d4943b]">For Gym Owners</p>
             <h2 className="font-display text-[clamp(34px,6vw,58px)] uppercase leading-[0.95] tracking-[0.04em] text-[#f4eee4]">
               Built for gyms. Built for athletes.
             </h2>
@@ -87,25 +85,28 @@ export default function GymPartnersSection() {
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
               Partner With DOMINATE
             </Link>
-            <span className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-8 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/50">
+            <span className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-8 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/72">
               DOMINATE Gym (Coming Soon)
             </span>
           </div>
         </div>
 
-        {/* Mobile: horizontal swipeable carousel for feature cards */}
-        <div className="md:hidden -mx-4 overflow-x-auto pb-4 pl-4 scroll-pl-4 snap-x snap-mandatory flex gap-4">
-          {PARTNER_POINTS.map((point, index) => (
-            <article key={point.title} data-snap className="snap-center min-w-[280px] shrink-0 rounded-[22px] border border-[#a67126]/12 bg-white/[0.03] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#a67126]/28 hover:bg-[#a67126]/[0.08]">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#a67126]/12 text-[#d4943b] transition-colors group-hover:bg-[#a67126]/18">{point.icon}</div>
-              <h3 className="font-display text-[18px] uppercase tracking-[0.03em] text-[#f4eee4]">{point.title}</h3>
-              <p className="mt-2 text-[13px] leading-[1.6] text-[#f4eee4]/42">{point.body}</p>
+        <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 sm:hidden">
+          {PARTNER_POINTS.map((point) => (
+            <article
+              key={point.title}
+              className="group w-[84%] shrink-0 snap-start rounded-[22px] border border-[#a67126]/12 bg-white/[0.03] p-5"
+            >
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#a67126]/12 text-[#d4943b]">
+                {point.icon}
+              </div>
+              <h3 className="font-display text-[24px] uppercase tracking-[0.03em] text-[#f4eee4]">{point.title}</h3>
+              <p className="mt-2 text-[12px] leading-[1.8] text-[#f4eee4]/42">{point.body}</p>
             </article>
           ))}
         </div>
 
-        {/* Desktop / tablet grid */}
-        <div className="hidden md:grid gap-4 md:grid-cols-2 xl:grid-cols-5"> 
+        <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-5">
           {PARTNER_POINTS.map((point, index) => (
             <article
               key={point.title}
@@ -120,7 +121,6 @@ export default function GymPartnersSection() {
             </article>
           ))}
         </div>
-
       </div>
     </section>
   );

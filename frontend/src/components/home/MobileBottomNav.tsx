@@ -95,7 +95,7 @@ export default function MobileBottomNav() {
               key={tab.label}
               href={href}
               className={[
-                "relative flex flex-col items-center justify-center gap-1 rounded-xl py-2 transition-colors min-h-[48px]",
+                "relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl py-2 transition-colors",
                 isActive
                   ? "bg-[#a67126]/14 text-[#d4943b]"
                   : "text-[#f4eee4]/40 hover:text-[#f4eee4]/70",
@@ -109,10 +109,9 @@ export default function MobileBottomNav() {
                   </span>
                 )}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.1em]">
+              <span className="text-[9px] font-bold uppercase tracking-[0.1em]">
                 {tab.authAware ? (user ? "Account" : "Sign In") : tab.label}
               </span>
-              {isActive && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-6 rounded-full bg-[#d4943b]" aria-hidden="true" />}
             </Link>
           );
         })}

@@ -4,7 +4,7 @@ import AppImage from "@/components/ui/AppImage";
 
 export default function HeroSection() {
   return (
-    <section className="relative flex min-h-svh items-end overflow-hidden bg-[#0d0b09] md:items-center">
+    <section id="hero" className="relative flex min-h-[calc(100dvh-96px)] items-end overflow-hidden bg-[#0d0b09] md:min-h-svh md:items-center">
       {/* Ken-Burns animated background */}
       <div className="absolute inset-0 animate-[kenburns_25s_ease-in-out_infinite_alternate]">
         <AppImage
@@ -14,7 +14,7 @@ export default function HeroSection() {
           priority
           loading="eager"
           sizes="100vw"
-          className="object-cover object-top sm:object-[center_40%] opacity-[0.28] brightness-75 contrast-110 md:opacity-[0.34]"
+          className="object-cover object-[center_40%] opacity-[0.28] brightness-75 contrast-110 md:opacity-[0.34]"
         />
       </div>
 
@@ -31,7 +31,7 @@ export default function HeroSection() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-24 pt-20 sm:px-8 sm:pb-20 sm:pt-24 md:pb-24 lg:px-10 lg:pt-[120px]">
+      <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-24 pt-[max(env(safe-area-inset-top,0px),72px)] sm:px-8 sm:pb-20 sm:pt-24 md:pb-24 lg:px-10 lg:pt-[120px]">
         {/* Badge — fade in */}
         <div className="mb-6 inline-flex animate-[fadeInUp_0.6s_ease-out_0.2s_both] items-center gap-[10px] rounded-full border border-[#a67126]/30 bg-[#a67126]/16 px-4 py-[7px] text-[9.5px] font-bold uppercase tracking-[0.22em] text-[#d4943b]">
           <span className="h-[5px] w-[5px] shrink-0 animate-pulse rounded-full bg-[#d4943b]" aria-hidden="true" />
@@ -39,7 +39,7 @@ export default function HeroSection() {
         </div>
 
         {/* Headline — staggered lines */}
-        <h1 className="mb-5 font-display text-[clamp(32px,8vw,56px)] uppercase leading-tight tracking-[0.01em] text-[#f4eee4] md:mb-6 md:text-[clamp(48px,7vw,96px)]">
+        <h1 className="mb-5 font-display text-[clamp(60px,16vw,120px)] uppercase leading-[0.93] tracking-[0.01em] text-[#f4eee4] md:mb-6 md:text-[clamp(72px,9vw,120px)]">
           <span className="inline-block animate-[fadeInUp_0.7s_ease-out_0.3s_both]">Train</span>
           <br />
           <span className="inline-block animate-[fadeInUp_0.7s_ease-out_0.45s_both]">Anywhere.</span>
@@ -55,17 +55,19 @@ export default function HeroSection() {
         </p>
 
         {/* Buttons */}
-        <div className="flex animate-[fadeInUp_0.7s_ease-out_1.05s_both] flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex animate-[fadeInUp_0.7s_ease-out_1.05s_both] flex-col flex-wrap gap-3 sm:flex-row">
           <Link
             href="/products"
-            className="group relative inline-flex w-full min-h-[52px] items-center justify-center overflow-hidden rounded-full border border-[#c89e65]/45 bg-[#a67126] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.12em] text-[#f4eee4] transition-all hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(166,113,38,0.3)]"
+            className="group relative inline-flex min-h-[52px] items-center justify-center overflow-hidden rounded-full border border-[#c89e65]/45 bg-[#a67126] px-9 py-[15px] text-[11px] font-bold uppercase tracking-[0.16em] text-[#f4eee4] transition-all hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(166,113,38,0.3)]"
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             Shop Now
           </Link>
-
-          <Link href="/#how" className="mt-1 text-[13px] font-semibold text-[#f4eee4]/70 underline-offset-4 hover:text-[#f4eee4] sm:mt-0 sm:ml-3">
-            How we build it ↓
+          <Link
+            href="/#why"
+            className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-[#a67126]/38 bg-transparent px-9 py-[15px] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f4eee4]/70 transition-all hover:border-[#a67126]/60 hover:bg-[#a67126]/14 hover:text-[#f4eee4]"
+          >
+            Our Story
           </Link>
         </div>
       </div>

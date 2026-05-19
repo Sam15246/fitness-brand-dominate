@@ -31,7 +31,7 @@ export default function FAQSection() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="bg-[#fff8ec] py-[72px] md:py-24">
+    <section id="faq" className="scroll-mt-28 bg-[#fff8ec] py-[72px] md:py-24">
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8 lg:px-10">
         <div className="mb-11 md:mx-auto md:mb-[52px] md:max-w-[560px] md:text-center">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#a67126]">Got Questions?</p>
@@ -54,7 +54,7 @@ export default function FAQSection() {
                 ].join(" ")}
               >
                 <button
-                  className="flex w-full items-center justify-between gap-3 px-5 py-4 min-h-[48px] text-left transition-colors sm:gap-4 sm:px-7 sm:py-5"
+                  className="flex min-h-12 w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors sm:gap-4 sm:px-7 sm:py-6"
                   aria-expanded={isOpen}
                   onClick={() => setOpen(isOpen ? null : index)}
                 >
@@ -94,11 +94,18 @@ export default function FAQSection() {
               </div>
             );
           })}
-        </div>
 
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <p className="text-[14px] font-semibold text-[#302115]">Still have questions?</p>
-          <a href="https://wa.me/917068462273" className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-[14px] font-bold text-white shadow-sm">Chat on WhatsApp</a>
+          <div className="mt-3 rounded-2xl border border-[#d9c8ad] bg-[#fff4e2] p-4 text-center sm:p-5">
+            <p className="text-[12px] font-semibold tracking-[0.02em] text-[#302115]">Still have questions?</p>
+            <a
+              href="https://wa.me/917068462273"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#1e1710] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#f4eee4]"
+            >
+              Chat on WhatsApp
+            </a>
+          </div>
         </div>
       </div>
     </section>

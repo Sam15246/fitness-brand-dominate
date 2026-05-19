@@ -4,7 +4,6 @@ import AnnouncementBar from "@/components/home/AnnouncementBar";
 import CTAStrip from "@/components/home/CTAStrip";
 import FAQSection from "@/components/home/FAQSection";
 import Footer from "@/components/home/Footer";
-import CommunitySection from "@/components/home/CommunitySection";
 import GymPartnersSection from "@/components/home/GymPartnersSection";
 import HeroSection from "@/components/home/HeroSection";
 import HowItWorks from "@/components/home/HowItWorks";
@@ -23,6 +22,8 @@ export const metadata: Metadata = {
 export const revalidate = 120;
 
 export default function HomePage() {
+  const SHOW_COMMUNITY_SECTION = false;
+
   return (
     <>
       <AnnouncementBar />
@@ -32,25 +33,31 @@ export default function HomePage() {
         <HeroSection />
         <TrustStrip />
 
-        <div className="h-9 bg-gradient-to-b from-[#fff8ec] to-[#f5e7d2]" aria-hidden="true" />
+        <div className="h-10 bg-gradient-to-b from-[#1e1710] to-[#fff8ec]" aria-hidden="true" />
         <ProductsSection />
 
-        <div className="h-9 bg-gradient-to-b from-[#f5e7d2] to-[#fff8ec]" aria-hidden="true" />
+        <div className="h-9 bg-gradient-to-b from-[#fff8ec] to-[#f5e7d2]" aria-hidden="true" />
         <HowItWorks />
 
-        <div className="h-9 bg-gradient-to-b from-[#fff8ec] to-[#1e1710]" aria-hidden="true" />
+        <div className="h-16 bg-gradient-to-b from-[#f5e7d2] to-[#f5e7d2]" aria-hidden="true" />
         <Testimonials />
 
-        <div className="h-16 bg-gradient-to-b from-[#1e1710] to-[#f5e7d2]" aria-hidden="true" />
+        <div className="h-16 bg-gradient-to-b from-[#f5e7d2] to-[#1e1710]" aria-hidden="true" />
         <WhyDominate />
 
-        <div className="h-9 bg-gradient-to-b from-[#f5e7d2] to-[#fff8ec]" aria-hidden="true" />
+        {SHOW_COMMUNITY_SECTION ? (
+          <>
+            <div className="h-9 bg-gradient-to-b from-[#1e1710] to-[#0d0b09]" aria-hidden="true" />
+          </>
+        ) : null}
+
+        <div className="h-9 bg-gradient-to-b from-[#1e1710] to-[#fff8ec]" aria-hidden="true" />
         <FAQSection />
 
-        <div className="h-16 bg-gradient-to-b from-[#fff8ec] to-[#0d0b09]" aria-hidden="true" />
+        <div className="h-10 bg-gradient-to-b from-[#fff8ec] to-[#1e1710]" aria-hidden="true" />
         <GymPartnersSection />
 
-        <div className="h-16 bg-gradient-to-b from-[#0d0b09] to-[#fff8ec]" aria-hidden="true" />
+        <div className="h-16 bg-gradient-to-b from-[#1e1710] to-[#0d0b09]" aria-hidden="true" />
         <CTAStrip />
       </main>
 

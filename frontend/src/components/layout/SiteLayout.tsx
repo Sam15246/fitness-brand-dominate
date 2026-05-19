@@ -8,7 +8,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <Navbar />
-      <main className="pb-20 md:pb-0 overflow-x-hidden">{children}</main>
+      <main className="pb-20 md:pb-0">{children}</main>
       <Footer />
       <MobileBottomNav />
     </>
