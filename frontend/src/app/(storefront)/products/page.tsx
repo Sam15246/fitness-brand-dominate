@@ -25,7 +25,7 @@ const FALLBACK_PRODUCTS: ProductCard[] = [
     available_quantity: 50,
     average_rating: 0,
     review_count: 0,
-    primary_image: { id: 0, path: "", url: "/liquid-chalk-dominate200ml.png", thumbnail_url: "/liquid-chalk-dominate200ml.png", is_primary: true, display_order: 0 },
+    primary_image: { id: 0, path: "", url: "/liquid-chalk-dominate200ml.png", thumbnail_url: "/liquid-chalk-dominate200ml.png", is_primary: true, display_order: 0, variant_ids: [] },
   },
   {
     id: -2,
@@ -44,7 +44,7 @@ const FALLBACK_PRODUCTS: ProductCard[] = [
     available_quantity: 0,
     average_rating: 0,
     review_count: 0,
-    primary_image: { id: 0, path: "", url: "/dominate-parallettes-standard.png", thumbnail_url: "/dominate-parallettes-standard.png", is_primary: true, display_order: 0 },
+    primary_image: { id: 0, path: "", url: "/dominate-parallettes-standard.png", thumbnail_url: "/dominate-parallettes-standard.png", is_primary: true, display_order: 0, variant_ids: [] },
   },
 ];
 

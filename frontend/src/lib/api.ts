@@ -44,6 +44,7 @@ export type ProductImage = {
   thumbnail_url: string | null;
   is_primary: boolean;
   display_order: number;
+  variant_ids?: number[];  // Optional for backward compatibility with API
 };
 
 export type ProductVariant = {
@@ -947,7 +948,13 @@ export async function getAdminProductImages(productId: number): Promise<ProductI
 
 export async function createAdminProductImage(
   productId: number,
-  payload: { image_path: string; storage_path?: string; display_order?: number; is_primary?: boolean },
+  payload: {
+    image_path: string;
+    storage_path?: string;
+    display_order?: number;
+    is_primary?: boolean;
+    variant_ids?: number[];  // NEW: Array of variant IDs to link image to
+  },
 ): Promise<ProductImage> {
   const response = await apiPost<{ image: ProductImage }>(`/admin/products/${productId}/images`, payload);
   return response.data.image;
@@ -955,7 +962,12 @@ export async function createAdminProductImage(
 
 export async function uploadAdminProductImage(
   productId: number,
-  payload: { file: File; display_order?: number; is_primary?: boolean },
+  payload: {
+    file: File;
+    display_order?: number;
+    is_primary?: boolean;
+    variant_ids?: number[];  // NEW: Array of variant IDs to link image to
+  },
 ): Promise<ProductImage> {
   const formData = new FormData();
   formData.set("file", payload.file);
@@ -965,6 +977,9 @@ export async function uploadAdminProductImage(
   if (typeof payload.is_primary === "boolean") {
     formData.set("is_primary", payload.is_primary ? "true" : "false");
   }
+  if (Array.isArray(payload.variant_ids) && payload.variant_ids.length > 0) {  // NEW
+    formData.set("variant_ids", JSON.stringify(payload.variant_ids));
+  }
 
   const response = await apiPostForm<{ image: ProductImage }>(`/admin/products/${productId}/images`, formData);
   return response.data.image;
@@ -973,7 +988,13 @@ export async function uploadAdminProductImage(
 export async function updateAdminProductImage(
   productId: number,
   imageId: number,
-  payload: { image_path?: string; storage_path?: string; display_order?: number; is_primary?: boolean },
+  payload: {
+    image_path?: string;
+    storage_path?: string;
+    display_order?: number;
+    is_primary?: boolean;
+    variant_ids?: number[];  // NEW: Array of variant IDs to link image to
+  },
 ): Promise<ProductImage> {
   const response = await apiPut<{ image: ProductImage }>(`/admin/products/${productId}/images/${imageId}`, payload);
   return response.data.image;
@@ -991,7 +1012,11 @@ export type AdminVariant = {
   sku: string;
   option_values: Record<string, string>;
   price_override: number | null;
+  price_original: number | null;  // NEW: MRP for variant
+  price_discounted: number | null;  // NEW: Discounted price for variant
+  is_discount_active: boolean;  // NEW: Discount toggle
   effective_price: number;
+  effective_original_price: number;  // NEW: Original price with fallback
   stock_quantity: number;
   weight_grams: number | null;
   is_active: boolean;
@@ -1005,7 +1030,16 @@ export async function listAdminVariants(productId: number): Promise<AdminVariant
 
 export async function createAdminVariant(
   productId: number,
-  payload: { sku: string; option_values: Record<string, string>; price_override: number | null; stock_quantity: number; is_active?: boolean },
+  payload: {
+    sku: string;
+    option_values: Record<string, string>;
+    price_override: number | null;
+    price_original?: number | null;  // NEW
+    price_discounted?: number | null;  // NEW
+    is_discount_active?: boolean;  // NEW
+    stock_quantity: number;
+    is_active?: boolean;
+  },
 ): Promise<AdminVariant> {
   const response = await apiPost<{ variant: AdminVariant }>(`/admin/products/${productId}/variants`, payload);
   return response.data.variant;
@@ -1014,7 +1048,16 @@ export async function createAdminVariant(
 export async function updateAdminVariant(
   productId: number,
   variantId: number,
-  payload: Partial<{ sku: string; option_values: Record<string, string>; price_override: number | null; stock_quantity: number; is_active: boolean }>,
+  payload: Partial<{
+    sku: string;
+    option_values: Record<string, string>;
+    price_override: number | null;
+    price_original: number | null;  // NEW
+    price_discounted: number | null;  // NEW
+    is_discount_active: boolean;  // NEW
+    stock_quantity: number;
+    is_active: boolean;
+  }>,
 ): Promise<AdminVariant> {
   const response = await apiPut<{ variant: AdminVariant }>(`/admin/products/${productId}/variants/${variantId}`, payload);
   return response.data.variant;

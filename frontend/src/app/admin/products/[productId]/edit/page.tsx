@@ -4,15 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import AdminShell from "@/components/admin/AdminShell";
-import ImageUploadManager from "@/components/admin/ImageUploadManager";
 import VariantManager from "@/components/admin/VariantManager";
-import { getAdminProduct, updateAdminProduct, getAdminProductImages, type AdminProduct, type ProductImage } from "@/lib/api";
+import Link from "next/link";
+import { getAdminProduct, updateAdminProduct, type AdminProduct } from "@/lib/api";
 
 export default function AdminProductEditPage() {
   const params = useParams<{ productId: string }>();
   const productId = Number(params.productId || 0);
   const [product, setProduct] = useState<AdminProduct | null>(null);
-  const [images, setImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +33,6 @@ export default function AdminProductEditPage() {
         const value = await getAdminProduct(productId);
         if (active) {
           setProduct(value);
-        }
-
-        const productImages = await getAdminProductImages(productId);
-        if (active) {
-          setImages(productImages);
         }
       } catch (err) {
         if (active) {
@@ -145,27 +139,16 @@ export default function AdminProductEditPage() {
             </button>
           </form>
 
-          {/* Image Upload Manager */}
-          <div className="mt-6">
-            <ImageUploadManager 
-              productId={productId} 
-              initialImages={images.map(img => ({
-                id: img.id,
-                url: img.url || '',
-                thumbnail_url: img.thumbnail_url || '',
-                display_order: img.display_order
-              }))} 
-              onImagesChange={(uploadedImages) => {
-                setImages(uploadedImages.map(img => ({
-                  id: img.id,
-                  path: img.url,
-                  url: img.url,
-                  thumbnail_url: img.thumbnailUrl,
-                  is_primary: false,
-                  display_order: img.displayOrder
-                })));
-              }}
-            />
+          {/* Image Management */}
+          <div className="mt-6 rounded-xl border border-[#8b6f47]/30 bg-[#17120f] p-5">
+            <h3 className="mb-3 text-sm font-semibold text-[#d8c19a]">Product Images</h3>
+            <p className="mb-4 text-xs text-[#9a7147]">Manage images in a dedicated page with variant assignments and reordering.</p>
+            <Link
+              href={`/admin/products/${productId}/images`}
+              className="inline-block rounded-lg border border-[#8b6f47]/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[#d8c19a] hover:bg-[#1f1814]"
+            >
+              Manage Images
+            </Link>
           </div>
 
           {/* Variant Management */}

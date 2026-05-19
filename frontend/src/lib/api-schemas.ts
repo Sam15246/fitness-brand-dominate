@@ -7,6 +7,7 @@ const productImageSchema = z.object({
   thumbnail_url: z.string().nullable(),
   is_primary: z.boolean(),
   display_order: z.number(),
+  variant_ids: z.array(z.number()).optional().default([]),  // NEW: IDs of variants this image is linked to
 });
 
 const productVariantSchema = z.object({
@@ -14,7 +15,11 @@ const productVariantSchema = z.object({
   sku: z.string(),
   option_values: z.record(z.string()),
   price_override: z.number().nullable(),
+  price_original: z.number().nullable().optional(),  // NEW: MRP for variant
+  price_discounted: z.number().nullable().optional(),  // NEW: Discounted price for variant
+  is_discount_active: z.boolean().optional().default(false),  // NEW: Discount toggle
   effective_price: z.number(),
+  effective_original_price: z.number().optional(),  // NEW: Original price with fallback
   stock_quantity: z.number(),
   available_quantity: z.number().optional(),
   weight_grams: z.number().nullable(),

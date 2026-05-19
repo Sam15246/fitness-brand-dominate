@@ -124,12 +124,13 @@ export default function ImageUploadManager({ productId, initialImages, onImagesC
               }
 
               const responseData = await response.json();
-              const imageData = responseData.data;
+              // Support both response shapes: { data: { image: {...} } } and { data: { ...image fields... } }
+              const imageData = (responseData.data && responseData.data.image) ? responseData.data.image : responseData.data;
               const newImg: UploadedImage = {
                 id: imageData.id,
                 url: imageData.url || imageData.path,
-                thumbnailUrl: imageData.thumbnail_url,
-                displayOrder: imageData.display_order,
+                thumbnailUrl: imageData.thumbnail_url || imageData.thumbnailUrl || null,
+                displayOrder: imageData.display_order || imageData.displayOrder || 0,
                 isNew: true,
               };
 
