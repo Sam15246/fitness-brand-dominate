@@ -35,8 +35,8 @@ export default function AdminProductCreatePage() {
         is_active: form.get("is_active") === "on",
       });
       setCreatedId(product.id);
-      // Redirect to edit page after short delay so admin can add variants/images
-      setTimeout(() => router.push(`/admin/products/${product.id}/edit`), 1500);
+      // Redirect immediately to edit page so admin can add variants/images
+      router.push(`/admin/products/${product.id}/edit`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");
     } finally {
