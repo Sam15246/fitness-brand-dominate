@@ -52,7 +52,11 @@ export type ProductVariant = {
   sku: string;
   option_values: Record<string, string>;
   price_override: number | null;
+  price_original?: number | null;
+  price_discounted?: number | null;
+  is_discount_active?: boolean;
   effective_price: number;
+  effective_original_price?: number;
   stock_quantity: number;
   available_quantity?: number;
   weight_grams: number | null;

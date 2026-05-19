@@ -124,7 +124,10 @@ export default function AddToCartButton({
     : activeVariants.length > 1
       ? `From ${formatPrice(lowestVariantPrice)}`
       : basePriceDisplay;
+  
+  // Show original price strikethrough for product or variant
   const showOriginal = !selectedVariant && discountPercentage > 0 && originalPrice;
+  const variantHasDiscount = selectedVariant?.is_discount_active && selectedVariant?.price_original != null && selectedVariant?.price_original > 0;
 
   return (
     <div className="space-y-2.5 sm:space-y-4 lg:space-y-5">
@@ -133,6 +136,18 @@ export default function AddToCartButton({
         <span className="font-display text-[24px] sm:text-[30px] lg:text-[36px] tracking-[0.02em] text-[#302115]">
           {displayPrice}
         </span>
+        {variantHasDiscount && selectedVariant?.price_original && (
+          <>
+            <span className="text-[14px] text-[#9a7147] line-through">
+              Rs. {(selectedVariant.price_original / 100).toFixed(0)}
+            </span>
+            {selectedVariant.price_discounted ? (
+              <span className="rounded-full bg-[#a67126] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#f4eee4]">
+                Save {Math.round(((selectedVariant.price_original - selectedVariant.price_discounted) / selectedVariant.price_original) * 100)}%
+              </span>
+            ) : null}
+          </>
+        )}
         {showOriginal && (
           <>
             <span className="text-[14px] text-[#9a7147] line-through">
@@ -171,9 +186,20 @@ export default function AddToCartButton({
                   <span className={`block text-[11px] sm:text-[13px] font-semibold ${isSelected ? "text-[#302115]" : "text-[#4f3825]"}`}>
                     {variantLabel(v)}
                   </span>
-                  <span className={`mt-0.5 block text-[10px] sm:text-[12px] ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
-                    {formatPrice(v.effective_price)}
-                  </span>
+                  {v.is_discount_active && v.price_original != null && v.price_original > 0 ? (
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      <span className={`text-[9px] sm:text-[11px] line-through ${isSelected ? "text-[#9a7147]" : "text-[#a08070]"}`}>
+                        Rs. {(v.price_original / 100).toFixed(0)}
+                      </span>
+                      <span className={`text-[10px] sm:text-[12px] font-semibold ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
+                        {formatPrice(v.effective_price)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className={`mt-0.5 block text-[10px] sm:text-[12px] ${isSelected ? "text-[#a67126]" : "text-[#6f5640]"}`}>
+                      {formatPrice(v.effective_price)}
+                    </span>
+                  )}
                   {(v.available_quantity ?? v.stock_quantity) <= 3 && (
                     <span className="mt-1 block text-[8px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#b87a3d]">
                       Only {v.available_quantity ?? v.stock_quantity} left

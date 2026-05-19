@@ -19,6 +19,9 @@ type VariantForm = {
   optionKey: string;
   optionValue: string;
   price_override: string;
+  price_original: string;
+  price_discounted: string;
+  is_discount_active: boolean;
   stock_quantity: string;
   is_active: boolean;
 };
@@ -28,6 +31,9 @@ const EMPTY_FORM: VariantForm = {
   optionKey: "size",
   optionValue: "",
   price_override: "",
+  price_original: "",
+  price_discounted: "",
+  is_discount_active: false,
   stock_quantity: "0",
   is_active: true,
 };
@@ -88,6 +94,9 @@ export default function VariantManager({ productId }: VariantManagerProps) {
       optionKey: entries[0]?.[0] || "size",
       optionValue: entries[0]?.[1] || "",
       price_override: v.price_override != null ? String(v.price_override / 100) : "",
+      price_original: v.price_original != null ? String(v.price_original / 100) : "",
+      price_discounted: v.price_discounted != null ? String(v.price_discounted / 100) : "",
+      is_discount_active: v.is_discount_active ?? false,
       stock_quantity: String(v.stock_quantity),
       is_active: v.is_active,
     });
@@ -123,6 +132,9 @@ export default function VariantManager({ productId }: VariantManagerProps) {
       sku: form.sku.trim(),
       option_values,
       price_override: form.price_override ? Math.round(Number(form.price_override) * 100) : null,
+      price_original: form.price_original ? Math.round(Number(form.price_original) * 100) : null,
+      price_discounted: form.price_discounted ? Math.round(Number(form.price_discounted) * 100) : null,
+      is_discount_active: form.is_discount_active,
       stock_quantity: Number(form.stock_quantity) || 0,
       is_active: form.is_active,
     };
@@ -249,6 +261,35 @@ export default function VariantManager({ productId }: VariantManagerProps) {
               ) : null}
             </div>
             <div>
+              <label className="mb-1 block text-[10px] uppercase tracking-wider text-[#8b6f47]">Original Price (₹)</label>
+              <input
+                type="number"
+                value={form.price_original}
+                onChange={(e) => setForm({ ...form, price_original: e.target.value })}
+                placeholder="MRP"
+                className="w-full rounded-lg border border-[#8b6f47]/30 bg-[#0d0b09] px-3 py-2 text-sm text-[#f2dfc0] outline-none focus:border-[#c89e65]"
+              />
+              {form.price_original ? (
+                <p className="mt-0.5 text-[10px] text-[#8b6f47]">₹{Number(form.price_original).toFixed(2)}</p>
+              ) : null}
+            </div>
+            <div>
+              <label className="mb-1 block text-[10px] uppercase tracking-wider text-[#8b6f47]">Discounted Price (₹)</label>
+              <input
+                type="number"
+                value={form.price_discounted}
+                onChange={(e) => setForm({ ...form, price_discounted: e.target.value })}
+                placeholder="Sale price"
+                className="w-full rounded-lg border border-[#8b6f47]/30 bg-[#0d0b09] px-3 py-2 text-sm text-[#f2dfc0] outline-none focus:border-[#c89e65]"
+              />
+              {form.price_discounted ? (
+                <p className="mt-0.5 text-[10px] text-[#8b6f47]">₹{Number(form.price_discounted).toFixed(2)}</p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
               <label className="mb-1 block text-[10px] uppercase tracking-wider text-[#8b6f47]">Stock</label>
               <input
                 type="number"
@@ -257,6 +298,17 @@ export default function VariantManager({ productId }: VariantManagerProps) {
                 onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
                 className="w-full rounded-lg border border-[#8b6f47]/30 bg-[#0d0b09] px-3 py-2 text-sm text-[#f2dfc0] outline-none focus:border-[#c89e65]"
               />
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 text-sm text-[#d8c19a]">
+                <input
+                  type="checkbox"
+                  checked={form.is_discount_active}
+                  onChange={(e) => setForm({ ...form, is_discount_active: e.target.checked })}
+                  className="h-4 w-4 rounded border-[#8b6f47] text-[#c89e65]"
+                />
+                Discount Active
+              </label>
             </div>
             <div className="flex items-end pb-1">
               <label className="flex items-center gap-2 text-sm text-[#d8c19a]">
@@ -318,7 +370,16 @@ export default function VariantManager({ productId }: VariantManagerProps) {
                   ) : null}
                 </div>
                 <div className="mt-1 flex flex-wrap gap-4 text-xs text-[#d8c19a]/60">
-                  <span>₹{(v.effective_price / 100).toFixed(2)}</span>
+                  <span>Price: ₹{(v.effective_price / 100).toFixed(2)}</span>
+                  {v.price_original != null && (
+                    <span>MRP: ₹{(v.price_original / 100).toFixed(2)}</span>
+                  )}
+                  {v.price_discounted != null && (
+                    <span>Discount: ₹{(v.price_discounted / 100).toFixed(2)}</span>
+                  )}
+                  {v.is_discount_active && (
+                    <span className="rounded-md bg-[#2b4a2b]/30 px-1.5 text-[#a3d9a5]">Discount Active</span>
+                  )}
                   <span>Stock: {v.stock_quantity}</span>
                 </div>
               </div>
