@@ -187,6 +187,13 @@ export type OrderSummary = {
   state: string;
   pincode: string;
   address: string;
+  subtotal_price?: number;
+  subtotal_price_display?: string;
+  discount_amount?: number;
+  discount_amount_display?: string;
+  coupon_code?: string | null;
+  discount_type?: string | null;
+  affiliate_id?: number | null;
   total_price: number;
   total_price_display: string;
   items: OrderLineSummary[];

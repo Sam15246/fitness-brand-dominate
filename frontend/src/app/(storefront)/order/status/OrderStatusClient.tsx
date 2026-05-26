@@ -94,9 +94,23 @@ export default function OrderStatusClient() {
               ))}
             </div>
 
-            <div className="mt-4 flex items-center justify-between text-sm text-[#6f5640]">
-              <span>Total</span>
-              <span className="text-base font-semibold text-[#4f341f]">{order.total_price_display}</span>
+            <div className="mt-4 space-y-1 text-sm text-[#6f5640]">
+              <div className="flex items-center justify-between">
+                <span>Subtotal</span>
+                <span className="text-base font-semibold text-[#4f341f]">{order.subtotal_price_display || order.total_price_display}</span>
+              </div>
+              {(order.discount_amount || 0) > 0 ? (
+                <div className="flex items-center justify-between text-[#4a7c3f]">
+                  <span>
+                    Discount{order.coupon_code ? ` (${order.coupon_code})` : ""}
+                  </span>
+                  <span>- {order.discount_amount_display}</span>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between border-t border-[#dcc9ab] pt-1.5">
+                <span>Total</span>
+                <span className="text-base font-semibold text-[#4f341f]">{order.total_price_display}</span>
+              </div>
             </div>
 
             <div className="mt-4 rounded-lg border border-[#dcc9ab] bg-[#fffefb] p-3 text-sm text-[#6f5640]">

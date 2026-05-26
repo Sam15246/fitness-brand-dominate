@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from config import TestingConfig
 from app import create_app
-from app.models import CartItem, Order, OrderItem, Product, ProductVariant, User, UserRole, db
+from app.models import AffiliateProfile, CartItem, CouponCode, Order, OrderItem, Product, ProductVariant, User, UserRole, db
 
 
 class ApiV1CheckoutTests(unittest.TestCase):
@@ -174,6 +174,56 @@ class ApiV1CheckoutTests(unittest.TestCase):
             json={"order_number": order_number, "email": "wrong@example.com"},
         )
         self.assertEqual(bad_lookup.status_code, 403)
+
+    def test_checkout_applies_coupon_and_carries_affiliate_to_order_lookup(self):
+        with self.app.app_context():
+            product_id = self._create_product(name="Liquid Chalk", slug="liquid-chalk", stock=20, price=100000)
+            affiliate_user_id = self._create_user(email="affiliate@example.com")
+            db.session.add(AffiliateProfile(user_id=affiliate_user_id, affiliate_code="AFF123", is_active=True))
+            db.session.add(
+                CouponCode(
+                    code="AFFDISC",
+                    discount_amount_fixed=5000,
+                    coupon_type="affiliate",
+                    affiliate_id=affiliate_user_id,
+                    is_active=True,
+                )
+            )
+            db.session.commit()
+
+        self.client.post(
+            "/api/v1/cart/add",
+            json={"product_id": product_id, "quantity": 1},
+        )
+
+        place = self.client.post(
+            "/api/v1/checkout/place",
+            json={
+                "customer_name": "Coupon User",
+                "phone_number": "9876543210",
+                "email": "coupon@example.com",
+                "city": "Pune",
+                "state": "Maharashtra",
+                "pincode": "411001",
+                "address": "123, Fitness Street, Near Arena",
+                "coupon_code": "AFFDISC",
+            },
+        )
+        self.assertEqual(place.status_code, 201)
+        order_number = place.get_json()["data"]["order"]["order_number"]
+
+        lookup = self.client.post(
+            "/api/v1/orders/lookup",
+            json={"order_number": order_number, "email": "coupon@example.com"},
+        )
+        self.assertEqual(lookup.status_code, 200)
+
+        order_payload = lookup.get_json()["data"]["order"]
+        self.assertEqual(order_payload["coupon_code"], "AFFDISC")
+        self.assertEqual(order_payload["affiliate_id"], affiliate_user_id)
+        self.assertEqual(order_payload["discount_amount"], 5000)
+        self.assertEqual(order_payload["subtotal_price"], 100000)
+        self.assertEqual(order_payload["total_price"], 95000)
 
     def test_product_detail_by_id(self):
         with self.app.app_context():

@@ -403,7 +403,9 @@ def _build_whatsapp_redirect_url(order, customer_data=None):
         message_lines.append(f'   Order #: {order.order_number}')
         message_lines.append('')
 
-    total_amount = order.get_total_price()
+    subtotal_amount = sum(item.get_subtotal() for item in order.items)
+    discount_amount = min(order.applied_discount or 0, subtotal_amount)
+    total_amount = max(subtotal_amount - discount_amount, 0)
     message_lines.extend([
         'TOTAL AMOUNT:',
         f'₹{total_amount / 100:.2f}',
@@ -468,6 +470,10 @@ def _serialize_order_item(item):
 
 
 def _serialize_order(order):
+    subtotal_amount = sum(item.get_subtotal() for item in order.items)
+    discount_amount = min(order.applied_discount or 0, subtotal_amount)
+    payable_amount = max(subtotal_amount - discount_amount, 0)
+
     return {
         'id': order.id,
         'order_number': order.order_number,
@@ -484,8 +490,15 @@ def _serialize_order(order):
         'state': order.state,
         'pincode': order.pincode,
         'address': order.address,
-        'total_price': order.get_total_price(),
-        'total_price_display': order.get_total_price_display(),
+        'subtotal_price': subtotal_amount,
+        'subtotal_price_display': f'₹{subtotal_amount / 100:.2f}',
+        'discount_amount': discount_amount,
+        'discount_amount_display': f'₹{discount_amount / 100:.2f}',
+        'total_price': payable_amount,
+        'total_price_display': f'₹{payable_amount / 100:.2f}',
+        'coupon_code': order.coupon.code if order.coupon else None,
+        'discount_type': order.discount_type,
+        'affiliate_id': order.affiliate_id,
         'items': [_serialize_order_item(item) for item in order.items],
     }
 

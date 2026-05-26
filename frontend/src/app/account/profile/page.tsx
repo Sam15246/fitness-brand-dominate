@@ -1,16 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getUserProfile, updateUserProfile } from '@/lib/api';
 import type { UserProfile } from '@/lib/api';
-
-const NAV_ITEMS = [
-  { label: 'Orders', href: '/account/orders', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-  { label: 'Addresses', href: '/account/addresses', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
-  { label: 'Profile', href: '/account/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', active: true },
-];
+import AccountNavTabs from '@/components/account/AccountNavTabs';
 
 const inputClasses =
   'w-full rounded-xl border border-[#d9c8ad] bg-[#fffefb] px-4 py-3.5 text-[13px] text-[#302115] outline-none transition-all placeholder:text-[#b5a08a] focus:border-[#a67126] focus:shadow-[0_0_0_3px_rgba(166,113,38,0.08)]';
@@ -142,24 +137,7 @@ export default function ProfilePage() {
           <p className="mt-2 text-[13px] text-[#6c5641]">Manage your personal information and preferences</p>
 
           {/* Navigation tabs */}
-          <div className="mt-6 flex gap-2 overflow-x-auto">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition-all ${
-                  item.active
-                    ? 'border-[#a67126] bg-[#a67126]/10 text-[#a67126]'
-                    : 'border-[#d9c8ad] bg-[#fffefb] text-[#6c5641] hover:border-[#a67126]/40 hover:text-[#302115]'
-                }`}
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                </svg>
-                {item.label}
-              </Link>
-            ))}
-          </div>
+          <AccountNavTabs activeTab="profile" />
         </div>
       </div>
 

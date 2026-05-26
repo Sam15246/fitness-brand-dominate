@@ -2,7 +2,7 @@ from flask import current_app, request
 from flask_login import current_user
 from sqlalchemy.orm import selectinload
 
-from app.models import Order, OrderItem, OrderStatus, Product, Review, ShippingStatus, UserAddress, UserRole, db
+from app.models import Order, OrderItem, OrderStatus, Product, ProductVariant, Review, ShippingStatus, UserAddress, UserRole, db
 from app.routes.api_v1_common import api_error, api_success
 
 
@@ -108,7 +108,23 @@ def register_api_v1_checkout_order_routes(
                 product = db.session.get(Product, item['product_id'])
                 if not product or not product.is_active:
                     return api_error('Some products are no longer available', status=409, code='product_unavailable')
-                variant = get_or_create_default_variant(product)
+
+                requested_variant_id = parse_int(item.get('variant_id'), 0)
+                if requested_variant_id > 0:
+                    variant = ProductVariant.query.filter_by(
+                        id=requested_variant_id,
+                        product_id=product.id,
+                        is_active=True,
+                    ).first()
+                    if not variant:
+                        return api_error(
+                            f"{product.name}: selected variant is no longer available",
+                            status=409,
+                            code='variant_unavailable',
+                        )
+                else:
+                    variant = get_or_create_default_variant(product)
+
                 stock_to_check = variant.get_available_quantity() if variant else product.get_available_quantity()
                 if item['quantity'] > stock_to_check:
                     return api_error(
@@ -149,13 +165,32 @@ def register_api_v1_checkout_order_routes(
 
             for item in cart['items']:
                 product = db.session.get(Product, item['product_id'])
-                variant = get_or_create_default_variant(product)
-                if variant and variant.price_override is not None:
-                    unit_price = variant.price_override
-                elif product.is_discount_active and product.price_discounted:
-                    unit_price = product.price_discounted
+
+                requested_variant_id = parse_int(item.get('variant_id'), 0)
+                if requested_variant_id > 0:
+                    variant = ProductVariant.query.filter_by(
+                        id=requested_variant_id,
+                        product_id=product.id,
+                        is_active=True,
+                    ).first()
+                    if not variant:
+                        return api_error(
+                            f"{product.name}: selected variant is no longer available",
+                            status=409,
+                            code='variant_unavailable',
+                        )
                 else:
-                    unit_price = product.price
+                    variant = get_or_create_default_variant(product)
+
+                # Keep order pricing aligned with checkout/cart preview snapshot.
+                unit_price = parse_int(item.get('unit_price'), 0)
+                if unit_price <= 0:
+                    if variant:
+                        unit_price = variant.get_effective_price()
+                    elif product.is_discount_active and product.price_discounted:
+                        unit_price = product.price_discounted
+                    else:
+                        unit_price = product.price
 
                 db.session.add(
                     OrderItem(

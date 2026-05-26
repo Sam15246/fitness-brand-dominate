@@ -86,7 +86,19 @@ export default function OrderConfirmationClient() {
                 ))}
               </div>
               <div className="mt-3 flex items-center justify-between border-t border-[#dcc9ab] pt-3 text-sm text-[#6f5640]">
-                <span>Order Total</span>
+                <span>Subtotal</span>
+                <span className="text-base font-semibold text-[#4f341f]">{order.subtotal_price_display || order.total_price_display}</span>
+              </div>
+              {(order.discount_amount || 0) > 0 ? (
+                <div className="mt-2 flex items-center justify-between text-sm text-[#4a7c3f]">
+                  <span>
+                    Discount{order.coupon_code ? ` (${order.coupon_code})` : ""}
+                  </span>
+                  <span>- {order.discount_amount_display}</span>
+                </div>
+              ) : null}
+              <div className="mt-2 flex items-center justify-between border-t border-[#dcc9ab] pt-2 text-sm text-[#6f5640]">
+                <span>Payable Total</span>
                 <span className="text-base font-semibold text-[#4f341f]">{order.total_price_display}</span>
               </div>
             </div>
